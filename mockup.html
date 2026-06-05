@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to Document - UI Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .layout-card { transition: all 0.15s; cursor: pointer; }
+    .layout-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .layout-card.active { border-color: #3b82f6 !important; background: #eff6ff; }
+    .radio-option { transition: all 0.15s; cursor: pointer; user-select: none; }
+    .radio-option.selected { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .img-item { transition: all 0.2s; }
+    .img-item:hover { background: #f8fafc; }
+    .paper { background: white; box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+    .export-btn { transition: all 0.15s; }
+    .export-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .page-dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+    .page-dot.active { background: #3b82f6; width: 24px; border-radius: 4px; }
+    .drop-zone { transition: all 0.2s; }
+    .drop-zone:hover { border-color: #3b82f6; background: #eff6ff; }
+    input[type=range] { -webkit-appearance: none; height: 4px; background: #e2e8f0; border-radius: 2px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; cursor: pointer; }
+    .panel-section { border-bottom: 1px solid #f1f5f9; }
+    .layout-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .fade-in { animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .img-enter { animation: slideIn 0.2s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+  </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200 px-5 py-2 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <h1 class="text-sm font-semibold text-gray-800">Image to Document</h1>
+      <span class="text-xs text-gray-400">Tauri + Vue3</span>
+    </div>
+    <div class="flex items-center gap-2 text-gray-400">
+      <button class="w-3 h-3 rounded-full bg-red-400"></button>
+      <button class="w-3 h-3 rounded-full bg-yellow-400"></button>
+      <button class="w-3 h-3 rounded-full bg-green-400"></button>
+    </div>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- ===== 左侧面板 ===== -->
+    <aside class="w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 overflow-y-auto">
+
+      <!-- 图片列表 -->
+      <div class="panel-section p-4">
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">图片</h2>
+          <span id="imgCount" class="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">4 张</span>
+        </div>
+        <div id="imageList" class="space-y-1 mb-2.5">
+          <!-- JS 动态渲染 -->
+        </div>
+        <div class="flex gap-1.5">
+          <button onclick="addImage()" class="drop-zone flex-1 border-2 border-dashed border-gray-200 rounded-lg py-2 text-xs text-gray-400 flex items-center justify-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            添加
+          </button>
+          <button onclick="removeLastImage()" class="flex-1 border-2 border-dashed border-red-100 rounded-lg py-2 text-xs text-red-300 flex items-center justify-center gap-1 hover:border-red-300 hover:text-red-400 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            移除
+          </button>
+        </div>
+        <p class="text-xs text-gray-300 mt-1.5 text-center">点击添加/移除，观察布局变化</p>
+      </div>
+
+      <!-- 页面设置 -->
+      <div class="panel-section p-4">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">页面设置</h2>
+
+        <div class="mb-3">
+          <label class="text-xs text-gray-500 mb-1 block">纸张</label>
+          <div class="flex gap-1.5">
+            <button class="radio-option selected flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center font-medium">A4</button>
+            <button class="radio-option flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center text-gray-500">A3</button>
+            <button class="radio-option flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center text-gray-500">Letter</button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="text-xs text-gray-500 mb-1 block">方向</label>
+          <div class="flex gap-1.5">
+            <button class="radio-option flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center text-gray-500 flex items-center justify-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="1.5" stroke-width="1.5"/></svg>
+              纵向
+            </button>
+            <button class="radio-option selected flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center font-medium flex items-center justify-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1.5" stroke-width="1.5"/></svg>
+              横向
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="text-xs text-gray-500 mb-1 block">间距模式</label>
+          <div class="flex gap-1.5">
+            <button class="radio-option selected flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center font-medium">有间距</button>
+            <button class="radio-option flex-1 text-xs py-1.5 rounded-md border border-gray-200 text-center text-gray-500">铺满</button>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs text-gray-500">间距</label>
+            <span class="text-xs text-gray-400">8 mm</span>
+          </div>
+          <input type="range" min="0" max="30" value="8" class="w-full">
+        </div>
+      </div>
+
+      <!-- 布局选择（动态） -->
+      <div class="panel-section p-4 flex-1">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">布局模式</h2>
+        <p id="layoutHint" class="text-xs text-gray-400 mb-3">根据图片数量自动匹配</p>
+        <div id="layoutGrid" class="layout-grid fade-in">
+          <!-- JS 动态渲染 -->
+        </div>
+      </div>
+
+      <!-- 导出 -->
+      <div class="p-4 border-t border-gray-100">
+        <div class="flex gap-2">
+          <button class="export-btn flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            PDF
+          </button>
+          <button class="export-btn flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Word
+          </button>
+        </div>
+        <p id="exportHint" class="text-xs text-gray-400 mt-1.5 text-center">4 张 → 1 页</p>
+      </div>
+    </aside>
+
+    <!-- ===== 右侧预览 ===== -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <div class="bg-white border-b border-gray-200 px-5 py-1.5 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <button class="p-1 rounded hover:bg-gray-100 text-gray-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
+          </button>
+          <span class="text-xs text-gray-500">75%</span>
+          <button class="p-1 rounded hover:bg-gray-100 text-gray-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="p-1 rounded hover:bg-gray-100 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="page-dot active"></div>
+          <button class="p-1 rounded hover:bg-gray-100 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <span id="pageInfo" class="text-xs text-gray-400">1 / 1</span>
+        </div>
+      </div>
+
+      <!-- 纸张预览 -->
+      <div class="flex-1 overflow-auto flex items-center justify-center p-8 bg-gray-100/60">
+        <div id="paperPreview" class="paper rounded fade-in" style="width:780px; height:552px; padding:36px;">
+          <!-- JS 动态渲染 -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+// ===== 数据 =====
+const COLORS = ['rose','sky','emerald','amber','violet','teal','orange','pink','indigo'];
+const NAMES = ['photo_001.jpg','screenshot_02.png','design_v3.jpg','banner_final.png','avatar_05.png','cover_v2.jpg','icon_set.png','bg_texture.jpg','logo_final.png'];
+const SIZES = ['1920×1080','2560×1440','3000×2000','1920×600','800×800','3840×2160','512×512','4096×2048','1200×1200'];
+
+let images = [
+  { name:'photo_001.jpg', size:'1920×1080', color:'rose' },
+  { name:'screenshot_02.png', size:'2560×1440', color:'sky' },
+  { name:'design_v3.jpg', size:'3000×2000', color:'emerald' },
+  { name:'banner_final.png', size:'1920×600', color:'amber' },
+];
+
+let activeLayout = 0;
+
+// ===== 布局定义 =====
+const LAYOUTS = {
+  1: [
+    { name:'居中适配', hint:'等比缩放，可能留白' },
+    { name:'填满页面', hint:'等比缩放，居中裁剪' },
+  ],
+  2: [
+    { name:'上下排列', hint:'上1下1，等分' },
+    { name:'左右排列', hint:'左1右1，等分' },
+    { name:'一大一小', hint:'左7右3' },
+    { name:'上大下小', hint:'上7下3' },
+    { name:'对角排列', hint:'左上+右下' },
+  ],
+  3: [
+    { name:'三等分横', hint:'一行3张' },
+    { name:'三等分纵', hint:'一列3张' },
+    { name:'一上两下', hint:'上大+下两小' },
+    { name:'两上一下', hint:'上两小+下大' },
+    { name:'一大两小', hint:'左大+右两小' },
+  ],
+  4: [
+    { name:'田字格', hint:'2×2 网格' },
+    { name:'两上两下', hint:'2行×2列' },
+    { name:'竖排四张', hint:'4行×1列' },
+    { name:'横排四张', hint:'1行×4列' },
+    { name:'一左三右', hint:'左大+右3小' },
+    { name:'一上三下', hint:'上大+下3小' },
+    { name:'三上一左', hint:'上3小+左下大' },
+    { name:'铺满拼贴', hint:'无间距紧密' },
+    { name:'环绕布局', hint:'中心大+3小' },
+  ],
+  6: [
+    { name:'2×3 网格', hint:'2行3列' },
+    { name:'3×2 网格', hint:'3行2列' },
+    { name:'一上五下', hint:'大图+5小图' },
+  ],
+  9: [
+    { name:'3×3 网格', hint:'标准九宫格' },
+    { name:'一大八小', hint:'中心大+8环绕' },
+  ],
+};
+
+// ===== 布局缩略图 SVG =====
+function layoutThumb(key, idx) {
+  const c = 'bg-blue-200', c2 = 'bg-blue-300';
+  const h = 32;
+  const map = {
+    // 1张
+    '居中适配': `<div class="flex items-center justify-center" style="height:${h}px"><div class="w-1/2 h-3/4 ${c} rounded-sm"></div></div>`,
+    '填满页面': `<div class="${c} rounded-sm" style="height:${h}px"></div>`,
+    // 2张
+    '上下排列': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div>`,
+    '左右排列': `<div class="flex gap-0.5" style="height:${h}px"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div>`,
+    '一大一小': `<div class="flex gap-0.5" style="height:${h}px"><div class="flex-[7] ${c} rounded-sm"></div><div class="flex-[3] ${c2} rounded-sm"></div></div>`,
+    '上大下小': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-[7] ${c} rounded-sm"></div><div class="flex-[3] ${c2} rounded-sm"></div></div>`,
+    '对角排列': `<div style="height:${h}px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px"><div class="${c} rounded-sm"></div><div></div><div></div><div class="${c2} rounded-sm"></div></div>`,
+    // 3张
+    '三等分横': `<div class="flex gap-0.5" style="height:${h}px"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div></div>`,
+    '三等分纵': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div></div>`,
+    '一上两下': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-[2] ${c} rounded-sm"></div><div class="flex gap-0.5 flex-1"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div></div></div>`,
+    '两上一下': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex gap-0.5 flex-1"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div><div class="flex-[2] ${c} rounded-sm"></div></div>`,
+    '一大两小': `<div class="flex gap-0.5" style="height:${h}px"><div class="flex-[2] ${c} rounded-sm"></div><div class="flex-1 flex flex-col gap-0.5"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div></div></div>`,
+    // 4张
+    '田字格': `<div class="grid grid-cols-2 gap-0.5" style="height:${h}px"><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div></div>`,
+    '两上两下': `<div style="height:${h}px"><div class="flex gap-0.5 h-1/2 mb-0.5"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div><div class="flex gap-0.5 h-1/2"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div></div></div>`,
+    '竖排四张': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div>`,
+    '横排四张': `<div class="flex gap-0.5" style="height:${h}px"><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div>`,
+    '一左三右': `<div class="flex gap-0.5" style="height:${h}px"><div class="flex-[2] ${c} rounded-sm"></div><div class="flex-1 flex flex-col gap-0.5"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div></div>`,
+    '一上三下': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-[2] ${c} rounded-sm"></div><div class="flex gap-0.5 flex-1"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div></div>`,
+    '三上一左': `<div style="height:${h}px"><div class="flex gap-0.5 h-1/2 mb-0.5"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div><div class="flex gap-0.5 h-1/2"><div class="flex-[2] ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div></div>`,
+    '铺满拼贴': `<div class="flex gap-0" style="height:${h}px"><div class="${c} rounded-sm" style="flex:2"></div><div class="flex flex-col gap-0 flex-1"><div class="${c2} rounded-sm flex-1"></div><div class="${c} rounded-sm flex-1"></div></div></div>`,
+    '环绕布局': `<div style="height:${h}px;display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:1fr 1fr;gap:2px"><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm" style="grid-row:1/3"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div></div><div class="${c2} rounded-sm"></div></div>`,
+    // 6张
+    '2×3 网格': `<div class="grid grid-cols-3 gap-0.5" style="height:${h}px"><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div></div>`,
+    '3×2 网格': `<div class="grid grid-cols-2 gap-0.5" style="height:${h}px"><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div></div>`,
+    '一上五下': `<div class="flex flex-col gap-0.5" style="height:${h}px"><div class="flex-[2] ${c} rounded-sm"></div><div class="flex gap-0.5 flex-1"><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div><div class="flex-1 ${c} rounded-sm"></div><div class="flex-1 ${c2} rounded-sm"></div></div></div>`,
+    // 9张
+    '3×3 网格': `<div class="grid grid-cols-3 gap-0.5" style="height:${h}px">${Array(9).fill(0).map((_,i)=>`<div class="${i%2?c2:c} rounded-sm"></div>`).join('')}</div>`,
+    '一大八小': `<div style="height:${h}px;display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:1fr 2fr 1fr;gap:2px"><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm" style="grid-row:2;grid-column:2"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div><div class="${c} rounded-sm"></div><div class="${c2} rounded-sm"></div></div>`,
+  };
+  return map[key] || `<div class="bg-gray-200 rounded-sm" style="height:${h}px"></div>`;
+}
+
+// ===== 获取当前布局配置 =====
+function getLayoutKey() {
+  const n = images.length;
+  if (n <= 1) return 1;
+  if (n <= 2) return 2;
+  if (n <= 3) return 3;
+  if (n <= 4) return 4;
+  if (n <= 6) return 6;
+  return 9;
+}
+
+// ===== 渲染图片列表 =====
+function renderImageList() {
+  const el = document.getElementById('imageList');
+  el.innerHTML = images.map((img, i) => `
+    <div class="img-item img-enter flex items-center gap-2 p-1.5 rounded-lg">
+      <div class="w-12 h-9 bg-gradient-to-br from-${img.color}-200 to-${img.color}-300 rounded flex items-center justify-center text-xs text-${img.color}-600 font-bold flex-shrink-0">${i+1}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium text-gray-700 truncate">${img.name}</p>
+        <p class="text-xs text-gray-400">${img.size}</p>
+      </div>
+      <svg onclick="removeImage(${i})" class="w-3.5 h-3.5 text-gray-300 hover:text-red-400 cursor-pointer flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </div>
+  `).join('');
+  document.getElementById('imgCount').textContent = images.length + ' 张';
+}
+
+// ===== 渲染布局选项 =====
+function renderLayouts() {
+  const key = getLayoutKey();
+  const layouts = LAYOUTS[key];
+  const grid = document.getElementById('layoutGrid');
+  const hint = document.getElementById('layoutHint');
+
+  hint.textContent = `${images.length} 张图片 · ${layouts.length} 种布局可选`;
+
+  if (activeLayout >= layouts.length) activeLayout = 0;
+
+  grid.innerHTML = layouts.map((l, i) => `
+    <div class="layout-card ${i===activeLayout?'active':''} border-2 ${i===activeLayout?'':'border-gray-100'} rounded-lg p-1.5" onclick="selectLayout(${i})">
+      <div class="mb-1">${layoutThumb(l.name)}</div>
+      <p class="text-xs text-center text-gray-500 leading-tight">${l.name}</p>
+    </div>
+  `).join('');
+
+  grid.classList.remove('fade-in');
+  void grid.offsetWidth;
+  grid.classList.add('fade-in');
+}
+
+// ===== 渲染预览 =====
+function renderPreview() {
+  const key = getLayoutKey();
+  const layouts = LAYOUTS[key];
+  const layoutName = layouts[activeLayout]?.name || '田字格';
+  const el = document.getElementById('paperPreview');
+
+  // 根据布局生成预览 HTML
+  el.innerHTML = generatePreviewHTML(layoutName);
+  el.classList.remove('fade-in');
+  void el.offsetWidth;
+  el.classList.add('fade-in');
+
+  // 更新导出提示
+  const pages = Math.ceil(images.length / key);
+  document.getElementById('exportHint').textContent = `${images.length} 张 → ${pages} 页`;
+  document.getElementById('pageInfo').textContent = `1 / ${pages}`;
+}
+
+function generatePreviewHTML(layout) {
+  const imgs = images.slice(0, Math.min(images.length, 9));
+  const gap = 14;
+
+  function imgCard(img, idx) {
+    return `<div class="bg-gradient-to-br from-${img.color}-50 to-${img.color}-100 rounded-lg flex items-center justify-center border border-${img.color}-100 overflow-hidden">
+      <div class="text-center">
+        <div class="w-10 h-10 mx-auto mb-1 rounded-lg bg-${img.color}-200/50 flex items-center justify-center">
+          <svg class="w-5 h-5 text-${img.color}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <p class="text-xs text-${img.color}-500 font-medium">${img.name}</p>
+        <p class="text-xs text-${img.color}-400">${img.size}</p>
+      </div>
+    </div>`;
+  }
+
+  // 布局生成器
+  const builders = {
+    '居中适配': () => `<div class="flex items-center justify-center w-full h-full">${imgCard(imgs[0],0)}</div>`,
+    '填满页面': () => imgCard(imgs[0],0),
+    '上下排列': () => `<div class="flex flex-col gap-[${gap}px] h-full">${imgs.slice(0,2).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div>`,
+    '左右排列': () => `<div class="flex gap-[${gap}px] h-full">${imgs.slice(0,2).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div>`,
+    '一大一小': () => `<div class="flex gap-[${gap}px] h-full"><div class="flex-[7]">${imgCard(imgs[0],0)}</div><div class="flex-[3]">${imgCard(imgs[1],1)}</div></div>`,
+    '上大下小': () => `<div class="flex flex-col gap-[${gap}px] h-full"><div class="flex-[7]">${imgCard(imgs[0],0)}</div><div class="flex-[3]">${imgCard(imgs[1],1)}</div></div>`,
+    '对角排列': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap}px"><div>${imgCard(imgs[0],0)}</div><div></div><div></div><div>${imgCard(imgs[1],1)}</div></div>`,
+    '三等分横': () => `<div class="flex gap-[${gap}px] h-full">${imgs.slice(0,3).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div>`,
+    '三等分纵': () => `<div class="flex flex-col gap-[${gap}px] h-full">${imgs.slice(0,3).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div>`,
+    '一上两下': () => `<div class="flex flex-col gap-[${gap}px] h-full"><div class="flex-[2]">${imgCard(imgs[0],0)}</div><div class="flex gap-[${gap}px] flex-1"><div class="flex-1">${imgCard(imgs[1],1)}</div><div class="flex-1">${imgCard(imgs[2],2)}</div></div></div>`,
+    '两上一下': () => `<div class="flex flex-col gap-[${gap}px] h-full"><div class="flex gap-[${gap}px] flex-1"><div class="flex-1">${imgCard(imgs[0],0)}</div><div class="flex-1">${imgCard(imgs[1],1)}</div></div><div class="flex-[2]">${imgCard(imgs[2],2)}</div></div>`,
+    '一大两小': () => `<div class="flex gap-[${gap}px] h-full"><div class="flex-[2]">${imgCard(imgs[0],0)}</div><div class="flex-1 flex flex-col gap-[${gap}px]"><div class="flex-1">${imgCard(imgs[1],1)}</div><div class="flex-1">${imgCard(imgs[2],2)}</div></div></div>`,
+    '田字格': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap}px">${imgs.slice(0,4).map((img,i)=>imgCard(img,i)).join('')}</div>`,
+    '两上两下': () => `<div class="h-full"><div class="flex gap-[${gap}px] h-1/2 mb-[${gap}px]"><div class="flex-1">${imgCard(imgs[0],0)}</div><div class="flex-1">${imgCard(imgs[1],1)}</div></div><div class="flex gap-[${gap}px] h-1/2"><div class="flex-1">${imgCard(imgs[2],2)}</div><div class="flex-1">${imgCard(imgs[3],3)}</div></div></div>`,
+    '竖排四张': () => `<div class="flex flex-col gap-[${gap}px] h-full">${imgs.slice(0,4).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div>`,
+    '横排四张': () => `<div class="flex gap-[${gap}px] h-full">${imgs.slice(0,4).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div>`,
+    '一左三右': () => `<div class="flex gap-[${gap}px] h-full"><div class="flex-[2]">${imgCard(imgs[0],0)}</div><div class="flex-1 flex flex-col gap-[${gap}px]"><div class="flex-1">${imgCard(imgs[1],1)}</div><div class="flex-1">${imgCard(imgs[2],2)}</div><div class="flex-1">${imgCard(imgs[3],3)}</div></div></div>`,
+    '一上三下': () => `<div class="flex flex-col gap-[${gap}px] h-full"><div class="flex-[2]">${imgCard(imgs[0],0)}</div><div class="flex gap-[${gap}px] flex-1"><div class="flex-1">${imgCard(imgs[1],1)}</div><div class="flex-1">${imgCard(imgs[2],2)}</div><div class="flex-1">${imgCard(imgs[3],3)}</div></div></div>`,
+    '三上一左': () => `<div class="h-full"><div class="flex gap-[${gap}px] h-1/2 mb-[${gap}px]"><div class="flex-1">${imgCard(imgs[0],0)}</div><div class="flex-1">${imgCard(imgs[1],1)}</div><div class="flex-1">${imgCard(imgs[2],2)}</div></div><div class="flex gap-[${gap}px] h-1/2"><div class="flex-[2]">${imgCard(imgs[3],3)}</div><div class="flex-1">${imgCard(imgs[0],0)}</div></div></div>`,
+    '铺满拼贴': () => `<div class="flex h-full" style="gap:0"><div class="bg-gradient-to-br from-${imgs[0].color}-50 to-${imgs[0].color}-100 rounded-lg" style="flex:2"></div><div class="flex flex-col flex-1" style="gap:0"><div class="bg-gradient-to-br from-${imgs[1].color}-50 to-${imgs[1].color}-100 rounded-lg flex-1"></div><div class="bg-gradient-to-br from-${imgs[2].color}-50 to-${imgs[2].color}-100 rounded-lg flex-1"></div></div><div class="flex flex-col flex-1" style="gap:0"><div class="bg-gradient-to-br from-${imgs[3].color}-50 to-${imgs[3].color}-100 rounded-lg flex-1"></div><div class="bg-gradient-to-br from-${imgs[0].color}-50 to-${imgs[0].color}-100 rounded-lg flex-1"></div></div></div>`,
+    '环绕布局': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:1fr 2fr 1fr;gap:${gap}px"><div>${imgCard(imgs[1],1)}</div><div>${imgCard(imgs[0],0)}</div><div>${imgCard(imgs[2],2)}</div><div>${imgCard(imgs[3],3)}</div><div style="grid-row:2;grid-column:2">${imgCard(imgs[0],0)}</div><div>${imgCard(imgs[1],1)}</div><div>${imgCard(imgs[2],2)}</div><div>${imgCard(imgs[3],3)}</div><div>${imgCard(imgs[0],0)}</div></div>`,
+    '2×3 网格': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:${gap}px">${imgs.slice(0,6).map((img,i)=>imgCard(img,i)).join('')}</div>`,
+    '3×2 网格': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:${gap}px">${imgs.slice(0,6).map((img,i)=>imgCard(img,i)).join('')}</div>`,
+    '一上五下': () => `<div class="flex flex-col gap-[${gap}px] h-full"><div class="flex-[2]">${imgCard(imgs[0],0)}</div><div class="flex gap-[${gap}px] flex-1">${imgs.slice(1,6).map((img,i)=>`<div class="flex-1">${imgCard(img,i)}</div>`).join('')}</div></div>`,
+    '3×3 网格': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:${gap}px">${imgs.slice(0,9).map((img,i)=>imgCard(img,i)).join('')}</div>`,
+    '一大八小': () => `<div class="h-full" style="display:grid;grid-template-columns:1fr 2fr 1fr;grid-template-rows:1fr 2fr 1fr;gap:${gap}px"><div>${imgCard(imgs[1],1)}</div><div>${imgCard(imgs[2],2)}</div><div>${imgCard(imgs[3],3)}</div><div>${imgCard(imgs[4],4)}</div><div style="grid-row:2;grid-column:2">${imgCard(imgs[0],0)}</div><div>${imgCard(imgs[5],5)}</div><div>${imgCard(imgs[6],6)}</div><div>${imgCard(imgs[7],7)}</div><div>${imgCard(imgs[8],8)}</div></div>`,
+  };
+
+  return (builders[layout] || builders['田字格'])();
+}
+
+// ===== 操作 =====
+function addImage() {
+  if (images.length >= 9) return;
+  const i = images.length;
+  images.push({ name:NAMES[i], size:SIZES[i], color:COLORS[i] });
+  activeLayout = 0;
+  renderAll();
+}
+
+function removeImage(idx) {
+  images.splice(idx, 1);
+  if (images.length === 0) return;
+  activeLayout = 0;
+  renderAll();
+}
+
+function removeLastImage() {
+  if (images.length <= 1) return;
+  images.pop();
+  activeLayout = 0;
+  renderAll();
+}
+
+function selectLayout(idx) {
+  activeLayout = idx;
+  renderLayouts();
+  renderPreview();
+}
+
+function renderAll() {
+  renderImageList();
+  renderLayouts();
+  renderPreview();
+}
+
+// 初始化
+renderAll();
+</script>
+
+</body>
+</html>
