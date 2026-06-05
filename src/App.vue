@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import AppHeader from "./components/AppHeader.vue";
 import ImageList from "./components/ImageList.vue";
 import PageSettings from "./components/PageSettings.vue";
@@ -12,6 +12,7 @@ import { useImages } from "./composables/useImages";
 import { usePageSettings } from "./composables/usePageSettings";
 import { useLayout } from "./composables/useLayout";
 import { useExport } from "./composables/useExport";
+import { useOverrides } from "./composables/useOverrides";
 
 const { images, removeImage, removeLastImage, openFileDialog } = useImages();
 const { settings, setImagesPerPage } = usePageSettings();
@@ -20,12 +21,32 @@ const {
   activeLayoutIndex,
   selectLayout,
   pages,
+  layoutKey,
 } = useLayout(() => images.value, () => settings);
+
+const {
+  overrides,
+  swapImages,
+  setImageOffset,
+  setPageSlots,
+  getMergedPages,
+  resetAllOverrides,
+} = useOverrides();
+
+// 合并覆盖后的页面
+const mergedPages = computed(() => getMergedPages(pages.value));
+
 const { exportPdf, exportDocx } = useExport(
   () => images.value,
-  () => pages.value,
-  () => settings
+  () => mergedPages.value,
+  () => settings,
+  (pageIndex) => overrides[pageIndex]
 );
+
+// 布局或图片数量变化时重置所有覆盖
+watch([layoutKey, activeLayoutIndex, () => images.value.length], () => {
+  resetAllOverrides();
+});
 
 const currentPage = ref(0);
 const showLeftPanel = ref(true);
@@ -120,14 +141,19 @@ function toggleRightPanel() {
         />
         <DocumentPreview
           :images="images"
-          :pages="pages"
+          :pages="mergedPages"
+          :base-pages="pages"
           :settings="settings"
           :current-page="currentPage"
+          :overrides="overrides"
+          @swap-images="(a, b) => swapImages(currentPage, a, b, pages)"
+          @set-image-offset="(imgIdx, ox, oy) => setImageOffset(currentPage, imgIdx, ox, oy)"
+          @set-page-slots="(slots) => setPageSlots(currentPage, slots)"
         />
         <!-- 底部缩略图导航（始终显示） -->
         <PageThumbnails
           :images="images"
-          :pages="pages"
+          :pages="mergedPages"
           :settings="settings"
           :current-page="currentPage"
           @go-to-page="goToPage"
