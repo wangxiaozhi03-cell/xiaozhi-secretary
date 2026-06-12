@@ -2,6 +2,7 @@
 import type { ImageItem, PageSettings, PageLayout, ImageSlot, PageOverrides, ImageOffset } from "@/types";
 import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
 import { computed, ref, onMounted, onUnmounted } from "vue";
+import { usePageDrag } from "@/composables/usePageDrag";
 
 const props = defineProps<{
   images: ImageItem[];
@@ -13,10 +14,13 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  swapImages: [slotA: number, slotB: number];
   setImageOffset: [imageIndex: number, offsetX: number, offsetY: number];
   setPageSlots: [slots: ImageSlot[]];
+  /** 拖拽放置：移动图片到目标页面的目标 slot 位置 */
+  dropOnSlot: [fromPage: number, fromSlot: number, toPage: number, toSlot: number];
 }>();
+
+const { startDrag, updatePointer, endDrag, cancelDrag } = usePageDrag();
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const containerWidth = ref(800);
@@ -91,26 +95,31 @@ function getImageStyle(imgIdx: number) {
 }
 
 // ===== 拖拽交换 =====
+// 用于区分 cover 模式下的 pan 和 swap
+const dragStartPos = ref<{ x: number; y: number } | null>(null);
+const dragModeDecided = ref(false);
+const DRAG_THRESHOLD = 8; // px，超过此距离才判定为 pan
+
 function onSlotPointerDown(e: PointerEvent, slotIdx: number) {
-  // 如果正在其他交互中，忽略
   if (interactionMode.value !== "idle") return;
 
-  // cover 模式下，按住 Shift 拖动是 pan，否则是 swap
-  if (isEdgeToEdge.value && !e.shiftKey) {
-    // 进入 pan 模式
-    startPan(e, slotIdx);
-    return;
-  }
-
-  // 进入 drag-swap 模式
+  // 记录起始位置，但不立即决定模式
   interactionMode.value = "drag-swap";
   dragSourceSlot.value = slotIdx;
   dragTargetSlot.value = null;
   dragPointerPos.value = { x: e.clientX, y: e.clientY };
+  dragStartPos.value = { x: e.clientX, y: e.clientY };
+  dragModeDecided.value = false;
 
   const imgIdx = currentPageData.value?.imageIndices[slotIdx];
   if (imgIdx !== undefined && props.images[imgIdx]) {
     dragGhostSrc.value = props.images[imgIdx].thumbUrl;
+    startDrag({
+      sourcePageIndex: props.currentPage,
+      sourceSlotIndex: slotIdx,
+      imageIndex: imgIdx,
+      thumbUrl: props.images[imgIdx].thumbUrl,
+    });
   }
 
   (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -119,8 +128,42 @@ function onSlotPointerDown(e: PointerEvent, slotIdx: number) {
 function onPaperPointerMove(e: PointerEvent) {
   if (interactionMode.value === "drag-swap") {
     dragPointerPos.value = { x: e.clientX, y: e.clientY };
-    // 检测目标 slot
-    dragTargetSlot.value = hitTestSlot(e.clientX, e.clientY);
+    updatePointer(e.clientX, e.clientY);
+
+    // 检测是否拖到了另一个 slot（swap 模式）
+    const targetSlot = hitTestSlot(e.clientX, e.clientY);
+    if (targetSlot !== null && targetSlot !== dragSourceSlot.value) {
+      // 进入了另一个 slot 的区域 → swap 模式
+      dragModeDecided.value = true;
+      dragTargetSlot.value = targetSlot;
+      return;
+    }
+
+    // cover 模式下，超过阈值且没进入其他 slot → 切换为 pan 模式
+    if (isEdgeToEdge.value && !dragModeDecided.value && dragStartPos.value) {
+      const dist = Math.hypot(
+        e.clientX - dragStartPos.value.x,
+        e.clientY - dragStartPos.value.y
+      );
+      if (dist > DRAG_THRESHOLD) {
+        // 超过阈值，切换为 pan 模式
+        dragModeDecided.value = true;
+        interactionMode.value = "pan-image";
+        panSlotIdx.value = dragSourceSlot.value;
+        panStartPointer.value = { ...dragStartPos.value };
+        const imgIdx = currentPageData.value?.imageIndices[dragSourceSlot.value!];
+        if (imgIdx !== undefined) {
+          const existing = props.overrides[props.currentPage]?.offsets?.[imgIdx];
+          panStartOffset.value = existing ? { ...existing } : { offsetX: 0.5, offsetY: 0.5 };
+        }
+        // 清理拖拽状态
+        resetDragState();
+        return;
+      }
+    }
+
+    // 非 cover 模式，或 cover 模式还没决定 → 检测目标 slot
+    dragTargetSlot.value = targetSlot;
   } else if (interactionMode.value === "pan-image") {
     updatePan(e);
   } else if (interactionMode.value === "resize") {
@@ -130,14 +173,22 @@ function onPaperPointerMove(e: PointerEvent) {
 
 function onPaperPointerUp(_e: PointerEvent) {
   if (interactionMode.value === "drag-swap") {
-    if (
+    // 检查是否拖到了缩略图区域
+    const crossPageData = endDrag();
+    if (crossPageData && crossPageData.targetPageIndex !== undefined) {
+      const toSlot = crossPageData.targetSlotIndex ?? 0;
+      emit("dropOnSlot", crossPageData.sourcePageIndex, crossPageData.sourceSlotIndex, crossPageData.targetPageIndex, toSlot);
+    } else if (
       dragSourceSlot.value !== null &&
       dragTargetSlot.value !== null &&
       dragSourceSlot.value !== dragTargetSlot.value
     ) {
-      emit("swapImages", dragSourceSlot.value, dragTargetSlot.value);
+      // 同页面内：移动到目标位置（其他图片自动前移）
+      emit("dropOnSlot", props.currentPage, dragSourceSlot.value, props.currentPage, dragTargetSlot.value);
     }
     resetDragState();
+    dragModeDecided.value = false;
+    dragStartPos.value = null;
   } else if (interactionMode.value === "pan-image") {
     endPan();
   } else if (interactionMode.value === "resize") {
@@ -151,6 +202,7 @@ function resetDragState() {
   dragTargetSlot.value = null;
   dragPointerPos.value = null;
   dragGhostSrc.value = "";
+  cancelDrag();
 }
 
 // 检测鼠标在哪个 slot 上
@@ -179,20 +231,6 @@ function hitTestSlot(clientX: number, clientY: number): number | null {
 }
 
 // ===== 图片拖动（cover 模式） =====
-function startPan(e: PointerEvent, slotIdx: number) {
-  interactionMode.value = "pan-image";
-  panSlotIdx.value = slotIdx;
-  panStartPointer.value = { x: e.clientX, y: e.clientY };
-
-  const imgIdx = currentPageData.value?.imageIndices[slotIdx];
-  if (imgIdx !== undefined) {
-    const existing = props.overrides[props.currentPage]?.offsets?.[imgIdx];
-    panStartOffset.value = existing ? { ...existing } : { offsetX: 0.5, offsetY: 0.5 };
-  }
-
-  (e.target as HTMLElement).setPointerCapture(e.pointerId);
-}
-
 function updatePan(e: PointerEvent) {
   if (panSlotIdx.value === null || !currentPageData.value) return;
 
@@ -424,19 +462,19 @@ onUnmounted(() => {
 <template>
   <div
     ref="containerRef"
-    class="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-8 bg-gray-100/60"
+    class="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-8"
     @pointermove="onPaperPointerMove"
     @pointerup="onPaperPointerUp"
   >
     <div v-if="images.length === 0" class="text-center">
-      <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gray-200 flex items-center justify-center">
-        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-20 h-20 mx-auto mb-5 rounded-3xl bg-blue-50 flex items-center justify-center">
+        <svg class="w-10 h-10 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
-      <p class="text-sm text-gray-400">添加图片后预览文档效果</p>
-      <p class="text-xs text-gray-300 mt-1">支持 PNG、JPG、WEBP、BMP</p>
+      <p class="text-sm text-secondary mb-1">添加图片后预览文档效果</p>
+      <p class="text-xs text-tertiary">支持 PNG、JPG、WEBP、BMP</p>
     </div>
 
     <div v-else-if="currentPageData" class="paper rounded fade-in" :style="paperStyle">
@@ -514,11 +552,14 @@ onUnmounted(() => {
 <style scoped>
 .paper {
   background: white;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
   position: relative;
+  box-shadow:
+    0 4px 16px rgba(120, 140, 180, 0.08),
+    0 12px 40px rgba(120, 140, 180, 0.06);
 }
 .fade-in {
-  animation: fadeIn 0.25s ease;
+  animation: fadeIn 0.3s ease-out;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }

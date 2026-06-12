@@ -1,6 +1,6 @@
 mod commands;
 
-use commands::{export_pdf, file_dialog};
+use commands::{export_pdf, file_dialog, system};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -16,6 +16,9 @@ pub fn run() {
             file_dialog::convert_to_png_base64,
             export_pdf::write_file,
             export_pdf::write_base64_file,
+            system::get_system_info,
+            system::kill_process,
+            system::clean_memory,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -97,3 +97,18 @@ export function useOverrides() {
     resetAllOverrides,
   };
 }
+
+/**
+ * 计算每页的图片在 images 数组中的起止索引
+ * 用于跨页面移动图片时确定插入位置
+ */
+export function computePageRanges(basePages: PageLayout[]): Array<{ start: number; count: number }> {
+  return basePages.map(page => {
+    const indices = page.imageIndices;
+    if (indices.length === 0) return { start: 0, count: 0 };
+    return {
+      start: Math.min(...indices),
+      count: indices.length,
+    };
+  });
+}
