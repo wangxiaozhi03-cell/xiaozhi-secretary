@@ -2,28 +2,35 @@
  * 纸张尺寸定义
  * 移植自 src/types/papers.ts
  */
-import { PaperSize, Orientation } from './Types'
+
+class PaperDimension {
+  width: number = 0
+  height: number = 0
+  constructor(width: number, height: number) {
+    this.width = width
+    this.height = height
+  }
+}
 
 // 纸张尺寸（毫米）
-const PAPER_DIMENSIONS: Record<string, { width: number; height: number }> = {
-  'A4': { width: 210, height: 297 },
-  'A3': { width: 297, height: 420 },
-  'Letter': { width: 215.9, height: 279.4 },
+const PAPER_A4: PaperDimension = new PaperDimension(210, 297)
+const PAPER_A3: PaperDimension = new PaperDimension(297, 420)
+const PAPER_LETTER: PaperDimension = new PaperDimension(215.9, 279.4)
+
+function getPaperDim(size: string): PaperDimension {
+  if (size === 'A4') return PAPER_A4
+  if (size === 'A3') return PAPER_A3
+  if (size === 'Letter') return PAPER_LETTER
+  return PAPER_A4
 }
 
 /** 获取纸张尺寸（考虑方向） */
-export function getPaperDimensions(
-  size: PaperSize,
-  orientation: Orientation
-): { width: number; height: number } {
-  const dim = PAPER_DIMENSIONS[size]
-  if (dim === undefined) {
-    return { width: 210, height: 297 }
-  }
+export function getPaperDimensions(size: string, orientation: string): PaperDimension {
+  const dim: PaperDimension = getPaperDim(size)
   if (orientation === 'landscape') {
-    return { width: dim.height, height: dim.width }
+    return new PaperDimension(dim.height, dim.width)
   }
-  return { width: dim.width, height: dim.height }
+  return new PaperDimension(dim.width, dim.height)
 }
 
 /** 页面边距（mm） */

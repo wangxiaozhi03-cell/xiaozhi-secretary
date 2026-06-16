@@ -1,7 +1,7 @@
 /**
  * 布局系统统一导出
  */
-export { LAYOUT_REGISTRY, getLayoutKey } from './LayoutRegistry'
+export { getLayoutsByKey, getLayoutKey } from './LayoutRegistry'
 export { computeUniformScale, centerImageInRegion } from './LayoutFit'
 export { layouts1 } from './Layouts1'
 export { layouts2 } from './Layouts2'

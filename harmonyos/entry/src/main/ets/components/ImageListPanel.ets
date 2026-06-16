@@ -19,7 +19,6 @@ struct ImageListPanel {
           .fontSize(11)
           .fontWeight(FontWeight.Medium)
           .fontColor('#999')
-          .textCase(TextCase.Upper)
           .letterSpacing(2)
 
         Text(`${this.images.length} 张`)
@@ -35,39 +34,24 @@ struct ImageListPanel {
 
       // 操作按钮
       Row({ space: 8 }) {
-        Button() {
-          Row({ space: 4 }) {
-            SymbolGlyph($r('sys.symbol.plus'))
-              .fontSize(14)
-              .fontColor([Color.White])
-            Text('添加')
-              .fontSize(12)
-              .fontColor(Color.White)
-          }
-        }
-        .layoutWeight(1)
-        .height(36)
-        .backgroundColor('#3B82F6')
-        .borderRadius(12)
-        .onClick(() => this.onAdd())
+        Button('添加')
+          .fontSize(12)
+          .layoutWeight(1)
+          .height(36)
+          .backgroundColor('#3B82F6')
+          .fontColor(Color.White)
+          .borderRadius(12)
+          .onClick(() => this.onAdd())
 
-        Button() {
-          Row({ space: 4 }) {
-            SymbolGlyph($r('sys.symbol.minus'))
-              .fontSize(14)
-              .fontColor([Color.White])
-            Text('移除')
-              .fontSize(12)
-              .fontColor(Color.White)
-          }
-        }
-        .layoutWeight(1)
-        .height(36)
-        .backgroundColor(this.images.length === 0 ? '#f5f5f5' : '#FEE2E2')
-        .fontColor(this.images.length === 0 ? '#ccc' : '#F87171')
-        .borderRadius(12)
-        .enabled(this.images.length > 0)
-        .onClick(() => this.onRemoveLast())
+        Button('移除')
+          .fontSize(12)
+          .layoutWeight(1)
+          .height(36)
+          .backgroundColor(this.images.length === 0 ? '#f5f5f5' : '#FEE2E2')
+          .fontColor(this.images.length === 0 ? '#ccc' : '#F87171')
+          .borderRadius(12)
+          .enabled(this.images.length > 0)
+          .onClick(() => this.onRemoveLast())
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 8, bottom: 8 })
@@ -75,9 +59,8 @@ struct ImageListPanel {
       // 图片列表
       if (this.images.length === 0) {
         Column() {
-          SymbolGlyph($r('sys.symbol.photo_on_rectangle'))
+          Text('📷')
             .fontSize(40)
-            .fontColor(['#BFDBFE'])
             .margin({ bottom: 8 })
           Text('点击添加图片')
             .fontSize(12)
@@ -116,9 +99,12 @@ struct ImageListPanel {
                 .padding({ left: 8 })
 
                 // 删除按钮
-                SymbolGlyph($r('sys.symbol.xmark'))
+                Button('✕')
                   .fontSize(14)
-                  .fontColor(['#ccc'])
+                  .fontColor('#ccc')
+                  .backgroundColor(Color.Transparent)
+                  .width(28)
+                  .height(28)
                   .onClick(() => this.onRemove(img.id))
               }
               .width('100%')

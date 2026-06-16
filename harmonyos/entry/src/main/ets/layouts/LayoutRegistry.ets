@@ -10,13 +10,15 @@ import { layouts4 } from './Layouts4'
 import { layouts6 } from './Layouts6'
 import { layouts9 } from './Layouts9'
 
-export const LAYOUT_REGISTRY: Record<number, LayoutDefinition[]> = {
-  1: layouts1,
-  2: layouts2,
-  3: layouts3,
-  4: layouts4,
-  6: layouts6,
-  9: layouts9,
+/** 根据 key 获取布局列表 */
+export function getLayoutsByKey(key: number): LayoutDefinition[] {
+  if (key === 1) return layouts1
+  if (key === 2) return layouts2
+  if (key === 3) return layouts3
+  if (key === 4) return layouts4
+  if (key === 6) return layouts6
+  if (key === 9) return layouts9
+  return layouts1
 }
 
 /** 根据图片数量确定布局 key */

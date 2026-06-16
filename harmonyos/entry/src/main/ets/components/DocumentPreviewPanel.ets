@@ -1,8 +1,8 @@
 /**
  * 文档预览面板
  * 移植自 src/components/DocumentPreview.vue
- * 使用鸿蒙 Canvas 组件渲染页面预览
  */
+import { image } from '@kit.ImageKit'
 import { ImageItem, PageSettings, PageLayout, ImageSlot, PageOverrides, ImageOffset } from '../model/Types'
 import { getPaperDimensions, PAGE_MARGIN_MM } from '../model/Papers'
 
@@ -10,23 +10,19 @@ import { getPaperDimensions, PAGE_MARGIN_MM } from '../model/Papers'
 struct DocumentPreviewPanel {
   @Prop images: ImageItem[] = []
   @Prop pages: PageLayout[] = []
-  @Prop settings!: PageSettings
+  @Prop settingsPaperSize: string = 'A4'
+  @Prop settingsOrientation: string = 'landscape'
+  @Prop settingsGapMode: string = 'gapped'
+  @Prop settingsGapMm: number = 8
   @Prop currentPage: number = 0
-  @Prop overrides: Map<number, PageOverrides> = new Map()
-  onSetImageOffset: (imageIndex: number, offsetX: number, offsetY: number) => void = () => {}
-  onSetPageSlots: (slots: ImageSlot[]) => void = () => {}
-  onDropOnSlot: (fromPage: number, fromSlot: number, toPage: number, toSlot: number) => void = () => {}
-
-  private settingsRef = getPaperDimensions('A4', 'landscape')
 
   build() {
     Column() {
       if (this.images.length === 0) {
         // 空状态
         Column() {
-          SymbolGlyph($r('sys.symbol.photo_on_rectangle'))
+          Text('🖼️')
             .fontSize(48)
-            .fontColor(['#BFDBFE'])
             .margin({ bottom: 12 })
           Text('添加图片后预览文档效果')
             .fontSize(13)
@@ -40,17 +36,12 @@ struct DocumentPreviewPanel {
         .height('100%')
         .justifyContent(FlexAlign.Center)
       } else {
-        // 预览区
+        // 预览区 - 使用 Stack 布局
         Stack() {
           // 白色纸张背景
           Column() {
-            // Canvas 渲染图片布局
-            Canvas(this.context)
-              .width('100%')
-              .height('100%')
-              .onReady(() => {
-                this.renderPage()
-              })
+            // 图片布局预览
+            this.PageContent()
           }
           .width(this.getPaperWidth())
           .height(this.getPaperHeight())
@@ -65,7 +56,6 @@ struct DocumentPreviewPanel {
         }
         .width('100%')
         .height('100%')
-        .justifyContent(FlexAlign.Center)
         .alignContent(Alignment.Center)
       }
     }
@@ -74,92 +64,79 @@ struct DocumentPreviewPanel {
     .padding(32)
   }
 
-  private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(new RenderingContextSettings(true))
+  @Builder
+  PageContent() {
+    // 使用 ForEach 渲染每个 slot 中的图片
+    ForEach(this.getCurrentSlots(), (item: SlotDisplayInfo, index: number) => {
+      Image(item.thumbUrl)
+        .width(item.imgW)
+        .height(item.imgH)
+        .position({ x: item.imgX, y: item.imgY })
+        .objectFit(item.isEdge ? ImageFit.Cover : ImageFit.Contain)
+        .clip(true)
+    })
+  }
+
+  private getCurrentSlots(): SlotDisplayInfo[] {
+    const pageData: PageLayout | undefined = this.pages[this.currentPage]
+    if (!pageData) return []
+
+    const paper = getPaperDimensions(this.settingsPaperSize, this.settingsOrientation)
+    const isEdge: boolean = this.settingsGapMode === 'edge-to-edge'
+    const margin: number = isEdge ? 0 : PAGE_MARGIN_MM
+    const scale: number = 1.5
+
+    const result: SlotDisplayInfo[] = []
+    for (let i = 0; i < pageData.slots.length; i++) {
+      const imgIdx: number = pageData.imageIndices[i]
+      if (imgIdx === undefined || imgIdx >= this.images.length) continue
+
+      const slot: ImageSlot = pageData.slots[i]
+      const imgInfo: ImageItem = this.images[imgIdx]
+
+      const slotX: number = (margin + slot.x) * scale
+      const slotY: number = (margin + slot.y) * scale
+      const slotW: number = slot.width * scale
+      const slotH: number = slot.height * scale
+
+      const rW: number = slotW / imgInfo.width
+      const rH: number = slotH / imgInfo.height
+      const fitScale: number = isEdge ? Math.max(rW, rH) : Math.min(rW, rH)
+      const drawW: number = imgInfo.width * fitScale
+      const drawH: number = imgInfo.height * fitScale
+      const drawX: number = slotX + (slotW - drawW) / 2
+      const drawY: number = slotY + (slotH - drawH) / 2
+
+      const info: SlotDisplayInfo = new SlotDisplayInfo()
+      info.thumbUrl = imgInfo.thumbUrl
+      info.imgX = drawX
+      info.imgY = drawY
+      info.imgW = drawW
+      info.imgH = drawH
+      info.isEdge = isEdge
+      result.push(info)
+    }
+    return result
+  }
 
   private getPaperWidth(): string {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
+    const paper = getPaperDimensions(this.settingsPaperSize, this.settingsOrientation)
     return `${paper.width * 1.5}px`
   }
 
   private getPaperHeight(): string {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
+    const paper = getPaperDimensions(this.settingsPaperSize, this.settingsOrientation)
     return `${paper.height * 1.5}px`
   }
+}
 
-  private renderPage(): void {
-    const ctx = this.context
-    const pageData = this.pages[this.currentPage]
-    if (!pageData) return
-
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
-    const isEdge = this.settings.gapMode === 'edge-to-edge'
-    const margin = isEdge ? 0 : PAGE_MARGIN_MM
-    const scale = 1.5 // 预览缩放比
-
-    // 清空画布
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(0, 0, ctx.width, ctx.height)
-
-    // 渲染每个 slot
-    const slots = pageData.slots
-    const imageIndices = pageData.imageIndices
-
-    for (let i = 0; i < slots.length; i++) {
-      const imgIdx = imageIndices[i]
-      if (imgIdx === undefined || imgIdx >= this.images.length) continue
-
-      const slot = slots[i]
-      const imgInfo = this.images[imgIdx]
-
-      const slotX = (margin + slot.x) * scale
-      const slotY = (margin + slot.y) * scale
-      const slotW = slot.width * scale
-      const slotH = slot.height * scale
-
-      // 计算 fit/cover
-      const rW = slotW / imgInfo.width
-      const rH = slotH / imgInfo.height
-      const fitScale = isEdge ? Math.max(rW, rH) : Math.min(rW, rH)
-      const drawW = imgInfo.width * fitScale
-      const drawH = imgInfo.height * fitScale
-      let drawX = slotX + (slotW - drawW) / 2
-      let drawY = slotY + (slotH - drawH) / 2
-
-      // 应用偏移（cover 模式）
-      const offset = this.overrides.get(this.currentPage)?.offsets?.get(imgIdx)
-      if (offset && isEdge) {
-        const excessX = Math.max(0, drawW - slotW)
-        const excessY = Math.max(0, drawH - slotH)
-        drawX = slotX + (slotW - drawW) / 2 - excessX * (offset.offsetX - 0.5)
-        drawY = slotY + (slotH - drawH) / 2 - excessY * (offset.offsetY - 0.5)
-      }
-
-      // 裁剪并绘制
-      ctx.save()
-      ctx.beginPath()
-      ctx.rect(slotX, slotY, slotW, slotH)
-      ctx.clip()
-
-      // 加载并绘制图片
-      const imageSrc = image.createImageSource(imgInfo.thumbUrl)
-      if (imageSrc) {
-        imageSrc.createPixelMap().then((pixelMap: image.PixelMap) => {
-          ctx.drawImage(pixelMap, drawX, drawY, drawW, drawH)
-          imageSrc.release()
-        }).catch(() => {
-          imageSrc.release()
-        })
-      }
-      ctx.restore()
-
-      // 绘制 slot 边框（非铺满模式）
-      if (!isEdge) {
-        ctx.strokeStyle = '#E5E7EB'
-        ctx.lineWidth = 0.5
-        ctx.strokeRect(slotX, slotY, slotW, slotH)
-      }
-    }
-  }
+class SlotDisplayInfo {
+  thumbUrl: string = ''
+  imgX: number = 0
+  imgY: number = 0
+  imgW: number = 0
+  imgH: number = 0
+  isEdge: boolean = false
 }
 
 export { DocumentPreviewPanel }

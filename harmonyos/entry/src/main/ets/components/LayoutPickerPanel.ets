@@ -18,7 +18,6 @@ struct LayoutPickerPanel {
         .fontSize(11)
         .fontWeight(FontWeight.Medium)
         .fontColor('#999')
-        .textCase(TextCase.Upper)
         .letterSpacing(2)
         .margin({ bottom: 4 })
         .alignSelf(ItemAlign.Start)
@@ -44,10 +43,7 @@ struct LayoutPickerPanel {
             GridItem() {
               Column() {
                 // 布局缩略图
-                this.LayoutThumbnailBuilder(layout.id)
-                  .width('100%')
-                  .height(32)
-                  .margin({ bottom: 4 })
+                this.getLayoutThumbnail(layout.id)
 
                 Text(layout.name)
                   .fontSize(10)
@@ -57,6 +53,7 @@ struct LayoutPickerPanel {
               }
               .padding(8)
               .borderRadius(10)
+              .width('100%')
               .backgroundColor(index === this.activeIndex ? '#EFF6FF' : 'transparent')
               .border({
                 width: index === this.activeIndex ? 1.5 : 0,
@@ -80,43 +77,40 @@ struct LayoutPickerPanel {
   }
 
   @Builder
-  LayoutThumbnailBuilder(layoutId: string) {
-    // 简化的布局缩略图
+  getLayoutThumbnail(layoutId: string) {
     Row() {
       if (layoutId === 'center-fit') {
         Column() {
           Row().width('50%').height('60%').backgroundColor('#93C5FD').borderRadius(2)
-        }.width('100%').height('100%').justifyContent(FlexAlign.Center)
+        }.width('100%').height(32).justifyContent(FlexAlign.Center)
       } else if (layoutId === 'fill-page') {
-        Row().width('100%').height('100%').backgroundColor('#93C5FD').borderRadius(2)
+        Row().width('100%').height(32).backgroundColor('#93C5FD').borderRadius(2)
       } else if (layoutId === 'top-bottom' || layoutId === 'three-vertical') {
         Column({ space: 2 }) {
           Row().layoutWeight(1).width('100%').backgroundColor('#93C5FD').borderRadius(2)
           Row().layoutWeight(1).width('100%').backgroundColor('#60A5FA').borderRadius(2)
-        }.width('100%').height('100%')
+        }.width('100%').height(32)
       } else if (layoutId === 'left-right' || layoutId === 'three-horizontal') {
         Row({ space: 2 }) {
-          Column().layoutWeight(1).height('100%').backgroundColor('#93C5FD').borderRadius(2)
-          Column().layoutWeight(1).height('100%').backgroundColor('#60A5FA').borderRadius(2)
-        }.width('100%').height('100%')
+          Column().layoutWeight(1).height(32).backgroundColor('#93C5FD').borderRadius(2)
+          Column().layoutWeight(1).height(32).backgroundColor('#60A5FA').borderRadius(2)
+        }.width('100%')
       } else if (layoutId === 'grid-2x2' || layoutId === 'grid-3x3') {
         Column({ space: 2 }) {
           Row({ space: 2 }) {
-            Column().layoutWeight(1).height('100%').backgroundColor('#93C5FD').borderRadius(2)
-            Column().layoutWeight(1).height('100%').backgroundColor('#60A5FA').borderRadius(2)
-          }.layoutWeight(1).width('100%')
+            Column().layoutWeight(1).height(14).backgroundColor('#93C5FD').borderRadius(2)
+            Column().layoutWeight(1).height(14).backgroundColor('#60A5FA').borderRadius(2)
+          }.width('100%')
           Row({ space: 2 }) {
-            Column().layoutWeight(1).height('100%').backgroundColor('#60A5FA').borderRadius(2)
-            Column().layoutWeight(1).height('100%').backgroundColor('#93C5FD').borderRadius(2)
-          }.layoutWeight(1).width('100%')
-        }.width('100%').height('100%')
+            Column().layoutWeight(1).height(14).backgroundColor('#60A5FA').borderRadius(2)
+            Column().layoutWeight(1).height(14).backgroundColor('#93C5FD').borderRadius(2)
+          }.width('100%')
+        }.width('100%')
       } else {
-        // 通用布局缩略图
-        Row().width('100%').height('100%').backgroundColor('#E5E7EB').borderRadius(2)
+        Row().width('100%').height(32).backgroundColor('#E5E7EB').borderRadius(2)
       }
     }
     .width('100%')
-    .height('100%')
   }
 }
 

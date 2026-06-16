@@ -4,3 +4,4 @@ export default {
     system: hapTasks,
     plugins: []
 }
+

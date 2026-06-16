@@ -2,14 +2,16 @@
  * 页面缩略图条
  * 移植自 src/components/PageThumbnails.vue
  */
-import { ImageItem, PageSettings, PageLayout, ImageSlot } from '../model/Types'
+import { ImageItem, PageLayout, ImageSlot } from '../model/Types'
 import { getPaperDimensions, PAGE_MARGIN_MM } from '../model/Papers'
 
 @Component
 struct PageThumbnailsBar {
   @Prop images: ImageItem[] = []
   @Prop pages: PageLayout[] = []
-  @Prop settings!: PageSettings
+  @Prop settingsPaperSize: string = 'A4'
+  @Prop settingsOrientation: string = 'landscape'
+  @Prop settingsGapMode: string = 'gapped'
   @Prop currentPage: number = 0
   onGoToPage: (pageIndex: number) => void = (_idx: number) => {}
 
@@ -29,16 +31,13 @@ struct PageThumbnailsBar {
               Column() {
                 // 缩略图
                 Stack() {
-                  ForEach(page.imageIndices, (imgIdx: number, slotIdx: number) => {
-                    if (imgIdx < this.images.length) {
-                      Image(this.images[imgIdx].thumbUrl)
-                        .width(this.getThumbSlotWidth(page.slots[slotIdx]))
-                        .height(this.getThumbSlotHeight(page.slots[slotIdx]))
-                        .position({
-                          x: this.getThumbSlotX(page.slots[slotIdx]),
-                          y: this.getThumbSlotY(page.slots[slotIdx]),
-                        })
-                        .objectFit(this.settings.gapMode === 'edge-to-edge'
+                  ForEach(this.getSlotDisplayInfos(page), (info: ThumbSlotInfo) => {
+                    if (info.hasImage) {
+                      Image(info.thumbUrl)
+                        .width(info.w)
+                        .height(info.h)
+                        .position({ x: info.x, y: info.y })
+                        .objectFit(this.settingsGapMode === 'edge-to-edge'
                           ? ImageFit.Cover : ImageFit.Contain)
                     }
                   })
@@ -77,35 +76,41 @@ struct PageThumbnailsBar {
   }
 
   private getThumbWidth(): number {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
+    const paper = getPaperDimensions(this.settingsPaperSize, this.settingsOrientation)
     return paper.width * (64 / paper.height)
   }
 
-  private getThumbSlotX(slot: ImageSlot): number {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
-    const scale = 64 / paper.height
-    const margin = this.settings.gapMode === 'edge-to-edge' ? 0 : PAGE_MARGIN_MM
-    return (margin + slot.x) * scale
-  }
+  private getSlotDisplayInfos(page: PageLayout): ThumbSlotInfo[] {
+    const paper = getPaperDimensions(this.settingsPaperSize, this.settingsOrientation)
+    const scale: number = 64 / paper.height
+    const margin: number = this.settingsGapMode === 'edge-to-edge' ? 0 : PAGE_MARGIN_MM
 
-  private getThumbSlotY(slot: ImageSlot): number {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
-    const scale = 64 / paper.height
-    const margin = this.settings.gapMode === 'edge-to-edge' ? 0 : PAGE_MARGIN_MM
-    return (margin + slot.y) * scale
+    const result: ThumbSlotInfo[] = []
+    for (let i = 0; i < page.slots.length; i++) {
+      const imgIdx: number = page.imageIndices[i]
+      const slot: ImageSlot = page.slots[i]
+      const info: ThumbSlotInfo = new ThumbSlotInfo()
+      if (imgIdx !== undefined && imgIdx < this.images.length) {
+        info.hasImage = true
+        info.thumbUrl = this.images[imgIdx].thumbUrl
+      }
+      info.x = (margin + slot.x) * scale
+      info.y = (margin + slot.y) * scale
+      info.w = slot.width * scale
+      info.h = slot.height * scale
+      result.push(info)
+    }
+    return result
   }
+}
 
-  private getThumbSlotWidth(slot: ImageSlot): number {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
-    const scale = 64 / paper.height
-    return slot.width * scale
-  }
-
-  private getThumbSlotHeight(slot: ImageSlot): number {
-    const paper = getPaperDimensions(this.settings.paperSize, this.settings.orientation)
-    const scale = 64 / paper.height
-    return slot.height * scale
-  }
+class ThumbSlotInfo {
+  hasImage: boolean = false
+  thumbUrl: string = ''
+  x: number = 0
+  y: number = 0
+  w: number = 0
+  h: number = 0
 }
 
 export { PageThumbnailsBar }

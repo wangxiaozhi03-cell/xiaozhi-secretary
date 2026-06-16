@@ -10,7 +10,7 @@ export class ImageItem {
   path: string = ''
   width: number = 0
   height: number = 0
-  thumbUrl: string = '' // 缩略图路径（鸿蒙中使用 resource:// 或 file://）
+  thumbUrl: string = ''
 
   constructor(id: string, name: string, path: string, width: number, height: number, thumbUrl: string) {
     this.id = id
@@ -23,24 +23,29 @@ export class ImageItem {
 }
 
 // ===== 页面设置 =====
-export type PaperSize = 'A4' | 'A3' | 'Letter'
-export type Orientation = 'portrait' | 'landscape'
-export type GapMode = 'gapped' | 'edge-to-edge'
+// 使用字符串常量代替 type 别名，避免与系统类型冲突
+export const PAPER_A4: string = 'A4'
+export const PAPER_A3: string = 'A3'
+export const PAPER_LETTER: string = 'Letter'
+
+export const ORIENT_PORTRAIT: string = 'portrait'
+export const ORIENT_LANDSCAPE: string = 'landscape'
+
+export const GAP_GAPPED: string = 'gapped'
+export const GAP_EDGE_TO_EDGE: string = 'edge-to-edge'
 
 export class PageSettings {
-  paperSize: PaperSize = 'A4'
-  orientation: Orientation = 'landscape'
-  gapMode: GapMode = 'gapped'
+  paperSize: string = 'A4'
+  orientation: string = 'landscape'
+  gapMode: string = 'gapped'
   gapMm: number = 8
-  imagesPerPage: number = -1 // -1 表示自动，1/2/3/4/6/9 表示手动指定
+  imagesPerPage: number = -1
 
   constructor() {
   }
 }
 
 // ===== 布局 =====
-export type LayoutKey = 1 | 2 | 3 | 4 | 6 | 9
-
 export class ImageSlot {
   x: number = 0
   y: number = 0
@@ -59,7 +64,6 @@ export class LayoutDefinition {
   id: string = ''
   name: string = ''
   description: string = ''
-  // computeSlots 函数类型
   computeSlots: (pageW: number, pageH: number, gap: number, imageCount: number) => ImageSlot[] =
     (_pageW: number, _pageH: number, _gap: number, _imageCount: number) => []
 
@@ -90,8 +94,8 @@ export class PageLayout {
 
 // ===== 交互覆盖 =====
 export class ImageOffset {
-  offsetX: number = 0.5 // 0-1，水平偏移比例
-  offsetY: number = 0.5 // 0-1，垂直偏移比例
+  offsetX: number = 0.5
+  offsetY: number = 0.5
 
   constructor(offsetX: number, offsetY: number) {
     this.offsetX = offsetX

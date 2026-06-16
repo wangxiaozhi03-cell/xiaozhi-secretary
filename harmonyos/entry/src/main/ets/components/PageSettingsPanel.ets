@@ -2,22 +2,61 @@
  * 页面设置面板
  * 移植自 src/components/PageSettings.vue
  */
-import { PageSettings, PaperSize } from '../model/Types'
+
+class OrientationOption {
+  value: string = ''
+  label: string = ''
+  constructor(value: string, label: string) {
+    this.value = value
+    this.label = label
+  }
+}
+
+class GapModeOption {
+  value: string = ''
+  label: string = ''
+  constructor(value: string, label: string) {
+    this.value = value
+    this.label = label
+  }
+}
+
+class PerPageOption {
+  val: number = 0
+  label: string = ''
+  constructor(val: number, label: string) {
+    this.val = val
+    this.label = label
+  }
+}
 
 @Component
 struct PageSettingsPanel {
-  @ObjectLink settings: PageSettingsObserved
+  @Prop paperSize: string = 'A4'
+  @Prop orientation: string = 'landscape'
+  @Prop gapMode: string = 'gapped'
+  @Prop gapMm: number = 8
+  @Prop imagesPerPage: number = -1
   @Prop imageCount: number = 0
   onUpdate: (key: string, value: string | number) => void = (_k: string, _v: string | number) => {}
 
   private paperSizes: string[] = ['A4', 'A3', 'Letter']
-  private orientations: Array<{ value: string; label: string }> = [
-    { value: 'portrait', label: '纵向' },
-    { value: 'landscape', label: '横向' },
+  private orientations: OrientationOption[] = [
+    new OrientationOption('portrait', '纵向'),
+    new OrientationOption('landscape', '横向'),
   ]
-  private gapModes: Array<{ value: string; label: string }> = [
-    { value: 'gapped', label: '有间距' },
-    { value: 'edge-to-edge', label: '铺满' },
+  private gapModes: GapModeOption[] = [
+    new GapModeOption('gapped', '有间距'),
+    new GapModeOption('edge-to-edge', '铺满'),
+  ]
+  private allPerPageOptions: PerPageOption[] = [
+    new PerPageOption(-1, '自动'),
+    new PerPageOption(1, '1张'),
+    new PerPageOption(2, '2张'),
+    new PerPageOption(3, '3张'),
+    new PerPageOption(4, '4张'),
+    new PerPageOption(6, '6张'),
+    new PerPageOption(9, '9张'),
   ]
 
   build() {
@@ -28,7 +67,6 @@ struct PageSettingsPanel {
           .fontSize(11)
           .fontWeight(FontWeight.Medium)
           .fontColor('#999')
-          .textCase(TextCase.Upper)
           .letterSpacing(2)
           .margin({ bottom: 8 })
 
@@ -38,8 +76,8 @@ struct PageSettingsPanel {
               .fontSize(12)
               .layoutWeight(1)
               .height(36)
-              .backgroundColor(this.settings.paperSize === size ? '#3B82F6' : '#f5f5f5')
-              .fontColor(this.settings.paperSize === size ? Color.White : '#666')
+              .backgroundColor(this.paperSize === size ? '#3B82F6' : '#f5f5f5')
+              .fontColor(this.paperSize === size ? Color.White : '#666')
               .borderRadius(12)
               .onClick(() => this.onUpdate('paperSize', size))
           })
@@ -54,18 +92,17 @@ struct PageSettingsPanel {
           .fontSize(11)
           .fontWeight(FontWeight.Medium)
           .fontColor('#999')
-          .textCase(TextCase.Upper)
           .letterSpacing(2)
           .margin({ bottom: 8 })
 
         Row({ space: 6 }) {
-          ForEach(this.orientations, (o: { value: string; label: string }) => {
+          ForEach(this.orientations, (o: OrientationOption) => {
             Button(o.label)
               .fontSize(12)
               .layoutWeight(1)
               .height(36)
-              .backgroundColor(this.settings.orientation === o.value ? '#3B82F6' : '#f5f5f5')
-              .fontColor(this.settings.orientation === o.value ? Color.White : '#666')
+              .backgroundColor(this.orientation === o.value ? '#3B82F6' : '#f5f5f5')
+              .fontColor(this.orientation === o.value ? Color.White : '#666')
               .borderRadius(12)
               .onClick(() => this.onUpdate('orientation', o.value))
           })
@@ -80,25 +117,19 @@ struct PageSettingsPanel {
           .fontSize(11)
           .fontWeight(FontWeight.Medium)
           .fontColor('#999')
-          .textCase(TextCase.Upper)
           .letterSpacing(2)
           .margin({ bottom: 8 })
 
         Row({ space: 4 }) {
-          ForEach([{ val: -1, label: '自动' }, { val: 1, label: '1张' },
-                   { val: 2, label: '2张' }, { val: 3, label: '3张' },
-                   { val: 4, label: '4张' }, { val: 6, label: '6张' },
-                   { val: 9, label: '9张' }], (opt: { val: number; label: string }) => {
-            if (opt.val === -1 || opt.val <= this.imageCount) {
-              Button(opt.label)
-                .fontSize(11)
-                .height(32)
-                .padding({ left: 12, right: 12 })
-                .backgroundColor(this.settings.imagesPerPage === opt.val ? '#3B82F6' : '#f5f5f5')
-                .fontColor(this.settings.imagesPerPage === opt.val ? Color.White : '#666')
-                .borderRadius(12)
-                .onClick(() => this.onUpdate('imagesPerPage', opt.val))
-            }
+          ForEach(this.getPerPageOptions(), (opt: PerPageOption) => {
+            Button(opt.label)
+              .fontSize(11)
+              .height(32)
+              .padding({ left: 12, right: 12 })
+              .backgroundColor(this.imagesPerPage === opt.val ? '#3B82F6' : '#f5f5f5')
+              .fontColor(this.imagesPerPage === opt.val ? Color.White : '#666')
+              .borderRadius(12)
+              .onClick(() => this.onUpdate('imagesPerPage', opt.val))
           })
         }
       }
@@ -106,16 +137,15 @@ struct PageSettingsPanel {
       .padding({ left: 16, right: 16 })
 
       // 间距滑块
-      if (this.settings.gapMode === 'gapped') {
+      if (this.gapMode === 'gapped') {
         Column() {
           Row() {
             Text('间距')
               .fontSize(11)
               .fontWeight(FontWeight.Medium)
               .fontColor('#999')
-              .textCase(TextCase.Upper)
               .letterSpacing(2)
-            Text(`${this.settings.gapMm} mm`)
+            Text(`${this.gapMm} mm`)
               .fontSize(11)
               .fontColor('#999')
           }
@@ -124,7 +154,7 @@ struct PageSettingsPanel {
           .margin({ bottom: 8 })
 
           Slider({
-            value: this.settings.gapMm,
+            value: this.gapMm,
             min: 0,
             max: 30,
             step: 1,
@@ -142,18 +172,17 @@ struct PageSettingsPanel {
           .fontSize(11)
           .fontWeight(FontWeight.Medium)
           .fontColor('#999')
-          .textCase(TextCase.Upper)
           .letterSpacing(2)
           .margin({ bottom: 8 })
 
         Row({ space: 6 }) {
-          ForEach(this.gapModes, (m: { value: string; label: string }) => {
+          ForEach(this.gapModes, (m: GapModeOption) => {
             Button(m.label)
               .fontSize(12)
               .layoutWeight(1)
               .height(36)
-              .backgroundColor(this.settings.gapMode === m.value ? '#3B82F6' : '#f5f5f5')
-              .fontColor(this.settings.gapMode === m.value ? Color.White : '#666')
+              .backgroundColor(this.gapMode === m.value ? '#3B82F6' : '#f5f5f5')
+              .fontColor(this.gapMode === m.value ? Color.White : '#666')
               .borderRadius(12)
               .onClick(() => this.onUpdate('gapMode', m.value))
           })
@@ -165,19 +194,16 @@ struct PageSettingsPanel {
     .width('100%')
     .padding({ top: 12, bottom: 12 })
   }
+
+  private getPerPageOptions(): PerPageOption[] {
+    if (this.imageCount === 0) {
+      return [new PerPageOption(-1, '自动')]
+    }
+    return this.allPerPageOptions.filter((opt: PerPageOption) => {
+      if (opt.val === -1) return true
+      return opt.val <= this.imageCount
+    })
+  }
 }
 
-/**
- * PageSettings 的可观察包装
- * 用于 @ObjectLink 装饰器
- */
-@ObservedV2
-class PageSettingsObserved {
-  @Trace paperSize: string = 'A4'
-  @Trace orientation: string = 'landscape'
-  @Trace gapMode: string = 'gapped'
-  @Trace gapMm: number = 8
-  @Trace imagesPerPage: number = -1
-}
-
-export { PageSettingsPanel, PageSettingsObserved }
+export { PageSettingsPanel }
