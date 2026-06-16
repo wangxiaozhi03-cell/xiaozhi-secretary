@@ -88,7 +88,7 @@ const indentOptions = [2, 4, 8];
       <h3 class="settings-card-title">格式化预览</h3>
       <div class="preview-code rounded-xl p-4 text-[12px] font-mono leading-relaxed overflow-x-auto">
         <pre class="text-secondary">{`{
-  "name": "小志工具箱",
+  "name": "小志秘书",
   "version": "1.0.0",
   "features": [
     "JSON 格式化",

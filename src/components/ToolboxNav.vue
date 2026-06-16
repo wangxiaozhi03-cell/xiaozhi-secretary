@@ -13,97 +13,126 @@ const emit = defineEmits<{
 
 const collapsed = ref(false);
 const showSettings = ref(false);
+
+interface MenuItem {
+  id: string;
+  icon: string;
+  label: string;
+  iconPath: string;
+}
+
+interface MenuGroup {
+  label?: string;
+  items: MenuItem[];
+}
+
+const menuGroups: MenuGroup[] = [
+  {
+    items: [
+      { id: "home", icon: "home", label: "首页", iconPath: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    ],
+  },
+  {
+    label: "主要功能",
+    items: [
+      { id: "image-layout", icon: "image", label: "图片", iconPath: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+      { id: "json-toolkit", icon: "code", label: "JSON", iconPath: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" },
+      { id: "md-toolkit", icon: "markdown", label: "Markdown", iconPath: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" },
+      { id: "java-generator", icon: "java", label: "Java生成", iconPath: "M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" },
+      { id: "namecase", icon: "namecase", label: "命名转换", iconPath: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" },
+      { id: "encrypt-toolkit", icon: "encrypt", label: "加密", iconPath: "M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" },
+      { id: "curl-toolkit", icon: "curl", label: "Curl", iconPath: "M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" },
+    ],
+  },
+];
+
+function handleItemClick(item: MenuItem) {
+  emit("select", item.id);
+}
 </script>
 
 <template>
   <aside
-    class="flex flex-col items-center py-4 px-2 gap-1 transition-all duration-300 overflow-hidden flex-shrink-0"
-    :class="collapsed ? 'w-12' : 'w-[68px]'"
+    class="glass-sidebar flex flex-col overflow-hidden transition-all duration-300 flex-shrink-0"
+    :class="collapsed ? 'w-[68px]' : 'w-[260px]'"
   >
-    <!-- Logo -->
-    <button
-      class="mb-4 group relative"
-      @click="emit('select', 'home')"
-      title="首页"
-    >
-      <img
-        :src="logoUrl"
-        alt="Logo"
-        class="rounded-xl shadow-md shadow-blue-400/15 transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-400/30"
-        :class="[
-          collapsed ? 'w-6 h-6' : 'w-8 h-8',
-          activeModule === 'home' ? 'ring-2 ring-blue-500/50 ring-offset-2' : ''
-        ]"
-      />
-      <!-- Pulse effect on hover -->
-      <div class="absolute inset-0 rounded-xl bg-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-ping" />
-    </button>
-
-    <!-- 图片工具按钮 -->
-    <button
-      class="nav-item w-full transition-all duration-300"
-      :class="[collapsed ? '!p-1.5' : '', activeModule === 'image-layout' ? 'active' : '']"
-      @click="emit('select', 'image-layout')"
-    >
-      <svg
-        class="transition-all duration-300"
-        :class="collapsed ? 'w-5 h-5' : 'w-6 h-6'"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
+    <!-- Logo 区域 -->
+    <div class="flex items-center gap-3 px-4 pt-5 pb-3 flex-shrink-0">
+      <button
+        class="group relative flex-shrink-0"
+        @click="emit('select', 'home')"
+        title="首页"
       >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-      <span v-if="!collapsed" class="nav-label">图片</span>
-    </button>
+        <img
+          :src="logoUrl"
+          alt="Logo"
+          class="rounded-xl shadow-md shadow-blue-400/15 transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-400/30"
+          :class="[
+            collapsed ? 'w-8 h-8' : 'w-9 h-9',
+            activeModule === 'home' ? 'ring-2 ring-blue-500/50 ring-offset-1' : ''
+          ]"
+        />
+      </button>
+      <Transition name="fade">
+        <div v-if="!collapsed" class="min-w-0">
+          <h2 class="text-[14px] font-semibold text-primary truncate">小志秘书</h2>
+          <p class="text-[10px] text-tertiary truncate">assistant xiao zhi</p>
+        </div>
+      </Transition>
+    </div>
 
-    <!-- JSON 工具按钮 -->
-    <button
-      class="nav-item w-full transition-all duration-300"
-      :class="[collapsed ? '!p-1.5' : '', activeModule === 'json-toolkit' ? 'active' : '']"
-      @click="emit('select', 'json-toolkit')"
-    >
-      <svg
-        class="transition-all duration-300"
-        :class="collapsed ? 'w-5 h-5' : 'w-6 h-6'"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-      </svg>
-      <span v-if="!collapsed" class="nav-label">JSON</span>
-    </button>
+    <!-- 菜单列表 -->
+    <nav class="flex-1 overflow-y-auto px-2.5 py-1 space-y-1">
+      <template v-for="(group, gi) in menuGroups" :key="gi">
+        <!-- 分组标签 -->
+        <div v-if="group.label && !collapsed" class="px-3 pt-3 pb-1">
+          <span class="text-[10px] font-medium text-tertiary uppercase tracking-wider">{{ group.label }}</span>
+        </div>
+        <div v-else-if="group.label && collapsed" class="px-1 pt-3 pb-1">
+          <div class="w-6 h-px bg-black/[0.06] dark:bg-white/[0.08] mx-auto" />
+        </div>
 
-    <!-- 系统监控按钮 -->
-    <button
-      class="nav-item w-full transition-all duration-300"
-      :class="[collapsed ? '!p-1.5' : '', activeModule === 'system-monitor' ? 'active' : '']"
-      @click="emit('select', 'system-monitor')"
-    >
-      <svg
-        class="transition-all duration-300"
-        :class="collapsed ? 'w-5 h-5' : 'w-6 h-6'"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
-      </svg>
-      <span v-if="!collapsed" class="nav-label">系统</span>
-    </button>
+        <!-- 菜单项 -->
+        <button
+          v-for="item in group.items"
+          :key="item.id"
+          class="sidebar-item w-full transition-all duration-200"
+          :class="[
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2',
+            activeModule === item.id ? 'active' : '',
+          ]"
+          :title="collapsed ? item.label : undefined"
+          @click="handleItemClick(item)"
+        >
+          <svg
+            class="sidebar-icon flex-shrink-0 transition-all duration-200"
+            :class="collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="item.iconPath" />
+          </svg>
+          <span v-if="!collapsed" class="sidebar-label text-[13px] truncate">{{ item.label }}</span>
+        </button>
+      </template>
+    </nav>
 
     <!-- 底部区域 -->
-    <div class="mt-auto flex flex-col items-center gap-1 w-full">
-      <!-- 设置按钮 -->
+    <div class="flex-shrink-0 px-2.5 pb-3 space-y-1">
+      <!-- 分隔线 -->
+      <div class="mx-3 my-1 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
+
+      <!-- 设置 -->
       <button
-        class="nav-item w-full transition-all duration-300"
-        :class="collapsed ? '!p-1.5' : ''"
+        class="sidebar-item w-full transition-all duration-200"
+        :class="collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2'"
+        :title="collapsed ? '设置' : undefined"
         @click="showSettings = true"
       >
         <svg
-          class="transition-all duration-300"
-          :class="collapsed ? 'w-5 h-5' : 'w-6 h-6'"
+          class="sidebar-icon flex-shrink-0 transition-all duration-200"
+          :class="collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -111,25 +140,26 @@ const showSettings = ref(false);
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span v-if="!collapsed" class="nav-label">设置</span>
+        <span v-if="!collapsed" class="sidebar-label text-[13px] truncate">设置</span>
       </button>
 
       <!-- 折叠/展开按钮 -->
       <button
-        class="nav-item w-full transition-all duration-300"
-        :class="collapsed ? '!p-1.5' : ''"
+        class="sidebar-item w-full transition-all duration-200"
+        :class="collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2'"
+        :title="collapsed ? '展开' : undefined"
         @click="collapsed = !collapsed"
       >
         <svg
-          class="transition-transform duration-300"
-          :class="collapsed ? 'w-5 h-5 rotate-180' : 'w-6 h-6'"
+          class="sidebar-icon flex-shrink-0 transition-transform duration-300"
+          :class="collapsed ? 'w-5 h-5 rotate-180' : 'w-[18px] h-[18px]'"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
         </svg>
-        <span v-if="!collapsed" class="nav-label">收起</span>
+        <span v-if="!collapsed" class="sidebar-label text-[13px] truncate">收起</span>
       </button>
     </div>
 
@@ -137,3 +167,80 @@ const showSettings = ref(false);
     <SettingsCenter :visible="showSettings" @close="showSettings = false" />
   </aside>
 </template>
+
+<style scoped>
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass-sidebar {
+  background: rgba(30, 38, 50, 0.55);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.45);
+  transition: all 0.2s ease-out;
+}
+
+.sidebar-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+  color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.10);
+}
+
+.sidebar-item:hover .sidebar-icon {
+  transform: scale(1.15);
+  color: #3B82F6;
+}
+
+.sidebar-item.active {
+  background: rgba(255, 255, 255, 0.75);
+  color: #3B82F6;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.12),
+    0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+.sidebar-item.active .sidebar-icon {
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
+}
+
+.dark .sidebar-item {
+  color: rgba(255, 255, 255, 0.40);
+}
+
+.dark .sidebar-item:hover {
+  background: rgba(59, 130, 246, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+
+.dark .sidebar-item.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60A5FA;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.2),
+    0 4px 12px rgba(59, 130, 246, 0.12);
+}
+
+/* Fade transition for labels */
+.fade-enter-active {
+  transition: opacity 0.2s ease 0.1s;
+}
+.fade-leave-active {
+  transition: opacity 0.1s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

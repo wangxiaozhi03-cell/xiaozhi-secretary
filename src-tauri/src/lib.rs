@@ -1,6 +1,6 @@
 mod commands;
 
-use commands::{export_pdf, file_dialog, system};
+use commands::{export_pdf, file_dialog, http_request, system};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,6 +19,7 @@ pub fn run() {
             system::get_system_info,
             system::kill_process,
             system::clean_memory,
+            http_request::http_request,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

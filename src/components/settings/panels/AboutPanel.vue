@@ -24,7 +24,7 @@ const changelog = [
       <div class="flex items-center gap-4 mb-4">
         <img :src="logoUrl" alt="Logo" class="w-14 h-14 rounded-2xl shadow-md" />
         <div>
-          <h2 class="text-[18px] font-semibold text-primary">小志工具箱</h2>
+          <h2 class="text-[18px] font-semibold text-primary">小志秘书</h2>
           <p class="text-[12px] text-tertiary">XiaoZhi Toolbox</p>
         </div>
       </div>
@@ -102,7 +102,7 @@ const changelog = [
 
     <!-- 版权信息 -->
     <div class="text-center text-[11px] text-tertiary py-2">
-      <p>© 2026 小志工具箱. All rights reserved.</p>
+      <p>© 2026 小志秘书. All rights reserved.</p>
       <p class="mt-1">Made with ❤️ using Vue 3 + Tauri</p>
     </div>
   </div>

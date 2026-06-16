@@ -25,7 +25,6 @@ const highlightRef = ref<HTMLPreElement>();
 const lineNumbersRef = ref<HTMLDivElement>();
 const editorWrapRef = ref<HTMLDivElement>();
 const currentLine = ref(-1);
-const isComposing = ref(false);
 
 // ========== 颜色主题 ==========
 interface ColorTheme {
@@ -46,6 +45,109 @@ interface ColorTheme {
 }
 
 const themes: ColorTheme[] = [
+  // 🌙 深夜开发者（推荐主主题）
+  {
+    id: "midnight-dev",
+    name: "🌙 深夜开发者",
+    bg: "#0B0F17",
+    text: "#E5E7EB",
+    key: "#7AA2F7",
+    string: "#9ECE6A",
+    number: "#F7768E",
+    boolean: "#FFB86C",
+    nullVal: "#565F89",
+    keyWeight: 500,
+    caret: "#7AA2F7",
+    selection: "rgba(122,162,247,0.25)",
+    lineBg: "rgba(255,255,255,0.03)",
+    divider: "rgba(120,130,255,0.15)",
+  },
+  // 🧊 冰川极光（鸿蒙风）
+  {
+    id: "glacier-aurora",
+    name: "🧊 冰川极光",
+    bg: "#EAF2FF",
+    text: "#1F2937",
+    key: "#3B82F6",
+    string: "#10B981",
+    number: "#6366F1",
+    boolean: "#F59E0B",
+    nullVal: "#9CA3AF",
+    keyWeight: 600,
+    caret: "#3B82F6",
+    selection: "rgba(59,130,246,0.15)",
+    lineBg: "rgba(59,130,246,0.04)",
+    divider: "rgba(59,130,246,0.12)",
+  },
+  // 🌑 赛博黑金（高级商业工具风）
+  {
+    id: "cyber-gold",
+    name: "🌑 赛博黑金",
+    bg: "#0A0A0A",
+    text: "#EAEAEA",
+    key: "#FBBF24",
+    string: "#34D399",
+    number: "#F87171",
+    boolean: "#A78BFA",
+    nullVal: "#6B7280",
+    keyWeight: 600,
+    caret: "#FBBF24",
+    selection: "rgba(251,191,36,0.2)",
+    lineBg: "rgba(255,215,0,0.03)",
+    divider: "rgba(255,215,0,0.15)",
+  },
+  // ☁️ 轻云白（极简苹果风）
+  {
+    id: "cloud-white",
+    name: "☁️ 轻云白",
+    bg: "#F9FAFB",
+    text: "#111827",
+    key: "#2563EB",
+    string: "#059669",
+    number: "#DC2626",
+    boolean: "#7C3AED",
+    nullVal: "#9CA3AF",
+    keyWeight: 600,
+    caret: "#2563EB",
+    selection: "rgba(37,99,235,0.12)",
+    lineBg: "rgba(0,0,0,0.02)",
+    divider: "rgba(0,0,0,0.08)",
+  },
+  // 🌌 紫雾未来（鸿蒙+AI感）
+  {
+    id: "purple-future",
+    name: "🌌 紫雾未来",
+    bg: "#0F1020",
+    text: "#E0E7FF",
+    key: "#A78BFA",
+    string: "#34D399",
+    number: "#60A5FA",
+    boolean: "#F472B6",
+    nullVal: "#6B7280",
+    keyWeight: 500,
+    caret: "#A78BFA",
+    selection: "rgba(167,139,250,0.25)",
+    lineBg: "rgba(167,139,250,0.05)",
+    divider: "rgba(167,139,250,0.15)",
+  },
+  // 🧑‍💻 IDE 专业模式（工程师最爱）
+  {
+    id: "ide-pro",
+    name: "🧑‍💻 IDE 专业",
+    bg: "#1E1E1E",
+    text: "#CCCCCC",
+    key: "#9CDCFE",
+    string: "#CE9178",
+    number: "#B5CEA8",
+    boolean: "#569CD6",
+    nullVal: "#569CD6",
+    keyWeight: 400,
+    caret: "#CCCCCC",
+    selection: "rgba(38,79,120,0.6)",
+    lineBg: "rgba(255,255,255,0.04)",
+    divider: "rgba(255,255,255,0.08)",
+  },
+  // ========== 经典主题 ==========
   { id: "github", name: "GitHub", bg: "#fff", text: "#24292f", key: "#881391", string: "#1a7f37", number: "#0550ae", boolean: "#cf222e", nullVal: "#cf222e", keyWeight: 500, caret: "#24292f", selection: "#c8e1ff", lineBg: "rgba(0,0,0,0.03)", divider: "rgba(0,0,0,0.08)" },
   { id: "vscode-dark", name: "VSCode Dark", bg: "#1e1e1e", text: "#d4d4d4", key: "#9cdcfe", string: "#ce9178", number: "#b5cea8", boolean: "#569cd6", nullVal: "#569cd6", keyWeight: 400, caret: "#d4d4d4", selection: "rgba(38,79,120,0.6)", lineBg: "rgba(255,255,255,0.04)", divider: "rgba(255,255,255,0.08)" },
   { id: "monokai", name: "Monokai", bg: "#272822", text: "#f8f8f2", key: "#a6e22e", string: "#e6db74", number: "#ae81ff", boolean: "#f92672", nullVal: "#f92672", keyWeight: 500, caret: "#f8f8f2", selection: "rgba(73,72,62,0.7)", lineBg: "rgba(255,255,255,0.04)", divider: "rgba(255,255,255,0.08)" },
@@ -55,7 +157,7 @@ const themes: ColorTheme[] = [
   { id: "me", name: "ME", bg: "#DAF4F6", text: "#2B2F36", key: "#2F6FED", string: "#0F8A5F", number: "#C75D1D", boolean: "#8E44AD", nullVal: "#7F8C8D", keyWeight: 600, caret: "#2F6FED", selection: "#BFEAF0", lineBg: "rgba(255,255,255,0.45)", divider: "rgba(43,47,54,0.08)" },
 ];
 
-const currentThemeId = ref(localStorage.getItem("json-color-theme") || "github");
+const currentThemeId = ref(localStorage.getItem("json-color-theme") || "glacier-aurora");
 const currentTheme = computed(() => themes.find((t) => t.id === currentThemeId.value) || themes[0]);
 
 function setTheme(id: string) {
@@ -68,6 +170,30 @@ const lineCount = computed(() => {
   if (!input.value) return 1;
   return input.value.split("\n").length;
 });
+
+// 状态栏信息
+const cursorLine = ref(1);
+const cursorCol = ref(1);
+const charCount = computed(() => input.value.length);
+const isValidJson = computed(() => {
+  if (!input.value.trim()) return null;
+  try {
+    JSON.parse(input.value);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
+function updateCursorPosition() {
+  const ta = textareaRef.value;
+  if (!ta) return;
+  const pos = ta.selectionStart;
+  const textBefore = ta.value.substring(0, pos);
+  const lines = textBefore.split("\n");
+  cursorLine.value = lines.length;
+  cursorCol.value = lines[lines.length - 1].length + 1;
+}
 
 // ========== JSON 校验 ==========
 function validateJson() {
@@ -117,15 +243,43 @@ function highlightJson(json: string): string {
   const lines = json.split("\n");
   return lines
     .map((line, idx) => {
+      // 先转义 HTML 特殊字符
       let html = line
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"([^"\\]*(\\.[^"\\]*)*)"\s*:/g, '<span class="jh-key">"$1"</span>:')
-        .replace(/:\s*"([^"\\]*(\\.[^"\\]*)*)"/g, ': <span class="jh-string">"$1"</span>')
-        .replace(/:\s*(-?\d+\.?\d*([eE][+-]?\d+)?)/g, ': <span class="jh-number">$1</span>')
-        .replace(/:\s*(true|false)/g, ': <span class="jh-bool">$1</span>')
-        .replace(/:\s*(null)/g, ': <span class="jh-null">$1</span>');
+        .replace(/>/g, "&gt;");
+
+      // 提取字符串并用占位符替换，避免后续处理破坏字符串内容
+      const stringPlaceholders: string[] = [];
+      html = html.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match) => {
+        const index = stringPlaceholders.length;
+        stringPlaceholders.push(match);
+        return `__STRING_${index}__`;
+      });
+
+      // 处理 key（在占位符之后）
+      html = html.replace(/__STRING_(\d+)__(\s*):/g, (_, idx, spaces) => {
+        return `<span class="jh-key">${stringPlaceholders[parseInt(idx)]}</span>${spaces}:`;
+      });
+
+      // 处理数字（排除时间格式中的数字）- 在字符串恢复之前执行
+      html = html.replace(/:(\s*)(-?\d+\.?\d*([eE][+-]?\d+)?)(?![\d:])/g, ':$1<span class="jh-number">$2</span>');
+
+      // 处理布尔值 - 在字符串恢复之前执行
+      html = html.replace(/:(\s*)(true|false)/g, ':$1<span class="jh-bool">$2</span>');
+
+      // 处理 null - 在字符串恢复之前执行
+      html = html.replace(/:(\s*)(null)/g, ':$1<span class="jh-null">$2</span>');
+
+      // 处理 value 字符串（在数字、布尔值、null 处理之后恢复）
+      html = html.replace(/:(\s*)__STRING_(\d+)__/g, (_, spaces, idx) => {
+        return `:${spaces}<span class="jh-string">${stringPlaceholders[parseInt(idx)]}</span>`;
+      });
+
+      // 还原未被处理的字符串占位符
+      stringPlaceholders.forEach((str, i) => {
+        html = html.replace(`__STRING_${i}__`, str);
+      });
 
       if (idx === errorLine.value) {
         html = '<span class="jh-error-line">' + html + '</span>';
@@ -175,6 +329,40 @@ function resetAfterOperation(end: boolean = true) {
       syncScroll();
       updateCurrentLine();
     });
+  });
+}
+
+function formatPastedJson(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed || text.includes("\n")) return text;
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return text;
+
+  try {
+    return JSON.stringify(JSON.parse(trimmed), null, indentSize.value);
+  } catch {
+    return text;
+  }
+}
+
+function handlePaste(e: ClipboardEvent) {
+  const ta = textareaRef.value;
+  const pasted = e.clipboardData?.getData("text");
+  if (!ta || !pasted) return;
+
+  const formatted = formatPastedJson(pasted);
+  if (formatted === pasted) return;
+
+  e.preventDefault();
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  input.value = input.value.slice(0, start) + formatted + input.value.slice(end);
+
+  nextTick(() => {
+    const cursor = start + formatted.length;
+    ta.selectionStart = ta.selectionEnd = cursor;
+    updateCurrentLine();
+    updateCursorPosition();
+    syncScroll();
   });
 }
 
@@ -489,35 +677,97 @@ function injectActions() {
       </div>
 
       <!-- 编辑器 -->
-      <div class="flex-1 relative min-h-0">
+      <div class="flex-1 relative min-h-0 overflow-hidden">
         <pre
           ref="highlightRef"
-          class="absolute inset-0 p-3 m-0 font-mono leading-[1.5] overflow-auto pointer-events-none whitespace-pre-wrap break-all box-border"
-          :style="{ color: currentTheme.text, fontSize: fontSize + 'px', visibility: isComposing ? 'hidden' : 'visible' }"
+          class="editor-layer absolute inset-0 p-3 m-0 font-mono leading-[1.5] pointer-events-none box-border overflow-hidden"
+          :style="{
+            color: currentTheme.text,
+            fontSize: fontSize + 'px',
+            visibility: 'visible',
+          }"
           aria-hidden="true"
         ><code v-html="highlightJson(input)" /></pre>
         <textarea
           ref="textareaRef"
           v-model="input"
-          class="json-textarea absolute inset-0 resize-none p-3 font-mono leading-[1.5] bg-transparent outline-none border-0 m-0 box-border whitespace-pre-wrap break-all placeholder:text-tertiary"
-          :style="{ color: isComposing ? currentTheme.text : 'transparent', caretColor: currentTheme.caret, '--sel-bg': currentTheme.selection, fontSize: fontSize + 'px' }"
+          class="json-textarea absolute inset-0 resize-none p-3 font-mono leading-[1.5] bg-transparent outline-none border-0 m-0 box-border placeholder:text-tertiary overflow-auto"
+          :style="{
+            color: 'transparent',
+            caretColor: currentTheme.caret,
+            '--sel-bg': currentTheme.selection,
+            fontSize: fontSize + 'px',
+          }"
           placeholder="Paste JSON here..."
           spellcheck="false"
           @keydown="handleKeydown"
           @scroll="syncScroll"
-          @click="updateCurrentLine"
-          @keyup="updateCurrentLine"
-          @input="updateCurrentLine"
-          @compositionstart="isComposing = true"
-          @compositionend="isComposing = false"
+          @click="updateCurrentLine; updateCursorPosition()"
+          @keyup="updateCurrentLine; updateCursorPosition()"
+          @input="updateCurrentLine; updateCursorPosition()"
+          @paste="handlePaste"
         />
 
         <!-- 右下角字号控制 -->
-        <div class="absolute bottom-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] z-10">
-          <button class="w-5 h-5 flex items-center justify-center text-[11px] text-tertiary hover:text-primary transition-colors" @click="zoomOut">−</button>
-          <button class="min-w-[28px] h-5 flex items-center justify-center text-[10px] text-tertiary hover:text-primary transition-colors" @click="zoomReset">{{ fontSize }}</button>
-          <button class="w-5 h-5 flex items-center justify-center text-[11px] text-tertiary hover:text-primary transition-colors" @click="zoomIn">+</button>
+        <div class="absolute bottom-2 right-2 flex items-center gap-0.5 px-2 py-1 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border border-black/[0.06] dark:border-white/[0.08] z-10">
+          <button
+            class="w-6 h-6 flex items-center justify-center rounded-md text-tertiary hover:text-primary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-all duration-150 cursor-pointer active:scale-90"
+            title="缩小字号"
+            @click="zoomOut"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+          </button>
+          <button
+            class="min-w-[36px] h-6 flex items-center justify-center rounded-md text-[11px] font-medium text-secondary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-all duration-150 cursor-pointer tabular-nums"
+            title="重置字号"
+            @click="zoomReset"
+          >
+            {{ fontSize }}px
+          </button>
+          <button
+            class="w-6 h-6 flex items-center justify-center rounded-md text-tertiary hover:text-primary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-all duration-150 cursor-pointer active:scale-90"
+            title="放大字号"
+            @click="zoomIn"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
+      </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div
+      class="px-3 py-1 text-[10px] border-t flex items-center justify-between flex-shrink-0"
+      :style="{
+        background: currentTheme.lineBg,
+        borderColor: currentTheme.divider,
+        color: currentTheme.text,
+        opacity: 0.7
+      }"
+    >
+      <div class="flex items-center gap-4">
+        <span class="font-mono">Line {{ cursorLine }}:{{ cursorCol }}</span>
+        <span>Chars: {{ charCount }}</span>
+        <span>UTF-8</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span v-if="isValidJson === true" class="text-emerald-500 flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Valid JSON
+        </span>
+        <span v-else-if="isValidJson === false" class="text-rose-500 flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Invalid JSON
+        </span>
+        <span v-else class="text-tertiary">等待输入</span>
       </div>
     </div>
 
@@ -535,13 +785,36 @@ function injectActions() {
 </template>
 
 <style scoped>
+/* 编辑器层：自动换行，整个 key: value 一起换行 */
+.editor-layer,
+.json-textarea {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  letter-spacing: normal;
+  word-spacing: normal;
+  font-weight: 400;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: none;
+}
+
+.json-textarea {
+  resize: none;
+}
+
 .json-textarea::selection {
   background: v-bind('currentTheme.selection');
 }
 
 pre :deep(.jh-key) {
   color: v-bind('currentTheme.key');
-  font-weight: v-bind('currentTheme.keyWeight');
+  font-weight: inherit;
 }
 pre :deep(.jh-string) {
   color: v-bind('currentTheme.string');

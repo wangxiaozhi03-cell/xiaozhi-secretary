@@ -7,6 +7,10 @@ const inputB = ref("");
 const errorMsg = ref("");
 const compared = ref(false);
 
+// 选项
+const ignoreWhitespace = ref(false);
+const ignoreKeyOrder = ref(false);
+
 // A 内容变化时清除旧结果
 watch(() => props.jsonA, () => {
   compared.value = false;
@@ -23,6 +27,39 @@ interface DiffLine {
 }
 const diffLines = ref<DiffLine[]>([]);
 
+// 规范化 JSON
+function normalizeJson(json: string, _ignoreWhitespace: boolean, shouldIgnoreKeyOrder: boolean): string {
+  try {
+    const parsed = JSON.parse(json);
+
+    if (shouldIgnoreKeyOrder) {
+      // 深度排序 key
+      const sorted = sortKeys(parsed);
+      return JSON.stringify(sorted, null, 2);
+    }
+
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return json;
+  }
+}
+
+// 递归排序 key
+function sortKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map(sortKeys);
+  }
+  if (obj !== null && typeof obj === "object") {
+    const sorted: Record<string, unknown> = {};
+    const keys = Object.keys(obj as Record<string, unknown>).sort();
+    for (const key of keys) {
+      sorted[key] = sortKeys((obj as Record<string, unknown>)[key]);
+    }
+    return sorted;
+  }
+  return obj;
+}
+
 function compare() {
   errorMsg.value = "";
   diffLines.value = [];
@@ -30,10 +67,15 @@ function compare() {
   const tA = props.jsonA.trim();
   const tB = inputB.value.trim();
   if (!tA || !tB) return;
+
   try {
-    const fA = JSON.stringify(JSON.parse(tA), null, 2);
-    const fB = JSON.stringify(JSON.parse(tB), null, 2);
-    diffLines.value = computeDiff(fA.split("\n"), fB.split("\n"));
+    const fA = normalizeJson(tA, ignoreWhitespace.value, ignoreKeyOrder.value);
+    const fB = normalizeJson(tB, ignoreWhitespace.value, ignoreKeyOrder.value);
+
+    const linesA = ignoreWhitespace.value ? fA.split("\n").map(l => l.trim()) : fA.split("\n");
+    const linesB = ignoreWhitespace.value ? fB.split("\n").map(l => l.trim()) : fB.split("\n");
+
+    diffLines.value = computeDiff(linesA, linesB);
   } catch (e: unknown) {
     errorMsg.value = e instanceof Error ? e.message : "Invalid JSON";
   }
@@ -58,17 +100,133 @@ function computeDiff(a: string[], b: string[]): DiffLine[] {
 const stats = computed(() => ({
   added: diffLines.value.filter((d) => d.type === "added").length,
   removed: diffLines.value.filter((d) => d.type === "removed").length,
+  unchanged: diffLines.value.filter((d) => d.type === "same").length,
 }));
+
+// 导出 Diff
+async function exportDiff() {
+  if (!compared.value || diffLines.value.length === 0) return;
+
+  const lines: string[] = [
+    "JSON Diff Report",
+    "================",
+    "",
+    `Date: ${new Date().toLocaleString()}`,
+    `Options: ${ignoreWhitespace.value ? 'Ignore Whitespace' : ''} ${ignoreKeyOrder.value ? 'Ignore Key Order' : ''}`,
+    "",
+    `Summary: +${stats.value.added} -${stats.value.removed} ${stats.value.unchanged} unchanged`,
+    "",
+    "--- A",
+    "+++ B",
+    "",
+  ];
+
+  for (const line of diffLines.value) {
+    if (line.type === "same") {
+      lines.push(`  ${line.lineA}`);
+    } else if (line.type === "removed") {
+      lines.push(`- ${line.lineA}`);
+    } else if (line.type === "added") {
+      lines.push(`+ ${line.lineB}`);
+    }
+  }
+
+  const content = lines.join("\n");
+
+  try {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const filePath = await save({
+      filters: [
+        { name: "Text", extensions: ["txt", "diff"] },
+      ],
+      defaultPath: "diff-result.txt",
+    });
+    if (filePath) {
+      const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+      await writeTextFile(filePath, content);
+    }
+  } catch {
+    // 回退到剪贴板
+    navigator.clipboard.writeText(content);
+  }
+}
+
+// 清空
+function clearAll() {
+  inputB.value = "";
+  compared.value = false;
+  diffLines.value = [];
+  errorMsg.value = "";
+}
+
+// 同步滚动
+const leftPanelRef = ref<HTMLDivElement>();
+const rightPanelRef = ref<HTMLDivElement>();
+const isSyncingScroll = ref(false);
+
+function syncScroll(source: "left" | "right") {
+  if (isSyncingScroll.value) return;
+  isSyncingScroll.value = true;
+
+  const sourceEl = source === "left" ? leftPanelRef.value : rightPanelRef.value;
+  const targetEl = source === "left" ? rightPanelRef.value : leftPanelRef.value;
+
+  if (sourceEl && targetEl) {
+    targetEl.scrollTop = sourceEl.scrollTop;
+  }
+
+  requestAnimationFrame(() => {
+    isSyncingScroll.value = false;
+  });
+}
 </script>
 
 <template>
   <div class="flex flex-col h-full">
     <!-- 头部 -->
-    <div class="px-3 py-1.5 text-[10px] font-medium text-tertiary uppercase tracking-widest border-b border-black/[0.03] dark:border-white/[0.04] flex items-center justify-between flex-shrink-0">
-      <span>JSON B</span>
-      <div class="flex items-center gap-1">
-        <button class="text-[10px] px-2 py-0.5 rounded bg-blue-500/[0.08] text-blue-500 font-medium hover:bg-blue-500/[0.14] transition-colors" @click="compare">Compare</button>
-        <button class="text-[10px] px-1.5 py-0.5 rounded text-tertiary hover:text-secondary transition-colors" @click="inputB = ''; compared = false; diffLines = []">Clear</button>
+    <div class="px-3 py-2 border-b border-black/[0.03] dark:border-white/[0.04] flex-shrink-0">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[10px] font-medium text-tertiary uppercase tracking-widest">JSON B</span>
+        <div class="flex items-center gap-1">
+          <button
+            class="text-[10px] px-2 py-0.5 rounded bg-blue-500/[0.08] text-blue-500 font-medium hover:bg-blue-500/[0.14] transition-colors"
+            @click="compare"
+          >
+            Compare
+          </button>
+          <button
+            class="text-[10px] px-1.5 py-0.5 rounded text-tertiary hover:text-secondary transition-colors"
+            @click="clearAll"
+          >
+            Clear
+          </button>
+          <button
+            class="text-[10px] px-1.5 py-0.5 rounded text-tertiary hover:text-secondary transition-colors"
+            @click="exportDiff"
+          >
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- 选项 -->
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input
+            v-model="ignoreWhitespace"
+            type="checkbox"
+            class="w-3 h-3 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500/20"
+          />
+          <span class="text-[10px] text-tertiary">忽略空格</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input
+            v-model="ignoreKeyOrder"
+            type="checkbox"
+            class="w-3 h-3 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500/20"
+          />
+          <span class="text-[10px] text-tertiary">忽略 Key 顺序</span>
+        </label>
       </div>
     </div>
 
@@ -89,12 +247,18 @@ const stats = computed(() => ({
         <template v-if="diffLines.length">
           <span class="normal-case tracking-normal text-emerald-500">+{{ stats.added }}</span>
           <span class="normal-case tracking-normal text-rose-500">-{{ stats.removed }}</span>
+          <span class="normal-case tracking-normal text-tertiary">{{ stats.unchanged }} unchanged</span>
         </template>
         <span v-if="compared && diffLines.length === 0 && !errorMsg" class="normal-case tracking-normal text-emerald-500">✓ 一致</span>
       </div>
 
       <div v-if="!compared" class="flex-1 flex items-center justify-center text-[11px] text-tertiary">粘贴 JSON B 后点击 Compare</div>
-      <div v-else class="flex-1 overflow-y-auto font-mono text-[12px] leading-relaxed">
+      <div
+        v-else
+        ref="leftPanelRef"
+        class="flex-1 overflow-y-auto font-mono text-[12px] leading-relaxed"
+        @scroll="syncScroll('left')"
+      >
         <table class="w-full border-collapse">
           <tbody>
             <template v-for="(line, idx) in diffLines" :key="idx">

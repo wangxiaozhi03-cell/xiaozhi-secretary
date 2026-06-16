@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "图片布局工具 - 鸿蒙版"
+    },
+    {
+      "name": "ability_desc",
+      "value": "图片布局文档生成工具"
+    },
+    {
+      "name": "app_name",
+      "value": "图片工具"
+    },
+    {
+      "name": "permission_read_image",
+      "value": "需要读取图片以进行布局和预览"
+    },
+    {
+      "name": "permission_write_image",
+      "value": "需要保存导出的文档文件"
+    }
+  ]
+}
