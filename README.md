@@ -1,295 +1,194 @@
-# Image to Document Generator
+# 小志秘书 · XiaoZhiSecretary
 
-将图片导入并导出为 PDF / Word 文档的桌面工具。
+轻盈、治愈、高效的多功能工具集合，为你的创意工作流加速。
 
----
-
-## 功能概览
-
-### 图片管理
-- 支持通过系统文件对话框导入图片（PNG、JPG、JPEG、WEBP、BMP）
-- 支持批量导入多张图片
-- 导入后可预览缩略图、查看尺寸、删除
-
-### 页面设置
-- **纸张大小**：A4 / A3 / Letter
-- **纸张方向**：横向 / 纵向
-- **间距模式**：有间距（可调 0-30mm）/ 无间距（铺满）
-- **每页图片数**：自动 / 手动指定（1/2/3/4/6/9 张/页）
-
-### 布局系统
-共 26 种布局，按每页图片数自动分组：
-
-| 每页张数 | 可用布局 |
-|---------|---------|
-| 1 张 | 居中适配、填满页面 |
-| 2 张 | 上下排列、左右排列、一大一小、上大下小、对角排列 |
-| 3 张 | 三等分横向、三等分纵向、一上两下、两上一下、一大两小右 |
-| 4 张 | 田字格、两上两下、竖排四张、横排四张、一左三右、一上三下、三上一左、铺满拼贴、一大三小环绕 |
-| 6 张 | 2×3 网格、3×2 网格、一上五下 |
-| 9 张 | 3×3 网格、一大八小环绕 |
-
-- 所有图片等比缩放，不变形、不裁剪（有间距模式）
-- 无间距模式下自动裁剪溢出部分，最大化利用页面
-- 最后一页不满时自动适配小布局
-
-### 实时预览
-- 左侧图片列表、中间文档预览、右侧设置面板
-- 画布自动缩放适配容器大小
-- 底部缩略图导航栏（始终可见）
-- 翻页查看所有页面
-
-### 导出
-- **PDF**：通过 canvas 渲染 + pdf-lib 嵌入，高质量输出
-- **Word (.docx)**：通过 canvas 渲染 + 手写 OOXML ZIP 生成
-  - 正确支持横向/纵向页面
-  - 每页独立分节，不多出空页
-  - 图片铺满整个页面
+基于 **Tauri 2 + Vue 3 + TypeScript** 构建的跨平台桌面应用。
 
 ---
 
-## 技术栈
+## 🧰 功能模块
 
-| 层面 | 方案 |
-|------|------|
-| 桌面框架 | Tauri v2 |
-| 前端框架 | Vue 3 + TypeScript + Composition API |
-| 样式 | Tailwind CSS v4 |
-| PDF 生成 | pdf-lib |
-| Word 生成 | 手写 OOXML（SimpleZip） |
-| 图片处理 | Canvas API（前端）+ Rust image crate（后端） |
-| 构建工具 | Vite 6 |
-| 包管理 | npm |
+### 📄 图片排版工具
 
----
+多图自动排版，一键导出 PDF / Word 文档。
 
-## 项目结构
-
-```
-document-generator/
-├── src/                          # Vue3 前端
-│   ├── App.vue                   # 根组件（三栏布局）
-│   ├── main.ts                   # 入口
-│   ├── components/               # UI 组件
-│   │   ├── AppHeader.vue         # 顶部栏（Logo、导出菜单）
-│   │   ├── ImageList.vue         # 左侧图片列表
-│   │   ├── PageSettings.vue      # 右侧页面设置
-│   │   ├── LayoutPicker.vue      # 布局选择器
-│   │   ├── LayoutThumbnail.vue   # 布局缩略图
-│   │   ├── DocumentPreview.vue   # 中间文档预览
-│   │   ├── PreviewToolbar.vue    # 翻页工具栏
-│   │   └── PageThumbnails.vue    # 底部页面缩略图
-│   ├── composables/              # 组合函数
-│   │   ├── useImages.ts          # 图片状态管理
-│   │   ├── usePageSettings.ts    # 页面设置
-│   │   ├── useLayout.ts          # 布局计算引擎
-│   │   └── useExport.ts          # PDF / Word 导出
-│   ├── layouts/                  # 布局定义
-│   │   ├── registry.ts           # 布局注册表
-│   │   ├── fit.ts                # 缩放计算
-│   │   └── layouts-{1,2,3,4,6,9}.ts
-│   └── types/                    # 类型定义 + 纸张常量
-├── src-tauri/                    # Tauri Rust 后端
-│   ├── Cargo.toml
-│   ├── tauri.conf.json
-│   ├── capabilities/             # 权限配置
-│   ├── icons/                    # 应用图标
-│   └── src/
-│       ├── main.rs / lib.rs
-│       └── commands/
-│           ├── file_dialog.rs    # 文件对话框、图片读取
-│           └── export_pdf.rs     # 文件写入
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-└── index.html
-```
+- 拖拽排序、批量导入图片（PNG / JPG / WEBP / BMP）
+- 26 种布局模板，按每页图片数自动分组（1/2/3/4/6/9 张/页）
+- 纸张：A4 / A3 / Letter，横向 / 纵向
+- 间距模式：有间距（0-30mm 可调）/ 无间距铺满
+- 实时文档预览 + 底部页面缩略图导航
+- 单图偏移微调、每页槽位覆盖
+- 导出 PDF 和 Word (DOCX)
 
 ---
 
-## 开发
+### 📝 Markdown 编辑器
+
+全功能 Markdown 写作工具，支持实时预览和导出。
+
+- 三种视图：编辑器 / 预览 / 分屏（`⌘1` / `⌘2` / `⌘3`）
+- 实时 Markdown → HTML 渲染
+- 文档大纲目录（自动提取 H1-H4）
+- 字数统计：字符、单词、行数、段落、代码块、图片、预计阅读时间
+- 格式化工具栏
+- 自动保存 + 文件打开（`⌘O`）/ 保存（`⌘S`）/ 导出 HTML
+- 撤销 / 重做
+
+---
+
+### 🔧 JSON 工具
+
+一站式 JSON 处理套件，四种模式。
+
+- **处理**（`⌘1`）：格式化、校验、压缩、复制、清空
+- **对比**（`⌘2`）：左右双栏 JSON Diff
+- **可视化**（`⌘3`）：格式化编辑器 + 树形结构（可拖拽分割线）
+- **转义**（`⌘4`）：JSON 字符串转义 / 反转义
+- 12 种语法高亮主题
+- 文件导入 / 导出、拖拽导入
+
+---
+
+### 🔐 加密工具
+
+多算法加密解密，可视化操作。
+
+- **算法**：AES-128、AES-256、AES-CryptoJS、RSA、SHA-256、SHA-512、Base64
+- AES-CryptoJS 兼容 CryptoJS / Java 的 `Salted__` 格式
+- RSA 密钥对生成（1024 / 2048 / 4096 位）
+- 随机密钥 / IV 生成
+- 双栏输入/输出、一键交换
+- 文件导入 / 结果导出、操作历史
+- `⌘Enter` 执行
+
+---
+
+### 🌐 Curl 重放工具
+
+粘贴 curl → 自动解析 → 多环境切换 → 一键重放。
+
+- 粘贴 curl 自动解析（method / URL / headers / body / query）
+- **可编辑请求**：Headers 增删改、Body 支持 JSON / Form / Text 三种格式
+- **多环境管理**：添加/切换环境（域名 + 端口 + 协议），一键替换请求目标
+- 追加 `/api` 路径开关（自动检测已有 `/api`）
+- 通过 Tauri 后端发送，**不受 CORS 限制**
+- 响应展示：状态码、耗时、大小、Pretty / Raw / Headers
+- 请求历史，点击恢复
+
+---
+
+### 🔤 命名转换
+
+智能变量命名风格转换。
+
+- 自动识别：camelCase / PascalCase / snake_case / kebab-case / CONSTANT_CASE
+- 同时转换为全部 5 种格式
+- 批量转换（每行一个变量名）
+- 智能拆词、可选保留缩写（HTTP、API 等）
+- 点击复制
+
+---
+
+### ☕ Java 代码生成器
+
+SQL 转 Java 后端代码，自动生成全套代码。
+
+- 输入 SQL 建表语句 → 生成 Entity / Mapper / Service / Controller
+- 支持 MyBatis-Plus、Lombok、Swagger 注解
+
+---
+
+### ⚙️ 设置中心
+
+- 外观主题（亮色 / 暗色）
+- 编辑器偏好、JSON 工具配置
+- 快捷键一览、插件管理、关于信息
+
+---
+
+## 🚀 快速开始
 
 ### 环境要求
 
-- [Node.js](https://nodejs.org/) >= 18
+- Node.js >= 18
 - [Rust](https://rustup.rs/) (stable)
 - [Tauri CLI v2 前置依赖](https://v2.tauri.app/start/prerequisites/)
 
-### 安装依赖
+### 开发
 
 ```bash
 npm install
-```
-
-### 启动开发服务器
-
-```bash
 npm run tauri dev
 ```
 
-启动 Vite 前端（端口 1420）+ Tauri 桌面窗口，支持热更新。
-
----
-
-## 打包
-
-### 打包命令
-
-```bash
-# 构建当前平台的安装包
-npm run tauri build
-```
-
-构建产物位于 `src-tauri/target/release/bundle/` 目录下。
-
-### macOS 打包
-
-在 macOS 上直接运行：
+### 构建安装包
 
 ```bash
 npm run tauri build
 ```
 
-产出格式：
-- `.dmg` — macOS 磁盘映像安装包
-- `.app` — macOS 应用程序包
-
-产出路径：
-```
-src-tauri/target/release/bundle/
-├── dmg/          # .dmg 安装包
-└── macos/        # .app 应用
-```
-
-> **注意**：macOS 上构建需要有效的开发者签名。未签名的应用需要用户在「系统设置 → 隐私与安全性」中手动允许运行。
-
-### Windows 打包
-
-#### 方式一：在 Windows 上直接打包
-
-在 Windows 机器上安装好 Node.js、Rust、[Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) 后：
-
-```bash
-npm install
-npm run tauri build
-```
-
-产出格式：
-- `.msi` — Windows Installer 安装包
-- `.exe` — NSIS 安装程序
-
-产出路径：
-```
-src-tauri/target/release/bundle/
-├── msi/          # .msi 安装包
-└── nsis/         # .exe 安装程序
-```
-
-#### 方式二：macOS 上交叉编译 Windows
-
-##### 方法 A：GitHub Actions（推荐）
-
-创建 `.github/workflows/build.yml`：
-
-```yaml
-name: Build
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm install
-      - run: npm run tauri build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-installer
-          path: src-tauri/target/release/bundle/*/*
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm install
-      - run: npm run tauri build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: macos-installer
-          path: src-tauri/target/release/bundle/*/*
-```
-
-推送 tag 即可自动构建：
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-##### 方法 B：本地交叉编译
-
-```bash
-# 安装 Windows 交叉编译工具链
-brew install mingw-w64
-
-# 添加 Rust Windows 目标
-rustup target add x86_64-pc-windows-gnu
-
-# 安装依赖
-npm install
-
-# 交叉编译
-npm run tauri build -- --target x86_64-pc-windows-gnu
-```
-
-> **注意**：交叉编译可能遇到链接器问题，推荐使用 GitHub Actions 在原生环境中构建。
+产物位于 `src-tauri/target/release/bundle/`：
+- macOS：`.dmg` / `.app`
+- Windows：`.msi` / `.exe`
 
 ---
 
-## 构建产物大小参考
+## 📦 技术栈
 
-| 平台 | 格式 | 大约大小 |
-|------|------|---------|
-| macOS | .dmg | ~5-8 MB |
-| Windows | .msi / .exe | ~5-8 MB |
-
-Tauri 使用系统 WebView，无需打包浏览器引擎，所以安装包非常小。
+| 层级 | 技术 |
+|------|------|
+| 前端 | Vue 3 + TypeScript + Composition API |
+| 样式 | Tailwind CSS 4 |
+| 桌面 | Tauri 2 (Rust) |
+| 构建 | Vite |
+| 加密 | CryptoJS + Web Crypto API |
+| HTTP | reqwest (Rust, 绕过 CORS) |
+| PDF | pdf-lib |
+| Word | 手写 OOXML (SimpleZip) |
 
 ---
 
-## 常见问题
+## 📁 项目结构
 
-### Q: `npm run tauri build` 报错找不到图标？
+```
+src/
+├── components/
+│   ├── curl-toolkit/          # Curl 重放
+│   ├── encrypt-toolkit/       # 加密工具
+│   ├── java-generator/        # Java 生成
+│   ├── json-toolkit/          # JSON 工具
+│   ├── md-toolkit/            # Markdown 编辑器
+│   ├── namecase/              # 命名转换
+│   ├── settings/              # 设置中心
+│   ├── App.vue                # 根组件
+│   ├── HomePage.vue           # 首页
+│   └── ToolboxNav.vue         # 左侧导航
+├── composables/               # 业务逻辑（按模块分目录）
+└── assets/                    # 全局样式
 
-确保 `src-tauri/icons/` 目录下有以下文件：
-- `32x32.png`
-- `128x128.png`
-- `128x128@2x.png`
-- `icon.icns`（macOS）
-- `icon.ico`（Windows）
-
-### Q: macOS 提示"无法打开，因为无法验证开发者"？
-
-```bash
-# 移除隔离属性
-xattr -cr "src-tauri/target/release/bundle/macos/Image to Document.app"
+src-tauri/
+├── src/commands/              # Tauri 命令（Rust）
+│   ├── http_request.rs        # HTTP 请求
+│   ├── export_pdf.rs          # 文件导出
+│   ├── file_dialog.rs         # 文件对话框
+│   └── system.rs              # 系统信息
+├── Cargo.toml
+└── tauri.conf.json
 ```
 
-或在「系统设置 → 隐私与安全性」中点击「仍要打开」。
+---
 
-### Q: Windows 构建需要什么环境？
+## ⌨️ 快捷键
 
-- Visual Studio 2022 C++ Build Tools
-- Rust stable toolchain
-- Node.js >= 18
+| 快捷键 | 功能 |
+|--------|------|
+| `⌘1` - `⌘4` | 工具模式切换 |
+| `⌘Enter` | 执行当前操作 |
+| `⌘O` | 打开文件 |
+| `⌘S` | 保存文件 |
+
+---
+
+## 📄 License
+
+MIT

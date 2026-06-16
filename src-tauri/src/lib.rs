@@ -1,6 +1,6 @@
 mod commands;
 
-use commands::{export_pdf, file_dialog, http_request, system};
+use commands::{export_pdf, file_dialog, http_request, maven_builder, system};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,6 +20,10 @@ pub fn run() {
             system::kill_process,
             system::clean_memory,
             http_request::http_request,
+            maven_builder::list_maven_modules,
+            maven_builder::list_maven_leaf_modules,
+            maven_builder::start_build,
+            maven_builder::check_maven_available,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -74,21 +74,21 @@ const toolCategories = [
         bgGradient: "from-[#FEF2F2] to-[#FFF7ED]",
         features: ["SQL解析", "MyBatis-Plus", "Lombok", "Swagger"],
       },
+      {
+        id: "java-packager",
+        label: "Java 打包",
+        desc: "Maven 多模块项目一键打包，支持选择模块、环境 Profile、跳过测试",
+        icon: "package",
+        gradient: "from-[#EF4444] to-[#DC2626]",
+        bgGradient: "from-[#FEF2F2] to-[#FEE2E2]",
+        features: ["模块选择", "多环境", "跳过测试", "构建日志"],
+      },
     ],
   },
   {
-    label: "安全工具",
-    desc: "加密、解密、哈希",
+    label: "网络工具",
+    desc: "请求调试、接口测试",
     tools: [
-      {
-        id: "encrypt-toolkit",
-        label: "加密工具",
-        desc: "AES/RSA/SHA/Base64 多算法加密解密，可视化操作",
-        icon: "encrypt",
-        gradient: "from-[#8B5CF6] to-[#A78BFA]",
-        bgGradient: "from-[#F5F3FF] to-[#EDE9FE]",
-        features: ["AES-256", "RSA", "SHA-256", "Base64"],
-      },
       {
         id: "curl-toolkit",
         label: "Curl 重放",
@@ -103,7 +103,7 @@ const toolCategories = [
 ];
 
 const stats = [
-  { label: "可用工具", value: "5", suffix: "+", color: "#3B82F6" },
+  { label: "可用工具", value: "6", suffix: "+", color: "#3B82F6" },
   { label: "支持格式", value: "PDF", suffix: " · Word", color: "#10B981" },
   { label: "系统平台", value: "Mac", suffix: " · Win", color: "#8B5CF6" },
   { label: "完全免费", value: "∞", suffix: "", color: "#F59E0B" },

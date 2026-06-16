@@ -59,7 +59,7 @@ export type OrmType = 'mybatis' | 'mybatis-plus' | 'jpa'
 export type DateType = 'LocalDateTime' | 'Date'
 
 // Swagger 版本
-export type SwaggerVersion = 'swagger2' | 'swagger3' | 'knife4j'
+export type SwaggerVersion = 'swagger2' | 'swagger3' | 'knife4j' | 'none'
 
 // Controller 返回格式
 export type ResponseStyle = 'spring-blade' | 'pigx' | 'spring-boot' | 'custom'
@@ -127,6 +127,32 @@ export interface SqlParseError {
   message: string
   severity: 'error' | 'warning'
 }
+
+// JSON 字段信息
+export interface JsonFieldInfo {
+  name: string
+  type: string
+  javaType: string
+  comment?: string
+  isArray: boolean
+  isNested: boolean
+  nestedFields?: JsonFieldInfo[]
+}
+
+// JSON 转 DTO 配置
+export interface JsonToDtoConfig {
+  className: string
+  packageName: string
+  author: string
+  useLombok: boolean
+  useSwagger: boolean
+  swaggerVersion: SwaggerVersion
+  extendPageLimit: boolean
+  numberType: 'Long' | 'Integer' | 'auto'
+}
+
+// 生成模式
+export type GeneratorMode = 'sql-to-java' | 'json-to-dto'
 
 // 类型映射规则
 export type TypeMapping = Record<string, string>

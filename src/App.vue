@@ -12,10 +12,10 @@ import PreviewToolbar from "./components/PreviewToolbar.vue";
 import PageThumbnails from "./components/PageThumbnails.vue";
 import JsonToolkit from "./components/json-toolkit/JsonToolkit.vue";
 import MdToolkit from "./components/md-toolkit/MdToolkit.vue";
-import EncryptToolkit from "./components/encrypt-toolkit/EncryptToolkit.vue";
 import CurlToolkit from "./components/curl-toolkit/CurlToolkit.vue";
 import NameCaseStudio from "./components/namecase/NameCaseStudio.vue";
 import JavaGenerator from "./components/java-generator/JavaGenerator.vue";
+import JavaPackager from "./components/java-packager/JavaPackager.vue";
 import type { LayoutKey } from "./types";
 import { useImages } from "./composables/useImages";
 import { usePageSettings } from "./composables/usePageSettings";
@@ -23,7 +23,7 @@ import { useLayout } from "./composables/useLayout";
 import { useExport } from "./composables/useExport";
 import { useOverrides, computePageRanges } from "./composables/useOverrides";
 
-const activeModule = ref<"home" | "image-layout" | "json-toolkit" | "md-toolkit" | "encrypt-toolkit" | "curl-toolkit" | "namecase" | "java-generator">("home");
+const activeModule = ref<"home" | "image-layout" | "json-toolkit" | "md-toolkit" | "curl-toolkit" | "namecase" | "java-generator" | "java-packager">("home");
 
 const { images, removeImage, removeLastImage, openFileDialog, reorderImages } = useImages();
 const { settings, setImagesPerPage } = usePageSettings();
@@ -118,8 +118,8 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
 
     <!-- 右侧主区域 -->
     <div class="flex-1 flex flex-col overflow-hidden min-w-0">
-      <!-- 顶部导航栏 -->
-      <TopBar />
+      <!-- 顶部导航栏（仅首页显示） -->
+      <TopBar v-if="activeModule === 'home'" />
 
       <!-- 内容区 -->
       <div class="flex-1 flex flex-col overflow-hidden py-2 px-2">
@@ -215,9 +215,6 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
           <!-- MD 工具模块 -->
           <MdToolkit v-else-if="activeModule === 'md-toolkit'" key="md-toolkit" />
 
-          <!-- 加密工具模块 -->
-          <EncryptToolkit v-else-if="activeModule === 'encrypt-toolkit'" key="encrypt-toolkit" />
-
           <!-- Curl 重放工具模块 -->
           <CurlToolkit v-else-if="activeModule === 'curl-toolkit'" key="curl-toolkit" />
 
@@ -226,6 +223,9 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
 
           <!-- Java 代码生成模块 -->
           <JavaGenerator v-else-if="activeModule === 'java-generator'" key="java-generator" />
+
+          <!-- Java 打包工具模块 -->
+          <JavaPackager v-else-if="activeModule === 'java-packager'" key="java-packager" />
         </Transition>
       </div>
     </div>
