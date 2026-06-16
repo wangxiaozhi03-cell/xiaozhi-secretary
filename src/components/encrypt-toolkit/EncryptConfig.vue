@@ -28,9 +28,6 @@ const emit = defineEmits<{
 const isAes = ["aes-128", "aes-256"].includes(props.algorithm);
 const isAesCryptoJs = props.algorithm === "aes-cryptojs";
 const isRsa = props.algorithm === "rsa";
-const isHash = ["sha-256", "sha-512"].includes(props.algorithm);
-const isBase64 = props.algorithm === "base64";
-
 const algoInfo: Record<string, { name: string; desc: string; security: string }> = {
   "aes-128": { name: "AES-128", desc: "对称加密算法，128位密钥，高性能", security: "中" },
   "aes-256": { name: "AES-256", desc: "对称加密算法，256位密钥，高安全性", security: "高" },

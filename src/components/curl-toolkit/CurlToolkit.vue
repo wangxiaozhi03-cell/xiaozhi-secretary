@@ -67,15 +67,6 @@ function handleSelectHistory(item: HistoryItem) {
   curlInputRef.value?.setCurl(item.curl);
 }
 
-// 快捷键
-function handleKeydown(e: KeyboardEvent) {
-  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-  const modifier = isMac ? e.metaKey : e.ctrlKey;
-  if (modifier && e.key === "Enter") {
-    e.preventDefault();
-    // 触发发送需要从 CurlInput 获取当前 curl
-  }
-}
 </script>
 
 <template>

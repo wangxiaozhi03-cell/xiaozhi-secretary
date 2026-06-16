@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import type { HeadingItem } from "../../composables/md-toolkit/types";
 
-const props = defineProps<{
+defineProps<{
   headings: HeadingItem[];
 }>();
 

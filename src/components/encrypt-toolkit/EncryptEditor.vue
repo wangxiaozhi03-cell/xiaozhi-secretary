@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EncryptResult } from "../../composables/encrypt-toolkit/types";
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   modelValue: string;
   title: string;
   readonly?: boolean;

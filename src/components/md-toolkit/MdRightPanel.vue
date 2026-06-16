@@ -39,7 +39,7 @@ const quickActions: QuickAction[] = [
     <!-- 大纲 -->
     <MdOutline
       :headings="headings"
-      @select="(line) => {}"
+      @select="() => {}"
     />
 
     <!-- 分隔线 -->

@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import type { Environment } from "./types";
 
 const STORAGE_KEY = "curl-toolkit-environments";

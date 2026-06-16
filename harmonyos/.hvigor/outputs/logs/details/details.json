@@ -42,16 +42,24 @@
     "OPTIMIZATION_STRATEGY": "memory",
     "TASK_TIME": {
       "923fe53966c6cd9343e11af776cd4b05be315ea4b200b02e4d5dfb0f929b73bf": {
-        "CreateModuleInfo": 280250,
-        "ConfigureCmake": 65750,
-        "PreCheckSyscap": 114000,
-        "GeneratePkgContextInfo": 2632625,
-        "ProcessIntegratedHsp": 207500,
-        "BuildNativeWithCmake": 54542,
-        "SyscapTransform": 6117875,
-        "ProcessStartupConfig": 263625,
-        "BuildNativeWithNinja": 142083,
-        "BuildJS": 1420792
+        "CreateModuleInfo": 1392541,
+        "ConfigureCmake": 96500,
+        "PreCheckSyscap": 580541,
+        "GeneratePkgContextInfo": 7383542,
+        "ProcessIntegratedHsp": 1473333,
+        "BuildNativeWithCmake": 142250,
+        "SyscapTransform": 21771667,
+        "ProcessStartupConfig": 367041,
+        "BuildNativeWithNinja": 211375,
+        "BuildJS": 597667,
+        "CompileArkTS": 3077472250,
+        "GeneratePkgModuleJson": 2247375,
+        "ProcessCompiledResources": 285125,
+        "PackageHap": 375322917,
+        "PackingCheck": 1763333,
+        "SignHap": 324709,
+        "CollectDebugSymbol": 179041,
+        "assembleHap": 43292
       }
     },
     "CUSTOM_TASK_TIME": {},
@@ -64,80 +72,7 @@
       "ENABLE_CPP_FUNCTION_LEVEL_INCREMENTAL": false
     },
     "CONFIG_PROPERTIES": {},
-    "BUILD_ID": "202606161335010970",
-    "ERROR_MESSAGE": [
-      {
-        "CODE": "10505001",
-        "STACK": "...\n10505001 ArkTS Compiler Error\n...\n10505001 ArkTS Compiler Error\n...\n10505001 ArkTS Compiler Error\n...\n10505001 ArkTS Compiler Error\n...",
-        "PROJECT_CONFIG": {
-          "buildMode": "Debug",
-          "compileMode": "esmodule",
-          "moduleType": "entry",
-          "targetName": ".default",
-          "packageManagerType": "ohpm",
-          "isLocalTest": false,
-          "needCoverageInsert": false,
-          "debugLine": false,
-          "compileSdkVersion": 26,
-          "compatibleSdkVersion": 26,
-          "originCompatibleSdkVersion": "26.0.0",
-          "etsLoaderVersion": "26.0.0.23",
-          "etsLoaderReleaseType": "Beta1",
-          "aotCompileMode": "type",
-          "isCrossplatform": false,
-          "bundleType": "app",
-          "apiVersion": 26,
-          "isFaMode": false,
-          "deviceTypes": [
-            "phone",
-            "tablet"
-          ],
-          "integratedHsp": false,
-          "branchElimination": false,
-          "tsImportSendable": false,
-          "resolveConflictMode": true,
-          "useNativeResolver": true,
-          "shouldEmitJs": true,
-          "useTscResolve": false,
-          "singleFileEmit": false,
-          "executionMode": "memory",
-          "isHarDeduplicateEnabled": false,
-          "autoLazyImport": false,
-          "allowEmptyBundleName": false,
-          "reExportCheckMode": "noCheck",
-          "usePathPlaceholder": false,
-          "writeRollupCache": true,
-          "isExpandImportEnabled": false,
-          "ignoreCrossplatformCheck": false,
-          "skipOhModulesLint": false,
-          "enableStrictCheckOHModule": false,
-          "useDeclarationFileSignature": false,
-          "isPreloadSoEnabled": false,
-          "runtimeOS": "HarmonyOS",
-          "sdkInfo": "false:26:26.0.0.23:Beta1",
-          "useSourceHash": false,
-          "isByteCodeHarOptimize": false,
-          "copyCodeResourceEnable": true,
-          "uiTransformOptimization": false
-        }
-      },
-      {
-        "CODE": "10505001",
-        "TIMESTAMP": "1781588104208"
-      },
-      {
-        "CODE": "10505001",
-        "TIMESTAMP": "1781588104208"
-      },
-      {
-        "CODE": "10505001",
-        "TIMESTAMP": "1781588104208"
-      },
-      {
-        "CODE": "10505001",
-        "TIMESTAMP": "1781588104208"
-      }
-    ],
-    "TOTAL_TIME": 3111310208
+    "BUILD_ID": "202606161340110730",
+    "TOTAL_TIME": 4703587667
   }
 }

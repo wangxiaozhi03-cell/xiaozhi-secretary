@@ -20,23 +20,6 @@ const prettyBody = computed(() => {
   }
 });
 
-// 响应是否为 JSON
-const isJson = computed(() => {
-  if (!props.response?.body) return false;
-  try {
-    JSON.parse(props.response.body);
-    return true;
-  } catch {
-    return false;
-  }
-});
-
-// 是否为 HTML
-const isHtml = computed(() => {
-  if (!props.response?.body) return false;
-  return props.response.body.trim().startsWith("<");
-});
-
 // 格式化大小
 function formatSize(bytes: number): string {
   if (bytes < 1024) return bytes + " B";

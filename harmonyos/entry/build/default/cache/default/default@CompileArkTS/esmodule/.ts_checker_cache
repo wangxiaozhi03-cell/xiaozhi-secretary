@@ -1575,11 +1575,11 @@
       "error": false
     },
     "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/src/main/ets/viewmodel/ImageManager.ets": {
-      "mtimeMs": 1781588077008.4348,
+      "mtimeMs": 1781588387503.7842,
       "children": [
         "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/ets/api/@ohos.multimedia.image.d.ts",
         "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/ets/api/@ohos.file.fs.d.ts",
-        "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/ets/api/@ohos.file.picker.d.ts",
+        "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/ets/api/@ohos.file.photoAccessHelper.d.ts",
         "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/src/main/ets/model/Types.ets"
       ],
       "parent": [
@@ -1587,10 +1587,8 @@
       ],
       "error": true,
       "errorCodes": [
-        28007,
-        2769,
-        2339,
-        28040
+        28040,
+        28007
       ]
     },
     "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/src/main/ets/viewmodel/LayoutEngine.ets": {

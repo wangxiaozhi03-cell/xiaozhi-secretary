@@ -4,7 +4,6 @@
  */
 import { image } from '@kit.ImageKit'
 import { fileIo } from '@kit.CoreFileKit'
-import { picker } from '@kit.CoreFileKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
 import { ImageItem } from '../model/Types'
 
@@ -15,16 +14,16 @@ export class ImageManager {
   @Trace images: ImageItem[] = []
 
   /**
-   * 通过系统文件选择器添加图片
+   * 通过系统图片选择器添加图片
    */
   async addImagesFromPicker(context: Context): Promise<void> {
     try {
-      const photoPicker: picker.PhotoViewPicker = new picker.PhotoViewPicker()
-      const result = await photoPicker.select({
-        MIMEType: photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE,
-        maxSelectNumber: 20,
-      })
-      const uris: string[] = result.photoUris as string[]
+      const photoPicker: photoAccessHelper.PhotoViewPicker = new photoAccessHelper.PhotoViewPicker()
+      const selectOptions: photoAccessHelper.PhotoSelectOptions = new photoAccessHelper.PhotoSelectOptions()
+      selectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE
+      selectOptions.maxSelectNumber = 20
+      const result: photoAccessHelper.PhotoSelectResult = await photoPicker.select(selectOptions)
+      const uris: string[] = result.photoUris
       if (uris && uris.length > 0) {
         await this.addImagesFromUris(context, uris)
       }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EncryptAlgorithm, AlgorithmCategory, HistoryItem } from "../../composables/encrypt-toolkit/types";
 
-const props = defineProps<{
+defineProps<{
   algorithm: EncryptAlgorithm;
   history: HistoryItem[];
 }>();

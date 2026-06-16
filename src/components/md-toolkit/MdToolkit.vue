@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, provide, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, provide, onMounted, onUnmounted } from "vue";
 import MdToolbar from "./MdToolbar.vue";
 import MdEditor from "./MdEditor.vue";
 import MdPreview from "./MdPreview.vue";

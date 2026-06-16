@@ -39,7 +39,7 @@ const autoIv = ref(true);
 // RSA 参数
 const rsaPublicKey = ref("");
 const rsaPrivateKey = ref("");
-const rsaKeyLength = ref<2048 | 4096>(2048);
+const rsaKeyLength = ref<1024 | 2048 | 4096>(2048);
 
 // 历史记录
 const history = ref<HistoryItem[]>([]);

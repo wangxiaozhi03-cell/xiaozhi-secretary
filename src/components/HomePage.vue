@@ -225,7 +225,7 @@ const iconColors: Record<string, string> = {
 
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
           <button
-            v-for="(tool, toolIndex) in category.tools"
+            v-for="tool in category.tools"
             :key="tool.id"
             class="quick-card group relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 flex flex-col"
             @click="emit('navigate', tool.id)"

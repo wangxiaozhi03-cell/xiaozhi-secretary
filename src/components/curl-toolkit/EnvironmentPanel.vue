@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import type { Environment, HistoryItem } from "../../composables/curl-toolkit/types";
 
-const props = defineProps<{
+defineProps<{
   environments: Environment[];
   selectedEnvId: string | null;
   history: HistoryItem[];
@@ -34,22 +34,6 @@ function handleAdd() {
   newDomain.value = "";
   newPort.value = "";
   showAddForm.value = false;
-}
-
-function handleCancel() {
-  showAddForm.value = false;
-  newName.value = "";
-  newDomain.value = "";
-  newPort.value = "";
-}
-
-function formatTime(ts: number): string {
-  const now = Date.now();
-  const diff = now - ts;
-  if (diff < 60000) return "刚刚";
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
-  return `${Math.floor(diff / 86400000)}天前`;
 }
 
 function statusColor(status: number | null): string {
