@@ -183,7 +183,7 @@ const tabSizeOptions = [2, 4, 8];
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #F0F4F8;
+  background: rgba(0, 0, 0, 0.04);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
@@ -209,7 +209,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #F0F4F8;
+  background: rgba(0, 0, 0, 0.04);
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }

@@ -225,7 +225,7 @@ function getActionIcon(icon: string) {
               :key="tab.id"
               class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200 whitespace-nowrap"
               :class="mode === tab.id
-                ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm'
+                ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary shadow-sm'
                 : 'text-tertiary hover:text-secondary'"
               @click="handleTabClick(tab.id)"
             >
@@ -313,24 +313,21 @@ function getActionIcon(icon: string) {
 
     <!-- 内容区 -->
     <div ref="containerRef" class="flex-1 relative min-h-0 overflow-hidden">
-      <div class="flex h-full">
-        <!-- JSON 处理模式 -->
-        <template v-if="mode === 'process'">
+      <Transition name="tab-float" mode="out-in">
+        <div v-if="mode === 'process'" key="process" class="flex h-full">
           <BeautifyTool
             class="flex-1 min-w-0"
             tab-id="main"
             :initial-state="{ input: mainJson }"
             @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }"
           />
-        </template>
+        </div>
 
-        <!-- JSON 对比模式 -->
-        <template v-else-if="mode === 'compare'">
+        <div v-else-if="mode === 'compare'" key="compare" class="h-full">
           <DiffPanel class="w-full h-full" :json-a="mainJson" />
-        </template>
+        </div>
 
-        <!-- JSON 可视化模式 -->
-        <template v-else-if="mode === 'visual'">
+        <div v-else-if="mode === 'visual'" key="visual" class="flex h-full">
           <BeautifyTool
             class="min-w-0"
             :style="{ width: splitPosition + '%' }"
@@ -352,17 +349,23 @@ function getActionIcon(icon: string) {
           <div class="min-w-0 flex-1">
             <TreePanel :json="mainJson" />
           </div>
-        </template>
+        </div>
 
-        <!-- 转义/去转义模式 -->
-        <template v-else-if="mode === 'escape'">
+        <div v-else-if="mode === 'escape'" key="escape" class="flex h-full">
           <EscapeTool
             class="flex-1 min-w-0"
             :json="mainJson"
             @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }"
           />
-        </template>
-      </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
+
+<style scoped>
+.tab-float-enter-active { transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
+.tab-float-leave-active { transition: all 0.18s ease-in; }
+.tab-float-enter-from { opacity: 0; transform: translateY(14px) scale(0.98); }
+.tab-float-leave-to { opacity: 0; transform: translateY(-6px) scale(0.99); }
+</style>

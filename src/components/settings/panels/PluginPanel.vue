@@ -129,7 +129,7 @@ function togglePlugin(plugin: typeof plugins[0]) {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #F0F4F8;
+  background: rgba(0, 0, 0, 0.04);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }

@@ -551,7 +551,7 @@ onUnmounted(() => {
 
 <style scoped>
 .paper {
-  background: #EEF2F8;
+  background: transparent;
   border-radius: 16px;
   position: relative;
   box-shadow:

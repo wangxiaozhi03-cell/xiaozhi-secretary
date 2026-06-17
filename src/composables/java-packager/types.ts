@@ -32,6 +32,24 @@ export interface ProjectConfig {
   defaultProfile: string
 }
 
+/** Maven 配置 */
+export interface MavenConfig {
+  /** 自定义 Maven 路径（为空则使用系统 PATH） */
+  customPath: string
+  /** 自定义 JAVA_HOME 路径（为空则使用系统环境变量） */
+  javaHome: string
+}
+
+/** 扫描结果项 */
+export interface ScanResult {
+  /** 显示名称（包含版本信息） */
+  label: string
+  /** 实际路径 */
+  path: string
+  /** 来源（system, sdkman, jenv, brew 等） */
+  source: string
+}
+
 /** 构建状态 */
 export type BuildStatus = 'idle' | 'building' | 'success' | 'error'
 

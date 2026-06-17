@@ -26,6 +26,8 @@ pub fn run() {
             maven_builder::check_maven_available,
             maven_builder::upload_to_server,
             maven_builder::copy_files_to_dir,
+            maven_builder::scan_maven_installations,
+            maven_builder::scan_jdk_installations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

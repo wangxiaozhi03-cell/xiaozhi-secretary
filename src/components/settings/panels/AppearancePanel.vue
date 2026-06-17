@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { useTheme, type ThemeMode, type AccentColor } from "../../../composables/settings/useTheme";
 import { useSettings } from "../../../composables/settings/useSettings";
+import { useThemeStyle, type ThemeStyle } from "../../../composables/settings/useThemeStyle";
 
 const { themeMode, accentColor, setTheme, setAccentColor, ACCENT_COLORS } = useTheme();
 const { settings, updateSetting } = useSettings();
+const { currentThemeStyle, setThemeStyle, THEME_STYLES } = useThemeStyle();
+
+const themeStyleList = Object.values(THEME_STYLES);
+
+function handleThemeStyleClick(style: ThemeStyle) {
+  setThemeStyle(style);
+}
 
 const themeOptions: { value: ThemeMode; label: string; icon: string }[] = [
   { value: "light", label: "浅色模式", icon: "sun" },
@@ -23,6 +31,37 @@ const accentOptions: { value: AccentColor; label: string }[] = [
 
 <template>
   <div class="space-y-5">
+    <!-- 主题风格 -->
+    <div class="settings-card">
+      <h3 class="settings-card-title">主题风格</h3>
+      <div class="grid grid-cols-3 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+        <button
+          v-for="theme in themeStyleList"
+          :key="theme.id"
+          class="theme-style-card flex items-center gap-2 p-2.5 rounded-xl transition-all duration-200"
+          :class="currentThemeStyle === theme.id ? 'active' : ''"
+          @click="handleThemeStyleClick(theme.id)"
+        >
+          <!-- 色卡预览 -->
+          <div class="flex gap-0.5 flex-shrink-0">
+            <div
+              v-for="(color, ci) in theme.preview"
+              :key="ci"
+              class="w-3 h-3 rounded-full"
+              :style="{ background: color }"
+            />
+          </div>
+          <div class="min-w-0">
+            <div class="text-[11px] font-semibold theme-style-label">{{ theme.label }}</div>
+          </div>
+          <!-- 选中标 -->
+          <svg v-if="currentThemeStyle === theme.id" class="w-3.5 h-3.5 flex-shrink-0 ml-auto check-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- 主题模式 -->
     <div class="settings-card">
       <h3 class="settings-card-title">主题模式</h3>
@@ -248,7 +287,7 @@ const accentOptions: { value: AccentColor; label: string }[] = [
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #F0F4F8;
+  background: rgba(0, 0, 0, 0.04);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
@@ -284,12 +323,67 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #F0F4F8;
+  background: rgba(0, 0, 0, 0.04);
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .dark input[type="range"]::-webkit-slider-thumb {
   background: #2A3545;
+}
+
+/* ── 主题风格卡片 ── */
+.theme-style-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 2px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.theme-style-card:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dark .theme-style-card {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .theme-style-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.theme-style-card.active {
+  background: #EFF6FF;
+  border-color: #3B82F6;
+}
+
+.dark .theme-style-card.active {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #60A5FA;
+}
+
+.theme-style-label {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.dark .theme-style-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.theme-style-desc {
+  color: rgba(0, 0, 0, 0.35);
+  margin-top: 2px;
+}
+
+.dark .theme-style-desc {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.theme-style-card.active .check-icon {
+  color: #3B82F6;
+}
+
+.dark .theme-style-card.active .check-icon {
+  color: #60A5FA;
 }
 </style>

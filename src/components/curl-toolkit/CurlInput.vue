@@ -140,7 +140,7 @@ defineExpose({ setCurl });
           ]"
           :key="tab.id"
           class="px-3 py-1 text-[11px] font-medium rounded-md transition-all duration-200"
-          :class="editTab === tab.id ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
+          :class="editTab === tab.id ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
           @click="editTab = tab.id as any"
         >
           {{ tab.label }}

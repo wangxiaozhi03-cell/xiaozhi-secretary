@@ -281,7 +281,7 @@ watch(config, () => {
         </div>
 
         <!-- 模式切换 -->
-        <div class="flex items-center gap-1 bg-[#EEF2F8]/40 dark:bg-black/20 rounded-lg p-0.5">
+        <div class="flex items-center gap-1 bg-black/[0.03] dark:bg-black/20 rounded-lg p-0.5">
           <button
             class="px-2.5 py-1 rounded-md text-[10px] font-medium transition-all"
             :class="generatorMode === 'sql-to-java'
@@ -373,10 +373,9 @@ watch(config, () => {
       </div>
     </div>
 
-    <!-- SQL 模式内容 -->
-    <template v-if="generatorMode === 'sql-to-java'">
-      <!-- 主内容区域 -->
-      <div class="flex-1 flex gap-2 overflow-hidden">
+    <Transition name="tab-float" mode="out-in">
+      <!-- SQL 模式内容 -->
+      <div v-if="generatorMode === 'sql-to-java'" key="sql" class="flex-1 flex gap-2 overflow-hidden">
         <!-- 左侧区域 -->
         <div class="flex flex-col gap-2 w-[45%] min-w-0">
           <!-- SQL 输入区 -->
@@ -454,11 +453,8 @@ watch(config, () => {
           </div>
         </div>
       </div>
-    </template>
-
-    <!-- JSON 模式内容 -->
-    <template v-else>
-      <div class="flex-1 flex gap-2 overflow-hidden">
+      <!-- JSON 模式内容 -->
+      <div v-else key="json" class="flex-1 flex gap-2 overflow-hidden">
         <!-- 左侧：JSON 输入和配置 -->
         <div class="flex flex-col gap-2 w-[45%] min-w-0">
           <!-- JSON 输入区 -->
@@ -488,7 +484,7 @@ watch(config, () => {
                 <input
                   v-model="jsonToDtoConfig.className"
                   type="text"
-                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-black/[0.04] dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
                   placeholder="ReqDto"
                 />
               </div>
@@ -499,7 +495,7 @@ watch(config, () => {
                 <input
                   v-model="jsonToDtoConfig.packageName"
                   type="text"
-                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-black/[0.04] dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
                   placeholder="com.example.demo"
                 />
               </div>
@@ -510,7 +506,7 @@ watch(config, () => {
                 <input
                   v-model="jsonToDtoConfig.author"
                   type="text"
-                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-black/[0.04] dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
                   placeholder="Developer"
                 />
               </div>
@@ -527,7 +523,7 @@ watch(config, () => {
                     @click="jsonToDtoConfig.useLombok = !jsonToDtoConfig.useLombok"
                   >
                     <div
-                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
+                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white/80 dark:bg-white/20 shadow-sm transition-transform"
                       :class="jsonToDtoConfig.useLombok ? 'translate-x-3.5' : 'translate-x-0'"
                     />
                   </div>
@@ -546,7 +542,7 @@ watch(config, () => {
                       class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
                       :class="jsonToDtoConfig.swaggerVersion === 'none'
                         ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-                        : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+                        : 'bg-black/[0.03] dark:bg-black/20 border border-white/20 hover:border-white/40'"
                       @click="jsonToDtoConfig.swaggerVersion = 'none'; jsonToDtoConfig.useSwagger = false"
                     >
                       <div
@@ -567,7 +563,7 @@ watch(config, () => {
                       class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
                       :class="jsonToDtoConfig.swaggerVersion === 'swagger2'
                         ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-                        : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+                        : 'bg-black/[0.03] dark:bg-black/20 border border-white/20 hover:border-white/40'"
                       @click="jsonToDtoConfig.swaggerVersion = 'swagger2'; jsonToDtoConfig.useSwagger = true"
                     >
                       <div
@@ -588,7 +584,7 @@ watch(config, () => {
                       class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
                       :class="jsonToDtoConfig.swaggerVersion === 'swagger3'
                         ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-                        : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+                        : 'bg-black/[0.03] dark:bg-black/20 border border-white/20 hover:border-white/40'"
                       @click="jsonToDtoConfig.swaggerVersion = 'swagger3'; jsonToDtoConfig.useSwagger = true"
                     >
                       <div
@@ -615,7 +611,7 @@ watch(config, () => {
                     @click="jsonToDtoConfig.extendPageLimit = !jsonToDtoConfig.extendPageLimit"
                   >
                     <div
-                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
+                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white/80 dark:bg-white/20 shadow-sm transition-transform"
                       :class="jsonToDtoConfig.extendPageLimit ? 'translate-x-3.5' : 'translate-x-0'"
                     />
                   </div>
@@ -651,7 +647,7 @@ watch(config, () => {
           </div>
         </div>
       </div>
-    </template>
+    </Transition>
 
     <!-- 错误提示 -->
     <Transition name="fade">
@@ -692,4 +688,9 @@ watch(config, () => {
   opacity: 0;
   transform: translateY(8px);
 }
+
+.tab-float-enter-active { transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
+.tab-float-leave-active { transition: all 0.18s ease-in; }
+.tab-float-enter-from { opacity: 0; transform: translateY(14px) scale(0.98); }
+.tab-float-leave-to { opacity: 0; transform: translateY(-6px) scale(0.99); }
 </style>

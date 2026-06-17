@@ -173,9 +173,9 @@ async function copyOutput() {
     <div v-if="errorMsg" class="err-bar">{{ errorMsg }}</div>
 
     <!-- 双栏主体 -->
-    <div class="cols">
+    <div class="cols flex-1 flex gap-2 p-2 min-h-0 overflow-hidden">
       <!-- 左栏：输入 -->
-      <div class="col col-left">
+      <div class="glass-card col col-left flex-1 flex flex-col min-h-0 overflow-hidden">
         <div class="col-hd"><span class="dot dot-input"></span>Input</div>
         <div class="editor-wrap">
           <div ref="lineNumbersRef" class="line-numbers">
@@ -198,7 +198,7 @@ async function copyOutput() {
       </div>
 
       <!-- 右栏：输出 -->
-      <div class="col col-right">
+      <div class="glass-card col col-right flex-1 flex flex-col min-h-0 overflow-hidden">
         <div class="col-hd"><span class="dot dot-output"></span>Output</div>
         <div class="editor-wrap">
           <div ref="outputLineNumbersRef" class="line-numbers">
@@ -280,10 +280,8 @@ async function copyOutput() {
 .err-bar { padding: 4px 12px; font-size: 10px; color: #ef4444; background: rgba(239,68,68,0.05); flex-shrink: 0; }
 
 /* ── 双栏 ── */
-.cols { display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; overflow: hidden; }
+.cols { display: flex; gap: 8px; padding: 8px; flex: 1; min-height: 0; overflow: hidden; }
 .col { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.col-left { border-right: 1px solid rgba(0,0,0,0.04); }
-:global(.dark) .col-left { border-right-color: rgba(255,255,255,0.04); }
 
 .col-hd {
   padding: 5px 12px; font-size: 10px; font-weight: 600; letter-spacing: 1px;

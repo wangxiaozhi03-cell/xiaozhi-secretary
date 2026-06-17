@@ -133,7 +133,11 @@ onMounted(() => {
       v-if="b.showSettings.value"
       :projects="b.projects.value"
       :servers="b.servers.value"
+      :maven-config="b.mavenConfig.value"
       :tab="b.settingsTab.value"
+      :maven-scan-results="b.mavenScanResults.value"
+      :jdk-scan-results="b.jdkScanResults.value"
+      :scanning="b.scanning.value"
       @update:tab="b.settingsTab.value = $event"
       @add-project="b.addProject"
       @remove-project="b.removeProject"
@@ -141,6 +145,10 @@ onMounted(() => {
       @add-server="b.addServer"
       @update-server="b.updateServer"
       @remove-server="b.removeServer"
+      @update-maven-config="b.updateMavenConfig"
+      @scan-installations="b.scanInstallations"
+      @select-maven-path="b.selectMavenPath"
+      @select-java-home="b.selectJavaHome"
       @close="b.showSettings.value = false"
     />
   </div>

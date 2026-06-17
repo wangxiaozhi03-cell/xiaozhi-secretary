@@ -168,7 +168,7 @@ const iconColors: Record<string, string> = {
       <div class="px-6 pt-8 pb-4">
         <!-- Welcome badge -->
         <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EEF2F8]/80 backdrop-blur-sm border border-[#3B82F6]/20 mb-4 transition-all duration-500 shadow-sm"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/[0.06] backdrop-blur-sm border border-[#3B82F6]/20 mb-4 transition-all duration-500 shadow-sm"
           :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'"
         >
           <span class="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" />
@@ -200,7 +200,7 @@ const iconColors: Record<string, string> = {
           <div
             v-for="stat in stats"
             :key="stat.label"
-            class="stat-card text-center px-4 py-2.5 rounded-xl bg-[#EEF2F8]/60 backdrop-blur-sm border border-white/80 shadow-sm"
+            class="stat-card text-center px-4 py-2.5 rounded-xl bg-black/[0.04] backdrop-blur-sm border border-white/80 shadow-sm"
           >
             <div class="text-lg font-semibold text-[#2B2F36]">
               {{ stat.value }}<span class="text-xs" :style="{ color: stat.color }">{{ stat.suffix }}</span>
@@ -256,7 +256,7 @@ const iconColors: Record<string, string> = {
                 <span
                   v-for="feature in tool.features"
                   :key="feature"
-                  class="px-2 py-0.5 rounded-full text-[10px] bg-[#EEF2F8]/60 text-[#98A2B3] backdrop-blur-sm border border-white/50"
+                  class="px-2 py-0.5 rounded-full text-[10px] bg-black/[0.04] text-[#98A2B3] backdrop-blur-sm border border-white/50"
                 >
                   {{ feature }}
                 </span>
@@ -264,7 +264,7 @@ const iconColors: Record<string, string> = {
             </div>
 
             <!-- Arrow -->
-            <div class="absolute bottom-4 right-4 w-7 h-7 rounded-lg bg-[#EEF2F8]/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 shadow-sm">
+            <div class="absolute bottom-4 right-4 w-7 h-7 rounded-lg bg-black/[0.04] backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 shadow-sm">
               <svg class="w-3.5 h-3.5 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -288,7 +288,7 @@ const iconColors: Record<string, string> = {
             <div
               v-for="tool in recentTools"
               :key="tool.label"
-              class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-[#EEF2F8]/50 transition-colors cursor-pointer"
+              class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-black/[0.04] transition-colors cursor-pointer"
             >
               <div class="w-7 h-7 rounded-lg bg-[#EEF4FF] flex items-center justify-center flex-shrink-0">
                 <svg class="w-3.5 h-3.5 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +316,7 @@ const iconColors: Record<string, string> = {
             <button
               v-for="tool in favoriteTools"
               :key="tool.label"
-              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EEF2F8]/50 hover:bg-[#EEF2F8]/80 border border-white/60 transition-all duration-200 hover:shadow-sm"
+              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/[0.04] hover:bg-black/[0.06] border border-white/60 transition-all duration-200 hover:shadow-sm"
               @click="tool.id && emit('navigate', tool.id)"
             >
               <svg class="w-3 h-3 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
