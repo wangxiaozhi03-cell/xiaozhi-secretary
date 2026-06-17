@@ -158,6 +158,7 @@ hello("小志秘书");
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
   startAutoSave();
+  loadExample();
 });
 
 onUnmounted(() => {
