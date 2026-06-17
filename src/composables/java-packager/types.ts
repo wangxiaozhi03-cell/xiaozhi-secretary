@@ -6,6 +6,24 @@ export interface MavenModule {
   children: MavenModule[]
 }
 
+/** SSH 服务器配置 */
+export interface SshServer {
+  /** 唯一 ID */
+  id: string
+  /** 显示名称 */
+  name: string
+  /** 服务器地址 */
+  host: string
+  /** SSH 端口 */
+  port: number
+  /** 用户名 */
+  username: string
+  /** 密码（为空则使用免密登录） */
+  password: string
+  /** 远程目录 */
+  remotePath: string
+}
+
 /** 项目配置 */
 export interface ProjectConfig {
   name: string

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectConfig, MavenModule, BuildStatus, BuildScope } from '../../../composables/java-packager/types'
+import type { ProjectConfig, MavenModule, BuildStatus, BuildScope, SshServer } from '../../../composables/java-packager/types'
 import { BUILD_SCOPE_OPTIONS } from '../../../composables/java-packager/types'
 import { open } from '@tauri-apps/plugin-dialog'
 
@@ -12,6 +12,9 @@ defineProps<{
   buildStatus: BuildStatus
   outputDir: string
   buildScope: BuildScope
+  autoUpload: boolean
+  servers: SshServer[]
+  selectedServerIds: string[]
 }>()
 
 const emit = defineEmits<{
@@ -20,7 +23,10 @@ const emit = defineEmits<{
   'update:extra-args': [value: string]
   'update:output-dir': [value: string]
   'update:build-scope': [value: BuildScope]
+  'update:auto-upload': [value: boolean]
+  toggleServer: [id: string]
   build: []
+  upload: []
   reset: []
 }>()
 
@@ -119,16 +125,51 @@ async function chooseOutputDir() {
         </button>
       </div>
 
-      <!-- Extra Args -->
-      <div class="flex items-center gap-2 flex-1 min-w-[100px]">
-        <label class="text-[11px] text-tertiary whitespace-nowrap">参数:</label>
-        <input
-          :value="extraArgs"
-          @input="emit('update:extra-args', ($event.target as HTMLInputElement).value)"
-          placeholder="如: -T 4"
-          class="flex-1 h-7 px-2.5 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] border border-transparent focus:border-blue-400/40 text-[12px] text-primary placeholder:text-tertiary/50 outline-none transition-all"
-        />
+      <!-- 上传服务器选择 -->
+      <div v-if="servers.length > 0" class="flex items-center gap-2">
+        <label class="text-[11px] text-tertiary whitespace-nowrap">上传到:</label>
+        <select
+          class="h-7 px-2 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] border border-transparent focus:border-blue-400/40 text-[12px] text-primary outline-none transition-all min-w-[120px]"
+          @change="emit('toggleServer', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="" :selected="selectedServerIds.length === 0">不上传</option>
+          <option
+            v-for="s in servers"
+            :key="s.id"
+            :value="s.id"
+            :selected="selectedServerIds.includes(s.id)"
+          >
+            {{ s.name }}
+          </option>
+        </select>
       </div>
+
+      <!-- 自动上传开关 -->
+      <label v-if="selectedServerIds.length > 0" class="flex items-center gap-2 cursor-pointer group">
+        <div
+          class="relative w-8 h-[18px] rounded-full transition-colors duration-200"
+          :class="autoUpload ? 'bg-green-500' : 'bg-black/[0.1] dark:bg-white/[0.15]'"
+          @click="emit('update:auto-upload', !autoUpload)"
+        >
+          <div
+            class="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform duration-200"
+            :class="autoUpload ? 'translate-x-[16px]' : 'translate-x-[2px]'"
+          />
+        </div>
+        <span class="text-[11px] text-tertiary group-hover:text-secondary transition-colors">自动上传</span>
+      </label>
+
+      <!-- 手动上传按钮 -->
+      <button
+        v-if="selectedServerIds.length > 0 && buildStatus === 'success'"
+        class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-all flex-shrink-0"
+        @click="emit('upload')"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        上传
+      </button>
 
       <!-- 构建按钮 -->
       <button

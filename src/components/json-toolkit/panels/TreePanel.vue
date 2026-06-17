@@ -1,135 +1,112 @@
 <script setup lang="ts">
-import { ref, computed, watch, h } from "vue";
+import { ref, computed, watch, h, onMounted, onUnmounted } from "vue";
+import VueJsonPretty from "vue-json-pretty";
+import "vue-json-pretty/lib/styles.css";
 
 const props = defineProps<{ json: string }>();
 
-interface TreeNode {
-  key: string;
-  value: unknown;
-  type: "object" | "array" | "string" | "number" | "boolean" | "null";
-  children: TreeNode[];
-  expanded: boolean;
-  path: string;
-  highlighted: boolean;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type JSONData = Record<string, any> | any[] | string | number | boolean | null;
 
-const tree = ref<TreeNode | null>(null);
+// 解析后的 JSON 数据
+const parsedData = ref<JSONData | null>(null);
 const errorMsg = ref("");
+
+// 搜索
 const searchQuery = ref("");
+
+// 展开/折叠控制
+const deep = ref(999);
+const treeKey = ref(0);
+
+// 选中的节点路径 (vue-json-pretty 格式，rootPath="$")
 const selectedPath = ref("");
+const selectedNodeData = ref<JSONData | null>(null);
+
+// 复制提示
 const copyToast = ref(false);
 
-function buildTree(data: unknown, key: string = "$", parentPath: string = "$"): TreeNode {
-  const currentPath = parentPath === "$" ? "$" : `${parentPath}.${key}`;
+// 暗色模式检测
+const isDark = ref(false);
+let darkObserver: MutationObserver | null = null;
 
-  if (data === null) return { key, value: null, type: "null", children: [], expanded: true, path: currentPath, highlighted: false };
-  if (Array.isArray(data)) {
-    return {
-      key,
-      value: `Array(${data.length})`,
-      type: "array",
-      children: data.map((item, i) => buildTree(item, String(i), currentPath)),
-      expanded: true,
-      path: currentPath,
-      highlighted: false,
-    };
-  }
-  if (typeof data === "object") {
-    const entries = Object.entries(data);
-    return {
-      key,
-      value: `{${entries.length}}`,
-      type: "object",
-      children: entries.map(([k, v]) => buildTree(v, k, currentPath)),
-      expanded: true,
-      path: currentPath,
-      highlighted: false,
-    };
-  }
-  return { key, value: data, type: typeof data as TreeNode["type"], children: [], expanded: false, path: currentPath, highlighted: false };
-}
+onMounted(() => {
+  isDark.value = document.documentElement.classList.contains("dark");
+  darkObserver = new MutationObserver(() => {
+    isDark.value = document.documentElement.classList.contains("dark");
+  });
+  darkObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+});
 
+onUnmounted(() => {
+  darkObserver?.disconnect();
+});
+
+// 解析 JSON
 function parse() {
   errorMsg.value = "";
-  tree.value = null;
+  parsedData.value = null;
+  selectedPath.value = "";
+  selectedNodeData.value = null;
   const trimmed = props.json.trim();
   if (!trimmed) return;
   try {
-    tree.value = buildTree(JSON.parse(trimmed));
+    parsedData.value = JSON.parse(trimmed) as JSONData;
   } catch (e: unknown) {
     errorMsg.value = e instanceof Error ? e.message : "Invalid JSON";
   }
 }
 
-function toggleNode(node: TreeNode) {
-  node.expanded = !node.expanded;
-}
+// 搜索：遍历数据查找匹配项的 path 集合
+const searchMatchPaths = computed(() => {
+  if (!searchQuery.value.trim() || parsedData.value == null) return new Set<string>();
+  const paths = new Set<string>();
+  const query = searchQuery.value.toLowerCase();
 
+  function walk(data: unknown, path: string) {
+    if (data === null || data === undefined) {
+      if (String(data).toLowerCase().includes(query)) paths.add(path);
+      return;
+    }
+    if (Array.isArray(data)) {
+      data.forEach((item, i) => walk(item, `${path}[${i}]`));
+    } else if (typeof data === "object") {
+      for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+        const childPath = /^[a-zA-Z_]\w*$/.test(k) ? `${path}.${k}` : `${path}["${k}"]`;
+        if (k.toLowerCase().includes(query)) paths.add(childPath);
+        walk(v, childPath);
+      }
+    } else {
+      if (String(data).toLowerCase().includes(query)) paths.add(path);
+    }
+  }
+
+  walk(parsedData.value, "$");
+  return paths;
+});
+
+const searchCount = computed(() => searchMatchPaths.value.size);
+
+// 展开 / 折叠全部
 function expandAll() {
-  if (!tree.value) return;
-  walk(tree.value, (n) => { n.expanded = true; });
+  deep.value = 999;
+  treeKey.value++;
 }
 
 function collapseAll() {
-  if (!tree.value) return;
-  walk(tree.value, (n) => { n.expanded = false; });
-  tree.value.expanded = true;
+  deep.value = 1;
+  treeKey.value++;
 }
 
-function walk(node: TreeNode, fn: (n: TreeNode) => void) {
-  fn(node);
-  node.children.forEach((c) => walk(c, fn));
+// 复制
+function showToast() {
+  copyToast.value = true;
+  setTimeout(() => { copyToast.value = false; }, 2000);
 }
 
-// 搜索功能
-const searchResults = computed(() => {
-  if (!searchQuery.value.trim() || !tree.value) return [];
-  const results: TreeNode[] = [];
-  const query = searchQuery.value.toLowerCase();
-
-  walk(tree.value, (node) => {
-    const keyMatch = node.key.toLowerCase().includes(query);
-    const valueMatch = String(node.value).toLowerCase().includes(query);
-    if (keyMatch || valueMatch) {
-      results.push(node);
-      node.highlighted = true;
-    } else {
-      node.highlighted = false;
-    }
-  });
-
-  return results;
-});
-
-// 复制路径
-function copyPath() {
-  if (selectedPath.value) {
-    navigator.clipboard.writeText(selectedPath.value);
-    showToast();
-  }
-}
-
-// 复制节点值
-function copyValue() {
-  if (!selectedNode.value) return;
-  const node = selectedNode.value;
-  const value = node.children.length > 0
-    ? JSON.stringify(node.value, null, 2)
-    : String(node.value);
-  navigator.clipboard.writeText(value);
-  showToast();
-}
-
-// 选中的节点
-const selectedNode = ref<TreeNode | null>(null);
-
-// 选中节点
-function selectNode(node: TreeNode) {
-  selectedPath.value = node.path;
-  selectedNode.value = node;
-}
-
-// 复制整个 JSON
 function copyAll() {
   if (props.json) {
     navigator.clipboard.writeText(props.json);
@@ -137,67 +114,75 @@ function copyAll() {
   }
 }
 
-function showToast() {
-  copyToast.value = true;
-  setTimeout(() => { copyToast.value = false; }, 2000);
-}
-
-// 渲染节点
-function renderNode(node: TreeNode, depth: number): ReturnType<typeof h> {
-  const hasChildren = node.children.length > 0;
-  const indent = depth * 16;
-
-  const arrow = hasChildren
-    ? h("span", {
-        class: "inline-block w-4 text-center text-tertiary cursor-pointer select-none transition-transform",
-        style: { transform: node.expanded ? "rotate(90deg)" : "rotate(0deg)" },
-        onClick: (e: Event) => { e.stopPropagation(); toggleNode(node); },
-      }, "▶")
-    : h("span", { class: "inline-block w-4" });
-
-  const keySpan = node.key !== "$"
-    ? h("span", {
-        class: "text-blue-600 dark:text-blue-400 mr-1",
-        style: node.highlighted ? { background: "rgba(250, 204, 21, 0.3)", borderRadius: "2px" } : {},
-      }, `"${node.key}"`)
-    : null;
-  const colon = node.key !== "$" ? h("span", { class: "text-tertiary mr-1" }, ": ") : null;
-
-  let valueEl;
-  if (hasChildren) {
-    const bracket = node.type === "array" ? ["[", "]"] : ["{", "}"];
-    const summary = node.expanded
-      ? null
-      : h("span", { class: "text-tertiary ml-1" }, ` ${node.children.length} items...`);
-    valueEl = [h("span", { class: "text-tertiary" }, bracket[0]), summary, h("span", { class: "text-tertiary" }, bracket[1])];
-  } else {
-    const colorClass = node.type === "string" ? "text-emerald-600 dark:text-emerald-400" : node.type === "number" ? "text-amber-600 dark:text-amber-400" : node.type === "boolean" ? "text-purple-600 dark:text-purple-400" : "text-gray-400";
-    const display = node.type === "string" ? `"${node.value}"` : String(node.value);
-    valueEl = h("span", {
-      class: colorClass,
-      style: node.highlighted ? { background: "rgba(250, 204, 21, 0.3)", borderRadius: "2px" } : {},
-    }, display);
+function copyPath() {
+  if (selectedPath.value) {
+    navigator.clipboard.writeText(selectedPath.value);
+    showToast();
   }
-
-  const line = h("div", {
-    class: `flex items-start hover:bg-blue-500/[0.04] rounded px-1 cursor-pointer ${selectedPath.value === node.path ? 'bg-blue-500/[0.06]' : ''}`,
-    style: { paddingLeft: `${indent}px` },
-    onClick: (e: Event) => { e.stopPropagation(); selectNode(node); },
-  }, [arrow, keySpan, colon, valueEl].filter(Boolean));
-
-  const children = (hasChildren && node.expanded)
-    ? node.children.map((child) => renderNode(child, depth + 1))
-    : [];
-
-  return h("div", null, [line, ...children]);
 }
 
-// 清除搜索
+function copyValue() {
+  if (selectedNodeData.value != null) {
+    const val =
+      typeof selectedNodeData.value === "object"
+        ? JSON.stringify(selectedNodeData.value, null, 2)
+        : String(selectedNodeData.value);
+    navigator.clipboard.writeText(val);
+    showToast();
+  }
+}
+
 function clearSearch() {
   searchQuery.value = "";
-  if (tree.value) {
-    walk(tree.value, (n) => { n.highlighted = false; });
+}
+
+// 节点选中回调：从 vue-json-pretty 的 path 提取 JSONPath + 数据
+function onNodeSelect(path: string | string[]) {
+  const p = Array.isArray(path) ? path[0] || "" : path;
+  selectedPath.value = p || "";
+  if (!p) {
+    selectedNodeData.value = null;
+    return;
   }
+  selectedNodeData.value = getNodeByPath(parsedData.value, p);
+}
+
+function getNodeByPath(data: JSONData | null, path: string): JSONData | null {
+  if (!path || path === "$") return data;
+  const rest = path.slice(1); // 去掉 "$"
+  const segments = rest.match(/\.(\w+)|\[(\d+)\]|\["([^"]+)"\]/g);
+  if (!segments) return data;
+  let current: any = data;
+  for (const seg of segments) {
+    if (seg.startsWith(".")) {
+      current = current?.[seg.slice(1)];
+    } else if (seg.startsWith("[") && seg.endsWith("]")) {
+      const inner = seg.slice(1, -1);
+      const key = inner.startsWith('"') ? inner.slice(1, -1) : Number(inner);
+      current = current?.[key];
+    }
+  }
+  return current;
+}
+
+// 搜索高亮：自定义 Key 渲染
+function renderSearchKey({ node, defaultKey }: { node: any; defaultKey: string }) {
+  const isMatch = searchMatchPaths.value.has(node.path);
+  return h("span", {
+    style: isMatch
+      ? "background: rgba(250, 204, 21, 0.35); border-radius: 2px; padding: 0 2px;"
+      : "",
+  }, defaultKey);
+}
+
+// 搜索高亮：自定义 Value 渲染
+function renderSearchValue({ node, defaultValue }: { node: any; defaultValue: string }) {
+  const isMatch = searchMatchPaths.value.has(node.path);
+  return h("span", {
+    style: isMatch
+      ? "background: rgba(250, 204, 21, 0.35); border-radius: 2px; padding: 0 2px;"
+      : "",
+  }, defaultValue);
 }
 
 watch(() => props.json, parse, { immediate: true });
@@ -205,7 +190,7 @@ watch(() => props.json, parse, { immediate: true });
 
 <template>
   <div class="flex flex-col h-full relative">
-    <!-- 头部 -->
+    <!-- 头部工具栏 -->
     <div class="px-3 py-2 border-b border-black/[0.03] dark:border-white/[0.04] flex-shrink-0">
       <div class="flex items-center justify-between mb-2">
         <span class="text-[10px] font-medium text-tertiary uppercase tracking-widest">Tree View</span>
@@ -239,16 +224,34 @@ watch(() => props.json, parse, { immediate: true });
       </div>
 
       <!-- 搜索结果统计 -->
-      <div v-if="searchQuery && searchResults.length > 0" class="mt-1 text-[10px] text-tertiary">
-        找到 {{ searchResults.length }} 个匹配项
+      <div v-if="searchQuery && searchCount > 0" class="mt-1 text-[10px] text-tertiary">
+        找到 {{ searchCount }} 个匹配项
       </div>
     </div>
 
-    <!-- 内容 -->
+    <!-- 内容区域 -->
     <div v-if="errorMsg" class="p-3 text-xs text-rose-500">{{ errorMsg }}</div>
-    <div v-else-if="!tree" class="flex-1 flex items-center justify-center text-xs text-tertiary">Paste JSON in the editor</div>
-    <div v-else class="flex-1 overflow-y-auto p-2 font-mono text-[12px] leading-[1.6]">
-      <component :is="() => renderNode(tree!, 0)" />
+    <div v-else-if="parsedData == null" class="flex-1 flex items-center justify-center text-xs text-tertiary">
+      Paste JSON in the editor
+    </div>
+    <div v-else class="flex-1 overflow-y-auto p-2 tree-container">
+      <vue-json-pretty
+        :key="treeKey"
+        :data="parsedData"
+        root-path="$"
+        :deep="deep"
+        :show-length="true"
+        :show-line="true"
+        :show-icon="true"
+        :show-double-quotes="true"
+        :highlight-selected-node="true"
+        selectable-type="single"
+        :selected-value="selectedPath"
+        :theme="isDark ? 'dark' : 'light'"
+        :render-node-key="renderSearchKey"
+        :render-node-value="renderSearchValue"
+        @selected-change="onNodeSelect"
+      />
     </div>
 
     <!-- JSONPath 显示栏 -->
@@ -302,5 +305,118 @@ watch(() => props.json, parse, { immediate: true });
 .toast-leave-to {
   opacity: 0;
   transform: translate(-50%, 8px);
+}
+</style>
+
+<style>
+/* vue-json-pretty 主题适配 */
+.tree-container .vjs-tree {
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* 替换默认三角箭头为 chevron 小箭头 */
+.tree-container .vjs-carets {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transform: none !important;
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+.tree-container .vjs-carets:hover {
+  color: #3b82f6 !important;
+}
+.tree-container .vjs-carets svg {
+  display: none;
+}
+.tree-container .vjs-carets::before {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: -1px;
+}
+.tree-container .vjs-carets-open::before {
+  transform: rotate(45deg);
+}
+.tree-container .vjs-carets-close::before {
+  transform: rotate(-45deg);
+}
+.dark .tree-container .vjs-carets {
+  color: #6b7280;
+}
+.dark .tree-container .vjs-carets:hover {
+  color: #60a5fa !important;
+}
+
+/* 浅色模式 - 适配项目的配色体系 */
+.tree-container .vjs-key {
+  color: #2563eb;
+}
+.tree-container .vjs-value-string {
+  color: #059669;
+}
+.tree-container .vjs-value-number {
+  color: #d97706;
+}
+.tree-container .vjs-value-boolean {
+  color: #7c3aed;
+}
+.tree-container .vjs-value-null {
+  color: #9ca3af;
+}
+.tree-container .vjs-tree-brackets {
+  color: #6b7280;
+}
+.tree-container .vjs-tree-node:hover {
+  background-color: rgba(59, 130, 246, 0.04);
+  border-radius: 4px;
+}
+.tree-container .vjs-tree-node.is-highlight {
+  background-color: rgba(59, 130, 246, 0.06);
+  border-radius: 4px;
+}
+.tree-container .vjs-indent-unit.has-line {
+  border-left: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+/* 暗色模式 */
+.tree-container.dark .vjs-tree,
+.dark .tree-container .vjs-tree {
+  color: #e5e7eb;
+}
+.dark .tree-container .vjs-key {
+  color: #60a5fa;
+}
+.dark .tree-container .vjs-value-string {
+  color: #34d399;
+}
+.dark .tree-container .vjs-value-number {
+  color: #fbbf24;
+}
+.dark .tree-container .vjs-value-boolean {
+  color: #a78bfa;
+}
+.dark .tree-container .vjs-value-null {
+  color: #6b7280;
+}
+.dark .tree-container .vjs-tree-brackets {
+  color: #9ca3af;
+}
+.dark .tree-container .vjs-tree-node:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+.dark .tree-container .vjs-tree-node.is-highlight {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+.dark .tree-container .vjs-indent-unit.has-line {
+  border-left: 1px dashed rgba(255, 255, 255, 0.08);
 }
 </style>

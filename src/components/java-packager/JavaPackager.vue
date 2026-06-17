@@ -2,41 +2,14 @@
 import { onMounted } from 'vue'
 import { useMavenBuilder } from '../../composables/java-packager/useMavenBuilder'
 import ProjectSelector from './panels/ProjectSelector.vue'
-import ProjectSettings from './panels/ProjectSettings.vue'
+import SettingsDialog from './panels/SettingsDialog.vue'
 import BuildConfig from './panels/BuildConfig.vue'
 import BuildOutput from './panels/BuildOutput.vue'
 
-const {
-  projects,
-  currentProject,
-  modules,
-  leafModules,
-  selectedModules,
-  selectedProfile,
-  skipTests,
-  extraArgs,
-  buildStatus,
-  buildLogs,
-  buildDuration,
-  mavenVersion,
-  loadingModules,
-  outputDir,
-  buildScope,
-  showSettings,
-  checkMaven,
-  addProject,
-  removeProject,
-  updateProject,
-  selectProject,
-  toggleModule,
-  clearSelection,
-  setOutputDir,
-  build,
-  resetBuild,
-} = useMavenBuilder()
+const b = useMavenBuilder()
 
 onMounted(() => {
-  checkMaven()
+  b.checkMaven()
 })
 </script>
 
@@ -56,19 +29,18 @@ onMounted(() => {
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <div v-if="mavenVersion" class="flex items-center gap-2 text-[11px] text-tertiary">
+        <div v-if="b.mavenVersion.value" class="flex items-center gap-2 text-[11px] text-tertiary">
           <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-          {{ mavenVersion }}
+          {{ b.mavenVersion.value }}
         </div>
         <div v-else class="flex items-center gap-2 text-[11px] text-red-400">
           <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
           Maven 未安装
         </div>
-        <!-- 项目管理按钮 -->
         <button
           class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors text-tertiary hover:text-primary"
-          title="项目管理"
-          @click="showSettings = true"
+          title="项目 & 服务器管理"
+          @click="b.showSettings.value = true"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -81,52 +53,64 @@ onMounted(() => {
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden gap-2 p-2">
       <ProjectSelector
-        :projects="projects"
-        :current-project="currentProject"
-        :modules="modules"
-        :leaf-modules="leafModules"
-        :selected-modules="selectedModules"
-        :loading-modules="loadingModules"
-        @select-project="selectProject"
-        @toggle-module="toggleModule"
-        @clear-selection="clearSelection"
-        @open-settings="showSettings = true"
+        :projects="b.projects.value"
+        :current-project="b.currentProject.value"
+        :modules="b.modules.value"
+        :leaf-modules="b.leafModules.value"
+        :selected-modules="b.selectedModules.value"
+        :loading-modules="b.loadingModules.value"
+        @select-project="b.selectProject"
+        @toggle-module="b.toggleModule"
+        @clear-selection="b.clearSelection"
+        @open-settings="b.showSettings.value = true"
       />
 
       <div class="flex-1 flex flex-col gap-2 min-w-0">
         <BuildConfig
-          :current-project="currentProject"
-          :selected-modules="selectedModules"
-          :selected-profile="selectedProfile"
-          :skip-tests="skipTests"
-          :extra-args="extraArgs"
-          :build-status="buildStatus"
-          :output-dir="outputDir"
-          :build-scope="buildScope"
-          @update:profile="selectedProfile = $event"
-          @update:skip-tests="skipTests = $event"
-          @update:extra-args="extraArgs = $event"
-          @update:output-dir="setOutputDir"
-          @update:build-scope="buildScope = $event"
-          @build="build"
-          @reset="resetBuild"
+          :current-project="b.currentProject.value"
+          :selected-modules="b.selectedModules.value"
+          :selected-profile="b.selectedProfile.value"
+          :skip-tests="b.skipTests.value"
+          :extra-args="b.extraArgs.value"
+          :build-status="b.buildStatus.value"
+          :output-dir="b.outputDir.value"
+          :build-scope="b.buildScope.value"
+          :auto-upload="b.autoUpload.value"
+          :servers="b.servers.value"
+          :selected-server-ids="b.selectedServerIds.value"
+          @update:profile="b.selectedProfile.value = $event"
+          @update:skip-tests="b.skipTests.value = $event"
+          @update:extra-args="b.extraArgs.value = $event"
+          @update:output-dir="b.setOutputDir"
+          @update:build-scope="b.buildScope.value = $event"
+          @update:auto-upload="b.autoUpload.value = $event"
+          @toggle-server="b.toggleServer"
+          @build="b.build"
+          @upload="b.upload"
+          @reset="b.resetBuild"
         />
         <BuildOutput
-          :build-status="buildStatus"
-          :build-logs="buildLogs"
-          :build-duration="buildDuration"
+          :build-status="b.buildStatus.value"
+          :build-logs="b.buildLogs.value"
+          :build-duration="b.buildDuration.value"
         />
       </div>
     </div>
 
-    <!-- 项目管理弹窗 -->
-    <ProjectSettings
-      v-if="showSettings"
-      :projects="projects"
-      @add="addProject"
-      @remove="removeProject"
-      @update="updateProject"
-      @close="showSettings = false"
+    <!-- 设置弹窗 -->
+    <SettingsDialog
+      v-if="b.showSettings.value"
+      :projects="b.projects.value"
+      :servers="b.servers.value"
+      :tab="b.settingsTab.value"
+      @update:tab="b.settingsTab.value = $event"
+      @add-project="b.addProject"
+      @remove-project="b.removeProject"
+      @update-project="b.updateProject"
+      @add-server="b.addServer"
+      @update-server="b.updateServer"
+      @remove-server="b.removeServer"
+      @close="b.showSettings.value = false"
     />
   </div>
 </template>

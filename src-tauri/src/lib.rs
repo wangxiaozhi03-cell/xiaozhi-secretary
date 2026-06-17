@@ -24,6 +24,7 @@ pub fn run() {
             maven_builder::list_maven_leaf_modules,
             maven_builder::start_build,
             maven_builder::check_maven_available,
+            maven_builder::upload_to_server,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

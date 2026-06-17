@@ -5,6 +5,40 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use tauri::{AppHandle, Emitter};
 
+/// 格式化文件大小
+fn format_size(bytes: u64) -> String {
+    if bytes < 1024 {
+        return format!("{} B", bytes);
+    }
+    let kb = bytes as f64 / 1024.0;
+    if kb < 1024.0 {
+        return format!("{:.1} KB", kb);
+    }
+    let mb = kb / 1024.0;
+    if mb < 1024.0 {
+        return format!("{:.1} MB", mb);
+    }
+    let gb = mb / 1024.0;
+    format!("{:.2} GB", gb)
+}
+
+/// 格式化传输速度
+fn format_speed(bytes: u64, ms: u128) -> String {
+    if ms == 0 {
+        return String::new();
+    }
+    let bytes_per_sec = (bytes as f64) / (ms as f64 / 1000.0);
+    if bytes_per_sec < 1024.0 {
+        return format!("{:.0} B/s", bytes_per_sec);
+    }
+    let kb_per_sec = bytes_per_sec / 1024.0;
+    if kb_per_sec < 1024.0 {
+        return format!("{:.1} KB/s", kb_per_sec);
+    }
+    let mb_per_sec = kb_per_sec / 1024.0;
+    format!("{:.1} MB/s", mb_per_sec)
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MavenModule {
     pub name: String,
@@ -598,6 +632,263 @@ fn format_duration(ms: u128) -> String {
     }
     let m = s / 60;
     format!("{}m {}s", m, s % 60)
+}
+
+/// 上传文件到远程服务器（通过 scp，支持密码和免密登录两种方式）
+#[tauri::command]
+pub fn upload_to_server(
+    app: AppHandle,
+    local_paths: Vec<String>,
+    host: String,
+    port: u16,
+    username: String,
+    password: Option<String>,
+    remote_path: String,
+) -> Result<(), String> {
+    if local_paths.is_empty() {
+        return Err("没有要上传的文件".to_string());
+    }
+
+    std::thread::spawn(move || {
+        let total = local_paths.len();
+        let start = std::time::Instant::now();
+        let use_password = password.is_some();
+
+        // 构建 ssh 命令（有密码时用 sshpass）
+        let auth_hint = if use_password { "密码认证" } else { "免密认证" };
+        let _ = app.emit("build-log", BuildLogEvent {
+            index: 0,
+            total,
+            module_name: String::new(),
+            line: format!("🔐 使用{}方式连接 {}@{}:{}", auth_hint, username, host, port),
+            kind: "info".to_string(),
+        });
+
+        // 检查 sshpass 是否安装（使用密码时）
+        if use_password {
+            let sshpass_check = Command::new("which").arg("sshpass").output();
+            match sshpass_check {
+                Ok(o) if !o.status.success() => {
+                    let _ = app.emit("build-log", BuildLogEvent {
+                        index: 0,
+                        total,
+                        module_name: String::new(),
+                        line: "❌ 未安装 sshpass，请先安装：brew install hudochenkov/sshpass/sshpass".to_string(),
+                        kind: "error".to_string(),
+                    });
+                    return;
+                }
+                Err(e) => {
+                    let _ = app.emit("build-log", BuildLogEvent {
+                        index: 0,
+                        total,
+                        module_name: String::new(),
+                        line: format!("❌ 检查 sshpass 失败: {}", e),
+                        kind: "error".to_string(),
+                    });
+                    return;
+                }
+                _ => {}
+            }
+        }
+
+        let ssh_prefix = if use_password {
+            vec!["sshpass".to_string(), "-p".to_string(), password.clone().unwrap(), "ssh".to_string()]
+        } else {
+            vec!["ssh".to_string()]
+        };
+        let scp_prefix = if use_password {
+            vec!["sshpass".to_string(), "-p".to_string(), password.unwrap(), "scp".to_string()]
+        } else {
+            vec!["scp".to_string()]
+        };
+
+        // 先测试 SSH 连接
+        let mut ssh_test_args: Vec<String> = ssh_prefix.clone();
+        ssh_test_args.extend([
+            "-p".to_string(), port.to_string(),
+            "-o".to_string(), "StrictHostKeyChecking=no".to_string(),
+            "-o".to_string(), "ConnectTimeout=10".to_string(),
+            format!("{}@{}", username, host),
+            "echo ok".to_string(),
+        ]);
+        let ssh_test = Command::new(&ssh_test_args[0])
+            .args(&ssh_test_args[1..])
+            .output();
+        match ssh_test {
+            Ok(o) if o.status.success() => {
+                let _ = app.emit("build-log", BuildLogEvent {
+                    index: 0,
+                    total,
+                    module_name: String::new(),
+                    line: "✅ SSH 连接成功".to_string(),
+                    kind: "success".to_string(),
+                });
+            }
+            Ok(o) => {
+                let stderr = String::from_utf8_lossy(&o.stderr);
+                let stdout = String::from_utf8_lossy(&o.stdout);
+                let mut detail = String::new();
+                if !stderr.trim().is_empty() {
+                    detail.push_str(&format!("stderr: {}", stderr.trim()));
+                }
+                if !stdout.trim().is_empty() {
+                    detail.push_str(&format!(" stdout: {}", stdout.trim()));
+                }
+                let _ = app.emit("build-log", BuildLogEvent {
+                    index: 0,
+                    total,
+                    module_name: String::new(),
+                    line: format!("❌ SSH 连接失败 (exit code: {}): {}", o.status.code().unwrap_or(-1), detail),
+                    kind: "error".to_string(),
+                });
+                return;
+            }
+            Err(e) => {
+                let _ = app.emit("build-log", BuildLogEvent {
+                    index: 0,
+                    total,
+                    module_name: String::new(),
+                    line: format!("❌ SSH 执行失败: {}", e),
+                    kind: "error".to_string(),
+                });
+                return;
+            }
+        }
+
+        // 创建远程目录
+        let mut ssh_args: Vec<String> = ssh_prefix.clone();
+        ssh_args.extend([
+            "-p".to_string(), port.to_string(),
+            "-o".to_string(), "StrictHostKeyChecking=no".to_string(),
+            "-o".to_string(), "ConnectTimeout=10".to_string(),
+            format!("{}@{}", username, host),
+            format!("mkdir -p {}", remote_path),
+        ]);
+        let _ = Command::new(&ssh_args[0])
+            .args(&ssh_args[1..])
+            .output();
+
+        for (i, local_path) in local_paths.iter().enumerate() {
+            let file_name = std::path::Path::new(local_path)
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default();
+
+            // 获取文件大小
+            let file_size = fs::metadata(local_path)
+                .map(|m| m.len())
+                .unwrap_or(0);
+            let size_str = format_size(file_size);
+
+            let _ = app.emit("build-log", BuildLogEvent {
+                index: i + 1,
+                total,
+                module_name: file_name.clone(),
+                line: format!("📤 [{}/{}] 上传中: {} ({}) → {}@{}:{}", i + 1, total, file_name, size_str, username, host, remote_path),
+                kind: "info".to_string(),
+            });
+
+            let remote_target = format!("{}@{}:{}/{}", username, host, remote_path, file_name);
+
+            let mut scp_args: Vec<String> = scp_prefix.clone();
+            scp_args.extend([
+                "-P".to_string(), port.to_string(),
+                "-o".to_string(), "StrictHostKeyChecking=no".to_string(),
+                "-o".to_string(), "ConnectTimeout=10".to_string(),
+                local_path.clone(),
+                remote_target,
+            ]);
+
+            let file_start = std::time::Instant::now();
+            let output = Command::new(&scp_args[0])
+                .args(&scp_args[1..])
+                .output();
+
+            match output {
+                Ok(o) if o.status.success() => {
+                    let file_duration = file_start.elapsed().as_millis();
+                    let speed = format_speed(file_size, file_duration);
+                    let _ = app.emit("build-log", BuildLogEvent {
+                        index: i + 1,
+                        total,
+                        module_name: file_name.clone(),
+                        line: format!("✅ [{}/{}] 上传成功: {} ({}) 耗时: {} {}", i + 1, total, file_name, size_str, format_duration(file_duration), speed),
+                        kind: "success".to_string(),
+                    });
+                }
+                Ok(o) => {
+                    let stderr = String::from_utf8_lossy(&o.stderr);
+                    let stdout = String::from_utf8_lossy(&o.stdout);
+                    let mut detail = String::new();
+                    if !stderr.trim().is_empty() {
+                        detail.push_str(&format!("stderr: {}", stderr.trim()));
+                    }
+                    if !stdout.trim().is_empty() {
+                        detail.push_str(&format!(" stdout: {}", stdout.trim()));
+                    }
+                    let hint = if use_password { "请检查密码是否正确。" } else { "请确认已配置 SSH 免密登录，或在服务器设置中填写密码。" };
+                    let _ = app.emit("build-log", BuildLogEvent {
+                        index: i + 1,
+                        total,
+                        module_name: file_name.clone(),
+                        line: format!("❌ [{}/{}] 上传失败: {} (exit code: {}) {}", i + 1, total, file_name, o.status.code().unwrap_or(-1), hint),
+                        kind: "error".to_string(),
+                    });
+                    if !detail.is_empty() {
+                        let _ = app.emit("build-log", BuildLogEvent {
+                            index: i + 1,
+                            total,
+                            module_name: file_name.clone(),
+                            line: format!("   {}", detail),
+                            kind: "error".to_string(),
+                        });
+                    }
+                }
+                Err(e) => {
+                    let hint = if use_password { "请确认已安装 sshpass（brew install hudochenkov/sshpass/sshpass）。" } else { "请确认已安装 ssh/scp 并配置免密登录，或在服务器设置中填写密码。" };
+                    let _ = app.emit("build-log", BuildLogEvent {
+                        index: i + 1,
+                        total,
+                        module_name: file_name.clone(),
+                        line: format!("❌ [{}/{}] 执行失败: {} {}", i + 1, total, file_name, hint),
+                        kind: "error".to_string(),
+                    });
+                    let _ = app.emit("build-log", BuildLogEvent {
+                        index: i + 1,
+                        total,
+                        module_name: file_name.clone(),
+                        line: format!("   {}", e),
+                        kind: "error".to_string(),
+                    });
+                }
+            }
+        }
+
+        // 上传汇总
+        let duration = start.elapsed().as_millis();
+        let total_size: u64 = local_paths.iter()
+            .map(|p| fs::metadata(p).map(|m| m.len()).unwrap_or(0))
+            .sum();
+        let speed = format_speed(total_size, duration);
+        let _ = app.emit("build-log", BuildLogEvent {
+            index: total,
+            total,
+            module_name: String::new(),
+            line: format!("📤 上传完成: {} 个文件, 总大小 {}, 耗时 {} {}", total, format_size(total_size), format_duration(duration), speed),
+            kind: "info".to_string(),
+        });
+
+        // 发送上传完成事件
+        let _ = app.emit("upload-done", BuildDoneEvent {
+            success: true,
+            duration_ms: duration,
+            message: format!("上传完成: {} 个文件, 总大小 {}", total, format_size(total_size)),
+            copy_result: None,
+        });
+    });
+
+    Ok(())
 }
 
 #[tauri::command]

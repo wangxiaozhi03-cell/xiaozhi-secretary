@@ -326,15 +326,7 @@ function getActionIcon(icon: string) {
 
         <!-- JSON 对比模式 -->
         <template v-else-if="mode === 'compare'">
-          <BeautifyTool
-            class="w-1/2 min-w-0"
-            tab-id="left"
-            :initial-state="{ input: mainJson }"
-            @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }"
-          />
-          <div class="w-1/2 min-w-0 border-l border-black/[0.04] dark:border-white/[0.06]">
-            <DiffPanel :json-a="mainJson" />
-          </div>
+          <DiffPanel class="w-full h-full" :json-a="mainJson" />
         </template>
 
         <!-- JSON 可视化模式 -->
