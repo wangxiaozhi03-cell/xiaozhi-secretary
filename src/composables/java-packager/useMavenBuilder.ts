@@ -106,9 +106,11 @@ export function useMavenBuilder() {
     }
   }
 
-  // 更新 Maven 配置
-  function updateMavenConfig(config: MavenConfig) {
+  // 更新 Maven 配置并重新检查
+  async function updateMavenConfig(config: MavenConfig) {
     mavenConfig.value = config
+    // 保存后重新检查 Maven 是否可用
+    await checkMaven()
   }
 
   // 扫描系统中的 Maven 和 JDK 安装
@@ -315,6 +317,9 @@ export function useMavenBuilder() {
     if (unlistenLog) unlistenLog()
     if (unlistenDone) unlistenDone()
 
+    // 获取选中模块的路径，用于过滤 JAR
+    const selectedModulePaths = selectedModules.value.map(m => m.path)
+
     unlistenLog = await listen<BuildLogEvent>('build-log', (event) => {
       const { line } = event.payload
       buildLogs.value.push(line)
@@ -322,7 +327,14 @@ export function useMavenBuilder() {
       // 从 Maven 日志中提取 JAR 原始路径
       const jarMatch = line.match(/\[INFO\] Building jar: (.+\.jar)/)
       if (jarMatch) {
-        copiedFilePaths.push(jarMatch[1])
+        const jarPath = jarMatch[1]
+        // 只复制属于选中模块的 JAR 文件
+        const belongsToSelectedModule = selectedModulePaths.some(modulePath =>
+          jarPath.includes(modulePath.replace(/^\./, ''))
+        )
+        if (belongsToSelectedModule) {
+          copiedFilePaths.push(jarPath)
+        }
       }
 
       if (buildLogs.value.length > 2000) {
