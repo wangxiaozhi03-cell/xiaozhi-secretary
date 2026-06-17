@@ -89,6 +89,37 @@ onMounted(() => {
           @upload="b.upload"
           @reset="b.resetBuild"
         />
+
+        <!-- 选中模块列表 -->
+        <div v-if="b.selectedModules.value.length > 0" class="glass-card flex-shrink-0 px-4 py-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-[11px] text-tertiary">已选模块:</span>
+            <div class="flex gap-1 flex-wrap">
+              <span
+                v-for="mod in b.selectedModules.value"
+                :key="mod.path"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[11px] font-medium group"
+              >
+                <span class="truncate max-w-[150px]">{{ mod.name }}</span>
+                <button
+                  class="w-3.5 h-3.5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-500 transition-all"
+                  @click="b.toggleModule(mod)"
+                >
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <button
+              class="text-[10px] text-tertiary hover:text-red-500 transition-colors ml-auto"
+              @click="b.clearSelection()"
+            >
+              清空
+            </button>
+          </div>
+        </div>
+
         <BuildOutput
           :build-status="b.buildStatus.value"
           :build-logs="b.buildLogs.value"

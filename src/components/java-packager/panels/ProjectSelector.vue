@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { ProjectConfig, MavenModule } from '../../../composables/java-packager/types'
 
-defineProps<{
+const props = defineProps<{
   projects: ProjectConfig[]
   currentProject: ProjectConfig | null
   modules: MavenModule[]
@@ -18,8 +18,36 @@ const emit = defineEmits<{
   openSettings: []
 }>()
 
+// 搜索关键词
+const searchQuery = ref('')
+
 // 展开/折叠状态（按模块路径）
 const expandedPaths = ref<Set<string>>(new Set())
+
+// 过滤后的模块（模糊搜索）
+const filteredModules = computed(() => {
+  if (!searchQuery.value.trim()) return props.modules
+  const query = searchQuery.value.toLowerCase()
+
+  function filterModule(mod: MavenModule): MavenModule | null {
+    // 检查当前模块名称是否匹配
+    const nameMatch = mod.name.toLowerCase().includes(query)
+    // 递归过滤子模块
+    const filteredChildren = mod.children
+      .map(c => filterModule(c))
+      .filter((c): c is MavenModule => c !== null)
+
+    // 如果名称匹配或有匹配的子模块，则保留
+    if (nameMatch || filteredChildren.length > 0) {
+      return { ...mod, children: filteredChildren }
+    }
+    return null
+  }
+
+  return props.modules
+    .map(m => filterModule(m))
+    .filter((m): m is MavenModule => m !== null)
+})
 
 function isExpanded(path: string): boolean {
   return expandedPaths.value.has(path)
@@ -166,6 +194,29 @@ function getModuleIcon(name: string): string {
         </div>
       </div>
 
+      <!-- 搜索框 -->
+      <div v-if="currentProject && modules.length > 0" class="mb-2">
+        <div class="relative">
+          <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            placeholder="搜索模块..."
+            class="w-full h-7 pl-8 pr-2 rounded-lg bg-black/[0.04] dark:bg-white/[0.06] border border-transparent focus:border-blue-400/40 text-[12px] text-primary placeholder:text-tertiary/50 outline-none transition-all"
+          />
+          <button
+            v-if="searchQuery"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary"
+            @click="searchQuery = ''"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <!-- Loading -->
       <div v-if="loadingModules" class="flex items-center justify-center py-8">
         <svg class="animate-spin w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24">
@@ -184,7 +235,11 @@ function getModuleIcon(name: string): string {
 
       <!-- Tree -->
       <div v-else class="space-y-0.5">
-        <template v-for="mod in modules" :key="mod.path">
+        <!-- 无搜索结果 -->
+        <div v-if="searchQuery && filteredModules.length === 0" class="text-center py-4 text-tertiary text-[12px]">
+          未找到匹配的模块
+        </div>
+        <template v-for="mod in filteredModules" :key="mod.path">
           <!-- 聚合模块（有子模块） -->
           <div v-if="mod.children.length > 0">
             <!-- 聚合模块标题行 -->
