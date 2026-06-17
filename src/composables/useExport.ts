@@ -1,4 +1,4 @@
-import type { ImageItem, PageSettings, PageLayout } from "@/types";
+import type { ImageItem, PageSettings, PageLayout, PageOverrides } from "@/types";
 import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
 import { invoke } from "@tauri-apps/api/core";
 import { save, message } from "@tauri-apps/plugin-dialog";
@@ -24,7 +24,8 @@ function calcFit(
 export function useExport(
   images: () => ImageItem[],
   pages: () => PageLayout[],
-  settings: () => PageSettings
+  settings: () => PageSettings,
+  getPageOverrides?: (pageIndex: number) => PageOverrides | undefined
 ) {
   function toBase64(bytes: Uint8Array): string {
     let binary = "";
@@ -44,17 +45,42 @@ export function useExport(
     }
   }
 
+  /** 加载图片，带超时和错误处理 */
+  function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const el = new Image();
+      const timer = setTimeout(() => {
+        el.src = "";
+        reject(new Error("图片加载超时"));
+      }, 30000);
+      el.onload = () => {
+        clearTimeout(timer);
+        resolve(el);
+      };
+      el.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error("图片加载失败"));
+      };
+      el.src = src;
+    });
+  }
+
   /** Canvas 渲染整页 → PNG */
   async function renderPageToPng(
     page: PageLayout,
     imgList: ImageItem[],
     s: PageSettings,
-    pxPerMm: number
+    pxPerMm: number,
+    pageOverrides?: PageOverrides
   ): Promise<Uint8Array> {
     const paper = getPaperDimensions(s.paperSize, s.orientation);
     const isEdge = s.gapMode === "edge-to-edge";
     const margin = isEdge ? 0 : PAGE_MARGIN_MM;
     const mode = isEdge ? "cover" : "contain";
+
+    // 使用覆盖的 slot 或原始 slot
+    const slots = pageOverrides?.slots ?? page.slots;
+    const imageIndices = pageOverrides?.imageIndices ?? page.imageIndices;
 
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(paper.width * pxPerMm);
@@ -63,19 +89,28 @@ export function useExport(
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let i = 0; i < page.slots.length; i++) {
-      const imgIdx = page.imageIndices[i];
-      if (imgIdx === undefined || imgIdx >= imgList.length) continue;
+    for (let i = 0; i < slots.length; i++) {
+      const imgIdx = imageIndices[i];
+      if (imgIdx === undefined || imgIdx >= imgList.length) {
+        console.warn(`导出: slot ${i} 的图片索引 ${imgIdx} 无效`);
+        continue;
+      }
 
-      const slot = page.slots[i];
+      const slot = slots[i];
       const imgInfo = imgList[imgIdx];
 
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const el = new Image();
-        el.onload = () => resolve(el);
-        el.onerror = reject;
-        el.src = imgInfo.thumbUrl;
-      });
+      let img: HTMLImageElement;
+      try {
+        img = await loadImage(imgInfo.thumbUrl);
+      } catch (e) {
+        console.error(`导出: 加载图片失败 [${imgInfo.name}]:`, e);
+        continue;
+      }
+
+      if (!img.naturalWidth || !img.naturalHeight) {
+        console.warn(`导出: 图片尺寸无效 [${imgInfo.name}]`);
+        continue;
+      }
 
       const slotX = (margin + slot.x) * pxPerMm;
       const slotY = (margin + slot.y) * pxPerMm;
@@ -83,11 +118,26 @@ export function useExport(
       const slotH = slot.height * pxPerMm;
       const fit = calcFit(slotW, slotH, img.naturalWidth, img.naturalHeight, mode);
 
+      // 应用图片拖动偏移（cover 模式）
+      let drawX = slotX + fit.offsetX;
+      let drawY = slotY + fit.offsetY;
+      const offset = pageOverrides?.offsets?.[imgIdx];
+      if (offset && mode === "cover") {
+        // fit.offsetX 是居中时的偏移（通常为 0 或负值）
+        // excess = 图片超出 slot 的像素量
+        const excessX = Math.max(0, fit.width - slotW);
+        const excessY = Math.max(0, fit.height - slotH);
+        // offset.offsetX: 0 = 显示左边缘, 0.5 = 居中, 1 = 显示右边缘
+        // 对应的绘制偏移：从居中位置向左/右移动
+        drawX = slotX + fit.offsetX - excessX * (offset.offsetX - 0.5);
+        drawY = slotY + fit.offsetY - excessY * (offset.offsetY - 0.5);
+      }
+
       ctx.save();
       ctx.beginPath();
       ctx.rect(slotX, slotY, slotW, slotH);
       ctx.clip();
-      ctx.drawImage(img, slotX + fit.offsetX, slotY + fit.offsetY, fit.width, fit.height);
+      ctx.drawImage(img, drawX, drawY, fit.width, fit.height);
       ctx.restore();
     }
 
@@ -119,7 +169,8 @@ export function useExport(
       const pdfDoc = await PDFDocument.create();
 
       for (let pageIdx = 0; pageIdx < pageList.length; pageIdx++) {
-        const pngBytes = await renderPageToPng(pageList[pageIdx], imgList, s, 3);
+        const pageOverrides = getPageOverrides?.(pageIdx);
+        const pngBytes = await renderPageToPng(pageList[pageIdx], imgList, s, 3, pageOverrides);
         const pdfImage = await pdfDoc.embedPng(pngBytes);
         const pdfPage = pdfDoc.addPage([paper.width * MM2PT, paper.height * MM2PT]);
         pdfPage.drawImage(pdfImage, {
@@ -159,7 +210,8 @@ export function useExport(
       // 渲染每一页为 PNG
       const pagePngs: Uint8Array[] = [];
       for (let i = 0; i < pageList.length; i++) {
-        pagePngs.push(await renderPageToPng(pageList[i], imgList, s, 3));
+        const pageOverrides = getPageOverrides?.(i);
+        pagePngs.push(await renderPageToPng(pageList[i], imgList, s, 3, pageOverrides));
       }
 
       // Word 中 w:pgSz 使用 twips 单位（1 mm = 56.6929 twips）

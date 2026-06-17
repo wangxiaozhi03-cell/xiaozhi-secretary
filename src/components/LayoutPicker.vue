@@ -14,47 +14,33 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="panel-section p-4 flex-1 min-h-[200px] flex flex-col">
-    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 flex-shrink-0">布局模式</h2>
-    <p class="text-xs text-gray-400 mb-3 flex-shrink-0">
-      {{ imageCount }} 张图片 · {{ layouts.length }} 种布局可选
+  <div class="p-5 flex-1 min-h-[180px] flex flex-col">
+    <h2 class="text-[11px] font-medium text-tertiary uppercase tracking-widest mb-1.5 flex-shrink-0">布局模式</h2>
+    <p class="text-[11px] text-tertiary mb-3 flex-shrink-0">
+      {{ imageCount }} 张图片 · {{ layouts.length }} 种布局
     </p>
 
     <div class="flex-1 overflow-y-auto min-h-0">
-      <div class="grid grid-cols-3 gap-1.5 fade-in" :key="imageCount">
-        <div
+      <div class="grid grid-cols-3 gap-2 fade-in" :key="imageCount">
+        <button
           v-for="(layout, index) in layouts"
           :key="layout.id"
-          class="border-2 rounded-lg p-1.5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md"
+          class="p-2 rounded-xl transition-all duration-200 cursor-pointer"
           :class="index === activeIndex
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-100 hover:border-gray-200'"
+            ? 'selected'
+            : 'hover:bg-blue-50/50'"
           @click="emit('select', index)"
         >
-          <div class="mb-1">
+          <div class="mb-1.5">
             <LayoutThumbnail :layout-id="layout.id" :image-count="imageCount" />
           </div>
-          <p class="text-xs text-center text-gray-500 leading-tight">{{ layout.name }}</p>
-        </div>
+          <p class="text-[10px] text-center text-secondary leading-tight">{{ layout.name }}</p>
+        </button>
       </div>
 
-      <!-- 空状态 -->
       <div v-if="layouts.length === 0" class="text-center py-8">
-        <p class="text-xs text-gray-400">请先添加图片</p>
+        <p class="text-xs text-tertiary">请先添加图片</p>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.panel-section {
-  border-bottom: 1px solid #f1f5f9;
-}
-.fade-in {
-  animation: fadeIn 0.25s ease;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style>

@@ -50,7 +50,7 @@ jobs:
           node-version: 'lts/*'
 
       - name: Install dependencies
-        run: npm install --registry https://registry.npmjs.org
+        run: npm install
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0

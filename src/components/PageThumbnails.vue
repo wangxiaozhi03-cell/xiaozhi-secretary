@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { ImageItem, PageSettings, PageLayout, ImageSlot } from "@/types";
 import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
+import { usePageDrag } from "@/composables/usePageDrag";
 
 const props = defineProps<{
   images: ImageItem[];
@@ -14,6 +15,11 @@ const emit = defineEmits<{
   goToPage: [pageIndex: number];
 }>();
 
+const {
+  dragState, dragPointerX, dragPointerY,
+  setOverThumbnails, setHoverPage, setHoverSlot, hoverPageIndex, hoverSlotIndex,
+} = usePageDrag();
+
 const paper = computed(() =>
   getPaperDimensions(props.settings.paperSize, props.settings.orientation)
 );
@@ -21,14 +27,11 @@ const paper = computed(() =>
 const isEdgeToEdge = computed(() => props.settings.gapMode === "edge-to-edge");
 const marginMm = computed(() => isEdgeToEdge.value ? 0 : PAGE_MARGIN_MM);
 
-// 缩略图尺寸
-const THUMB_HEIGHT = 80;
-const THUMB_SCALE = computed(() => {
-  const paperH = paper.value.height;
-  return THUMB_HEIGHT / paperH;
-});
-
+const THUMB_HEIGHT = 64;
+const THUMB_SCALE = computed(() => THUMB_HEIGHT / paper.value.height);
 const thumbWidth = computed(() => paper.value.width * THUMB_SCALE.value);
+
+const containerRef = ref<HTMLDivElement | null>(null);
 
 function getThumbSlotStyle(slot: ImageSlot) {
   const m = marginMm.value * THUMB_SCALE.value;
@@ -39,38 +42,119 @@ function getThumbSlotStyle(slot: ImageSlot) {
     height: `${slot.height * THUMB_SCALE.value}px`,
   };
 }
+
+function checkPointerOverThumbnails() {
+  if (!containerRef.value || !dragState.value) {
+    setHoverPage(null);
+    setHoverSlot(null);
+    setOverThumbnails(false);
+    return;
+  }
+
+  const rect = containerRef.value.getBoundingClientRect();
+  const x = dragPointerX.value;
+  const y = dragPointerY.value;
+
+  const isInside = x >= rect.left && x <= rect.right && y >= rect.top - 20 && y <= rect.bottom + 20;
+  setOverThumbnails(isInside);
+
+  if (isInside) {
+    const slotElements = containerRef.value.querySelectorAll("[data-page-slot]");
+    let foundPage: number | null = null;
+    let foundSlot: number | null = null;
+
+    for (const el of slotElements) {
+      const elRect = el.getBoundingClientRect();
+      if (x >= elRect.left && x <= elRect.right && y >= elRect.top && y <= elRect.bottom) {
+        const attr = el.getAttribute("data-page-slot") || "";
+        const [pageStr, slotStr] = attr.split("-");
+        const pageIdx = parseInt(pageStr);
+        const slotIdx = parseInt(slotStr);
+        if (!isNaN(pageIdx) && !isNaN(slotIdx)) {
+          foundPage = pageIdx;
+          foundSlot = slotIdx;
+          break;
+        }
+      }
+    }
+
+    if (foundPage === null) {
+      const pageElements = containerRef.value.querySelectorAll("[data-page-index]");
+      for (const el of pageElements) {
+        const elRect = el.getBoundingClientRect();
+        if (x >= elRect.left && x <= elRect.right) {
+          const idx = parseInt(el.getAttribute("data-page-index") || "-1");
+          if (idx >= 0) {
+            foundPage = idx;
+            foundSlot = null;
+            break;
+          }
+        }
+      }
+    }
+
+    setHoverPage(foundPage);
+    setHoverSlot(foundSlot);
+  } else {
+    setHoverPage(null);
+    setHoverSlot(null);
+  }
+}
+
+let checkInterval: ReturnType<typeof setInterval> | null = null;
+
+watch(() => dragState.value, (newVal) => {
+  if (newVal) {
+    checkInterval = setInterval(checkPointerOverThumbnails, 40);
+  } else {
+    if (checkInterval) {
+      clearInterval(checkInterval);
+      checkInterval = null;
+    }
+    setHoverPage(null);
+    setHoverSlot(null);
+  }
+});
 </script>
 
 <template>
-  <div class="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
-    <div v-if="pages.length === 0" class="flex items-center justify-center h-20">
-      <span class="text-xs text-gray-300">添加图片后显示页面缩略图</span>
+  <div ref="containerRef" class="px-4 py-2.5 flex-shrink-0">
+    <div v-if="pages.length === 0" class="flex items-center justify-center h-16">
+      <span class="text-xs text-tertiary">添加图片后显示页面缩略图</span>
     </div>
-    <div v-else class="flex items-center gap-3 overflow-x-auto pb-1">
+    <div v-else class="flex items-center gap-2.5 overflow-x-auto pb-1">
       <div
-        v-for="(page, index) in pages"
-        :key="index"
-        class="flex-shrink-0 cursor-pointer rounded-lg border-2 transition-all hover:shadow-md"
-        :class="index === currentPage
-          ? 'border-blue-500 shadow-md'
-          : 'border-gray-200 hover:border-gray-300'"
-        :style="{ width: `${thumbWidth + 8}px` }"
-        @click="emit('goToPage', index)"
+        v-for="(page, pageIndex) in pages"
+        :key="pageIndex"
+        :data-page-index="pageIndex"
+        class="flex-shrink-0 cursor-pointer rounded-xl transition-all duration-300"
+        :class="[
+          pageIndex === currentPage
+            ? 'selected scale-[1.02]'
+            : 'hover:bg-black/[0.02] hover:scale-[1.01]',
+          dragState && hoverPageIndex === pageIndex && hoverSlotIndex === null
+            ? 'ring-2 ring-blue-400/30 scale-[1.03]'
+            : '',
+        ]"
+        :style="{ width: `${thumbWidth + 6}px` }"
+        @click="emit('goToPage', pageIndex)"
       >
-        <!-- 缩略图容器 -->
         <div
-          class="relative bg-white rounded overflow-hidden mx-1 mt-1"
+          class="relative rounded-lg overflow-hidden mx-1 mt-1"
           :style="{ height: `${THUMB_HEIGHT}px` }"
         >
-          <!-- 页面内容缩略图 -->
-          <div
-            v-if="page"
-            class="relative w-full h-full"
-          >
+          <div v-if="page" class="relative w-full h-full">
             <div
               v-for="(imgIdx, slotIdx) in page.imageIndices"
               :key="imgIdx"
-              class="absolute overflow-hidden"
+              :data-page-slot="`${pageIndex}-${slotIdx}`"
+              class="absolute overflow-hidden rounded-sm transition-all duration-200"
+              :class="[
+                dragState ? 'cursor-crosshair' : '',
+                dragState && hoverPageIndex === pageIndex && hoverSlotIndex === slotIdx
+                  ? 'ring-1 ring-blue-400/50 scale-[1.05] z-10'
+                  : '',
+              ]"
               :style="getThumbSlotStyle(page.slots[slotIdx])"
             >
               <img
@@ -84,29 +168,15 @@ function getThumbSlotStyle(slot: ImageSlot) {
           </div>
         </div>
 
-        <!-- 页码 -->
         <div class="text-center py-1">
           <span
-            class="text-xs font-medium"
-            :class="index === currentPage ? 'text-blue-500' : 'text-gray-400'"
+            class="text-[10px] tabular-nums transition-colors"
+            :class="pageIndex === currentPage ? 'text-accent' : 'text-tertiary'"
           >
-            {{ index + 1 }}
+            {{ pageIndex + 1 }}
           </span>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-div::-webkit-scrollbar {
-  height: 4px;
-}
-div::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 2px;
-}
-div::-webkit-scrollbar-track {
-  background: transparent;
-}
-</style>

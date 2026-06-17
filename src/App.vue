@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
+import ToolboxNav from "./components/ToolboxNav.vue";
+import TopBar from "./components/TopBar.vue";
+import HomePage from "./components/HomePage.vue";
 import AppHeader from "./components/AppHeader.vue";
 import ImageList from "./components/ImageList.vue";
 import PageSettings from "./components/PageSettings.vue";
@@ -7,31 +10,56 @@ import LayoutPicker from "./components/LayoutPicker.vue";
 import DocumentPreview from "./components/DocumentPreview.vue";
 import PreviewToolbar from "./components/PreviewToolbar.vue";
 import PageThumbnails from "./components/PageThumbnails.vue";
+import JsonToolkit from "./components/json-toolkit/JsonToolkit.vue";
+import MdToolkit from "./components/md-toolkit/MdToolkit.vue";
+import CurlToolkit from "./components/curl-toolkit/CurlToolkit.vue";
+import NameCaseStudio from "./components/namecase/NameCaseStudio.vue";
+import JavaGenerator from "./components/java-generator/JavaGenerator.vue";
+import JavaPackager from "./components/java-packager/JavaPackager.vue";
+import SqlToolkit from "./components/sql-toolkit/SqlToolkit.vue";
 import type { LayoutKey } from "./types";
 import { useImages } from "./composables/useImages";
 import { usePageSettings } from "./composables/usePageSettings";
 import { useLayout } from "./composables/useLayout";
 import { useExport } from "./composables/useExport";
+import { useOverrides, computePageRanges } from "./composables/useOverrides";
 
-const { images, removeImage, removeLastImage, openFileDialog } = useImages();
+const activeModule = ref<"home" | "image-layout" | "json-toolkit" | "md-toolkit" | "curl-toolkit" | "namecase" | "java-generator" | "java-packager" | "sql-toolkit">("home");
+
+const { images, removeImage, removeLastImage, openFileDialog, reorderImages } = useImages();
 const { settings, setImagesPerPage } = usePageSettings();
 const {
   availableLayouts,
   activeLayoutIndex,
   selectLayout,
   pages,
+  layoutKey,
 } = useLayout(() => images.value, () => settings);
+
+const {
+  overrides,
+  setImageOffset,
+  setPageSlots,
+  getMergedPages,
+  resetAllOverrides,
+} = useOverrides();
+
+const mergedPages = computed(() => getMergedPages(pages.value));
+
 const { exportPdf, exportDocx } = useExport(
   () => images.value,
-  () => pages.value,
-  () => settings
+  () => mergedPages.value,
+  () => settings,
+  (pageIndex) => overrides[pageIndex]
 );
 
+watch([layoutKey, activeLayoutIndex, () => images.value.length], () => {
+  resetAllOverrides();
+});
+
 const currentPage = ref(0);
-const showLeftPanel = ref(true);
 const showRightPanel = ref(true);
 
-// 图片数量变化时重置页码
 watch(() => images.value.length, () => {
   currentPage.value = 0;
 });
@@ -58,118 +86,170 @@ function goToPage(pageIndex: number) {
   }
 }
 
-function toggleLeftPanel() {
-  showLeftPanel.value = !showLeftPanel.value;
-}
+function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, toSlot: number) {
+  const merged = mergedPages.value;
+  const fromPageData = merged[fromPage];
+  const toPageData = merged[toPage];
+  if (!fromPageData || !toPageData) return;
 
-function toggleRightPanel() {
-  showRightPanel.value = !showRightPanel.value;
+  const fromImageIdx = fromPageData.imageIndices[fromSlot];
+  if (fromImageIdx === undefined) return;
+
+  const ranges = computePageRanges(merged);
+  const toRange = ranges[toPage];
+  if (!toRange) return;
+  let targetAbsIndex = toRange.start + toSlot;
+
+  if (targetAbsIndex > fromImageIdx) {
+    targetAbsIndex = Math.max(0, targetAbsIndex - 1);
+  }
+
+  if (targetAbsIndex === fromImageIdx) return;
+  reorderImages(fromImageIdx, targetAbsIndex);
 }
 </script>
 
 <template>
-  <div class="h-screen flex flex-col overflow-hidden bg-gray-50">
-    <AppHeader
-      :image-count="images.length"
-      :page-count="pages.length"
-      @export-pdf="exportPdf"
-      @export-docx="exportDocx"
+  <div class="toolbox-bg h-screen flex overflow-hidden">
+    <!-- 左侧导航栏 -->
+    <ToolboxNav
+      :active-module="activeModule"
+      @select="(m) => activeModule = m as any"
     />
 
-    <div class="flex flex-1 overflow-hidden">
-      <!-- 左侧图片面板 -->
-      <aside
-        class="bg-white border-r border-gray-200 flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300"
-        :class="showLeftPanel ? 'w-64' : 'w-10'"
-      >
-        <!-- 折叠按钮 -->
-        <button
-          class="h-8 flex items-center justify-center hover:bg-gray-100 border-b border-gray-200 text-gray-500"
-          @click="toggleLeftPanel"
-        >
-          <svg
-            class="w-4 h-4 transition-transform"
-            :class="showLeftPanel ? 'rotate-0' : 'rotate-180'"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
+    <!-- 右侧主区域 -->
+    <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+      <!-- 顶部导航栏（仅首页显示） -->
+      <TopBar v-if="activeModule === 'home'" />
 
-        <!-- 图片列表内容 -->
-        <div v-if="showLeftPanel" class="flex-1 overflow-hidden flex flex-col">
-          <ImageList
-            class="flex-1 min-h-0"
-            :images="images"
-            @add="openFileDialog"
-            @remove="removeImage"
-            @remove-last="removeLastImage"
-          />
-        </div>
-      </aside>
+      <!-- 内容区 -->
+      <div class="flex-1 flex flex-col overflow-hidden py-2 px-2">
+        <Transition name="module-fade" mode="out-in">
+          <!-- 首页 -->
+          <HomePage v-if="activeModule === 'home'" key="home" @navigate="(m) => activeModule = m as any" />
 
-      <!-- 中间预览区 -->
-      <main class="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0 transition-all duration-300">
-        <PreviewToolbar
-          :current-page="currentPage"
-          :total-pages="pages.length"
-          @prev="prevPage"
-          @next="nextPage"
-        />
-        <DocumentPreview
-          :images="images"
-          :pages="pages"
-          :settings="settings"
-          :current-page="currentPage"
-        />
-        <!-- 底部缩略图导航（始终显示） -->
-        <PageThumbnails
-          :images="images"
-          :pages="pages"
-          :settings="settings"
-          :current-page="currentPage"
-          @go-to-page="goToPage"
-        />
-      </main>
+          <!-- 图片工具模块 -->
+          <div v-else-if="activeModule === 'image-layout'" key="image-layout" class="flex-1 flex flex-col overflow-hidden">
+            <AppHeader
+              :image-count="images.length"
+              :page-count="pages.length"
+              @export-pdf="exportPdf"
+              @export-docx="exportDocx"
+            />
+            <div class="flex-1 flex overflow-hidden gap-2 mt-2">
+              <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+                <div class="glass-card flex-1 overflow-hidden flex flex-col">
+                  <PreviewToolbar
+                    :current-page="currentPage"
+                    :total-pages="pages.length"
+                    @prev="prevPage"
+                    @next="nextPage"
+                  />
+                  <DocumentPreview
+                    :images="images"
+                    :pages="mergedPages"
+                    :base-pages="pages"
+                    :settings="settings"
+                    :current-page="currentPage"
+                    :overrides="overrides"
+                    @set-image-offset="(imgIdx, ox, oy) => setImageOffset(currentPage, imgIdx, ox, oy)"
+                    @set-page-slots="(slots) => setPageSlots(currentPage, slots)"
+                    @drop-on-slot="handleDropOnSlot"
+                  />
+                  <PageThumbnails
+                    :images="images"
+                    :pages="mergedPages"
+                    :settings="settings"
+                    :current-page="currentPage"
+                    @go-to-page="goToPage"
+                  />
+                </div>
+              </div>
 
-      <!-- 右侧设置面板 -->
-      <aside
-        class="bg-white border-l border-gray-200 flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300"
-        :class="showRightPanel ? 'w-72' : 'w-10'"
-      >
-        <!-- 折叠按钮 -->
-        <button
-          class="h-8 flex items-center justify-center hover:bg-gray-100 border-b border-gray-200 text-gray-500"
-          @click="toggleRightPanel"
-        >
-          <svg
-            class="w-4 h-4 transition-transform"
-            :class="showRightPanel ? 'rotate-0' : 'rotate-180'"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-          </svg>
-        </button>
+              <aside
+                class="glass-panel flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300"
+                :class="showRightPanel ? 'w-60' : 'w-10'"
+              >
+                <button
+                  class="h-9 flex items-center justify-center hover:bg-black/[0.02] transition-colors text-tertiary"
+                  @click="showRightPanel = !showRightPanel"
+                >
+                  <svg
+                    class="w-4 h-4 transition-transform duration-300"
+                    :class="showRightPanel ? 'rotate-0' : 'rotate-180'"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
+                </button>
 
-        <!-- 设置内容 -->
-        <div v-if="showRightPanel" class="flex-1 overflow-y-auto">
-          <PageSettings
-            :settings="settings"
-            :image-count="images.length"
-            @update="handlePageSettingsUpdate"
-          />
-          <LayoutPicker
-            :layouts="availableLayouts"
-            :active-index="activeLayoutIndex"
-            :image-count="images.length"
-            @select="selectLayout"
-          />
-        </div>
-      </aside>
+                <div v-if="showRightPanel" class="flex-1 overflow-y-auto">
+                  <div class="max-h-[280px] overflow-hidden flex flex-col">
+                    <ImageList
+                      :images="images"
+                      @add="openFileDialog"
+                      @remove="removeImage"
+                      @remove-last="removeLastImage"
+                    />
+                  </div>
+                  <PageSettings
+                    :settings="settings"
+                    :image-count="images.length"
+                    @update="handlePageSettingsUpdate"
+                  />
+                  <LayoutPicker
+                    :layouts="availableLayouts"
+                    :active-index="activeLayoutIndex"
+                    :image-count="images.length"
+                    @select="selectLayout"
+                  />
+                </div>
+              </aside>
+            </div>
+          </div>
+
+          <!-- JSON 工具模块 -->
+          <JsonToolkit v-else-if="activeModule === 'json-toolkit'" key="json-toolkit" />
+
+          <!-- MD 工具模块 -->
+          <MdToolkit v-else-if="activeModule === 'md-toolkit'" key="md-toolkit" />
+
+          <!-- Curl 重放工具模块 -->
+          <CurlToolkit v-else-if="activeModule === 'curl-toolkit'" key="curl-toolkit" />
+
+          <!-- NameCase Studio 命名转换模块 -->
+          <NameCaseStudio v-else-if="activeModule === 'namecase'" key="namecase" />
+
+          <!-- Java 代码生成模块 -->
+          <JavaGenerator v-else-if="activeModule === 'java-generator'" key="java-generator" />
+
+          <!-- Java 打包工具模块 -->
+          <JavaPackager v-else-if="activeModule === 'java-packager'" key="java-packager" />
+          <SqlToolkit v-else-if="activeModule === 'sql-toolkit'" key="sql-toolkit" />
+        </Transition>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.module-fade-enter-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.module-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.module-fade-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.module-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

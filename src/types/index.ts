@@ -52,6 +52,23 @@ export interface PageLayout {
   uniformScale: number;
 }
 
+// ===== 交互覆盖 =====
+/** 图片在 slot 内的拖动偏移（cover 模式） */
+export interface ImageOffset {
+  offsetX: number; // 0-1，水平偏移比例
+  offsetY: number; // 0-1，垂直偏移比例
+}
+
+/** 单页的手动覆盖数据 */
+export interface PageOverrides {
+  /** 交换后的图片索引（slot index -> 全局图片 index） */
+  imageIndices?: number[];
+  /** 图片拖动偏移（全局图片 index -> 偏移） */
+  offsets?: Record<number, ImageOffset>;
+  /** 调整后的完整 slot 列表 */
+  slots?: ImageSlot[];
+}
+
 // ===== 导出 =====
 export interface PlacementInstruction {
   page: number;
