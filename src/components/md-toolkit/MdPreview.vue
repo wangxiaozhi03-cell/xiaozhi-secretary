@@ -5,7 +5,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="h-full overflow-y-auto bg-[#EEF2F8]/60 dark:bg-white/[0.02]">
+  <div class="h-full overflow-y-auto bg-black/[0.04] dark:bg-white/[0.02]">
     <div
       class="markdown-body p-6 max-w-none"
       v-html="html"

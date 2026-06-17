@@ -179,10 +179,10 @@ function handleItemClick(item: MenuItem) {
 <style scoped>
 /* ── 鸿蒙沉浸光感侧栏 ── */
 .glass-sidebar {
-  background: rgba(238, 243, 250, 0.72);
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.72);
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border-right: 0.5px solid rgba(255, 255, 255, 0.55);
+  border-right: 0.5px solid rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.4);
   position: relative;
 }
 /* 顶部极光线 */
@@ -223,20 +223,20 @@ function handleItemClick(item: MenuItem) {
 .sg-1 {
   width: 140px; height: 140px;
   top: -30px; left: -30px;
-  background: linear-gradient(135deg, #93C5FD, #60A5FA);
+  background: rgb(var(--blob-1-r), var(--blob-1-g), var(--blob-1-b));
   opacity: 0.35;
 }
 .sg-2 {
   width: 120px; height: 120px;
   bottom: 20%; right: -25px;
-  background: linear-gradient(135deg, #C4B5FD, #A78BFA);
+  background: rgb(var(--blob-2-r), var(--blob-2-g), var(--blob-2-b));
   opacity: 0.25;
   animation-delay: -6s;
 }
 .sg-3 {
   width: 100px; height: 100px;
   bottom: -20px; left: 20%;
-  background: linear-gradient(135deg, #6EE7B7, #34D399);
+  background: rgb(var(--blob-3-r), var(--blob-3-g), var(--blob-3-b));
   opacity: 0.20;
   animation-delay: -12s;
 }
@@ -251,7 +251,7 @@ function handleItemClick(item: MenuItem) {
 :global(.dark) .sg-3 { opacity: 0.12; }
 
 .dark .glass-sidebar {
-  background: rgba(22, 30, 42, 0.72);
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.18);
   border-right-color: rgba(255, 255, 255, 0.08);
 }
 .dark .glass-sidebar::before {
@@ -272,29 +272,45 @@ function handleItemClick(item: MenuItem) {
   position: relative;
   background: linear-gradient(
     180deg,
-    rgba(242, 246, 252, 0.65) 0%,
-    rgba(235, 240, 248, 0.45) 100%
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.30) 0%,
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15) 100%
   );
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 0.5px solid rgba(255, 255, 255, 0.60);
+  border: 0.5px solid rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.30);
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.70);
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 所有菜单项都有隐藏的指示器，激活时淡入 */
+.sidebar-item::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4F8CFF, #6BA3FF);
+  box-shadow: 0 0 8px rgba(79, 140, 255, 0.5);
+  opacity: 0;
+  transform: scaleY(0.5);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebar-item:hover {
   background: linear-gradient(
     180deg,
-    rgba(242, 246, 252, 0.80) 0%,
-    rgba(235, 240, 248, 0.58) 100%
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.45) 0%,
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.25) 100%
   );
   color: rgba(0, 0, 0, 0.8);
-  border-color: rgba(79, 140, 255, 0.2);
+  border-color: rgba(79, 140, 255, 0.15);
   box-shadow:
-    0 4px 14px rgba(79, 140, 255, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+    0 4px 14px rgba(79, 140, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
 }
 
 .sidebar-item:hover .sidebar-icon {
@@ -311,17 +327,10 @@ function handleItemClick(item: MenuItem) {
     0 4px 16px rgba(79, 140, 255, 0.10),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
-/* 左侧3px辉光指示器 */
+/* 左侧3px辉光指示器 — 激活时淡入展开 */
 .sidebar-item.active::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 20%;
-  bottom: 20%;
-  width: 3px;
-  border-radius: 3px;
-  background: linear-gradient(180deg, #4F8CFF, #6BA3FF);
-  box-shadow: 0 0 8px rgba(79, 140, 255, 0.5);
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .sidebar-item.active .sidebar-icon {
@@ -333,26 +342,26 @@ function handleItemClick(item: MenuItem) {
   color: rgba(255, 255, 255, 0.40);
   background: linear-gradient(
     180deg,
-    rgba(35, 48, 68, 0.50) 0%,
-    rgba(28, 40, 58, 0.35) 100%
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.10) 0%,
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.05) 100%
   );
-  border-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.06);
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 1px 3px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .dark .sidebar-item:hover {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.06) 100%
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15) 0%,
+    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.08) 100%
   );
   color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(79, 140, 255, 0.2);
+  border-color: rgba(79, 140, 255, 0.15);
   box-shadow:
-    0 4px 14px rgba(79, 140, 255, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    0 4px 14px rgba(79, 140, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .dark .sidebar-item.active {

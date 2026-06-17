@@ -112,20 +112,20 @@ async function handlePaste() {
       </div>
       <div class="flex items-center gap-1">
         <button
-          class="px-2 py-0.5 rounded text-[10px] bg-[#EEF2F8]/40 dark:bg-black/20 text-secondary hover:bg-[#EEF2F8]/60 dark:hover:bg-black/30 transition-colors"
+          class="px-2 py-0.5 rounded text-[10px] bg-black/[0.03] dark:bg-black/20 text-secondary hover:bg-black/[0.04] dark:hover:bg-black/30 transition-colors"
           @click="handlePaste"
         >
           粘贴
         </button>
         <button
-          class="px-2 py-0.5 rounded text-[10px] bg-[#EEF2F8]/40 dark:bg-black/20 text-secondary hover:bg-[#EEF2F8]/60 dark:hover:bg-black/30 transition-colors"
+          class="px-2 py-0.5 rounded text-[10px] bg-black/[0.03] dark:bg-black/20 text-secondary hover:bg-black/[0.04] dark:hover:bg-black/30 transition-colors"
           @click="handleFormat"
           :disabled="!json.trim()"
         >
           格式化
         </button>
         <button
-          class="px-2 py-0.5 rounded text-[10px] bg-[#EEF2F8]/40 dark:bg-black/20 text-secondary hover:bg-[#EEF2F8]/60 dark:hover:bg-black/30 transition-colors"
+          class="px-2 py-0.5 rounded text-[10px] bg-black/[0.03] dark:bg-black/20 text-secondary hover:bg-black/[0.04] dark:hover:bg-black/30 transition-colors"
           @click="handleClear"
           :disabled="!json.trim()"
         >

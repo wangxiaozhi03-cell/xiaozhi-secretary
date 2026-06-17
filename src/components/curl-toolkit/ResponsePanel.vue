@@ -59,7 +59,7 @@ const responseHeaders = computed(() => {
       <nav class="flex items-center gap-0.5 p-0.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.05] w-fit">
         <button v-for="tab in [{ id: 'body', label: 'Body' }, { id: 'headers', label: 'Headers' }]" :key="tab.id"
           class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200"
-          :class="activeTab === tab.id ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
+          :class="activeTab === tab.id ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
           @click="activeTab = tab.id as any"
         >{{ tab.label }}</button>
       </nav>

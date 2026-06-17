@@ -103,7 +103,7 @@ async function chooseOutputDir() {
           @click="emit('update:skip-tests', !skipTests)"
         >
           <div
-            class="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-[#F0F4F8] shadow-sm transition-transform duration-200"
+            class="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white/80 dark:bg-white/20 shadow-sm transition-transform duration-200"
             :class="skipTests ? 'translate-x-[16px]' : 'translate-x-[2px]'"
           />
         </div>
@@ -152,7 +152,7 @@ async function chooseOutputDir() {
           @click="emit('update:auto-upload', !autoUpload)"
         >
           <div
-            class="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-[#F0F4F8] shadow-sm transition-transform duration-200"
+            class="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white/80 dark:bg-white/20 shadow-sm transition-transform duration-200"
             :class="autoUpload ? 'translate-x-[16px]' : 'translate-x-[2px]'"
           />
         </div>

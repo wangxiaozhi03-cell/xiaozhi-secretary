@@ -183,7 +183,7 @@ onUnmounted(() => {
             :key="tab.id"
             class="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
             :class="mode === tab.id
-              ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm'
+              ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary shadow-sm'
               : 'text-tertiary hover:text-secondary'"
             @click="mode = tab.id as MdViewMode"
           >
@@ -246,32 +246,34 @@ onUnmounted(() => {
     <div class="flex-1 flex overflow-hidden">
       <!-- 编辑/预览区 -->
       <div class="flex-1 flex min-w-0 overflow-hidden">
-        <!-- 编辑器模式 -->
-        <template v-if="mode === 'editor'">
+        <Transition name="tab-float" mode="out-in">
+          <!-- 编辑器模式 -->
           <MdEditor
+            v-if="mode === 'editor'"
+            key="editor"
             class="flex-1 min-w-0"
             @update:content="onContentChange"
           />
-        </template>
 
-        <!-- 预览模式 -->
-        <template v-else-if="mode === 'preview'">
+          <!-- 预览模式 -->
           <MdPreview
+            v-else-if="mode === 'preview'"
+            key="preview"
             class="flex-1 min-w-0"
             :html="renderedHtml"
           />
-        </template>
 
-        <!-- 分屏模式 -->
-        <template v-else-if="mode === 'split'">
-          <MdEditor
-            class="w-1/2 min-w-0"
-            @update:content="onContentChange"
-          />
-          <div class="w-1/2 min-w-0 border-l border-black/[0.04] dark:border-white/[0.06]">
-            <MdPreview :html="renderedHtml" />
+          <!-- 分屏模式 -->
+          <div v-else-if="mode === 'split'" key="split" class="flex w-full min-w-0">
+            <MdEditor
+              class="w-1/2 min-w-0"
+              @update:content="onContentChange"
+            />
+            <div class="w-1/2 min-w-0 border-l border-black/[0.04] dark:border-white/[0.06]">
+              <MdPreview :html="renderedHtml" />
+            </div>
           </div>
-        </template>
+        </Transition>
       </div>
 
       <!-- 右侧面板 -->
@@ -309,3 +311,10 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.tab-float-enter-active { transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
+.tab-float-leave-active { transition: all 0.18s ease-in; }
+.tab-float-enter-from { opacity: 0; transform: translateY(14px) scale(0.98); }
+.tab-float-leave-to { opacity: 0; transform: translateY(-6px) scale(0.99); }
+</style>

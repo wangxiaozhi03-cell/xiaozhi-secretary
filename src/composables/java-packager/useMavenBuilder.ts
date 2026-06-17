@@ -1,10 +1,11 @@
 import { ref, watch, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import type { MavenModule, BuildStatus, BuildScope, ProjectConfig, SshServer, BuildLogEvent, BuildDoneEvent } from './types'
+import type { MavenModule, BuildStatus, BuildScope, ProjectConfig, SshServer, MavenConfig, ScanResult, BuildLogEvent, BuildDoneEvent } from './types'
 
 const PROJECTS_KEY = 'java-packager-projects'
 const SERVERS_KEY = 'java-packager-servers'
+const MAVEN_CONFIG_KEY = 'java-packager-maven-config'
 
 function loadProjects(): ProjectConfig[] {
   try {
@@ -30,6 +31,18 @@ function saveServers(v: SshServer[]) {
   localStorage.setItem(SERVERS_KEY, JSON.stringify(v))
 }
 
+function loadMavenConfig(): MavenConfig {
+  try {
+    const raw = localStorage.getItem(MAVEN_CONFIG_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return { customPath: '', javaHome: '' }
+}
+
+function saveMavenConfig(v: MavenConfig) {
+  localStorage.setItem(MAVEN_CONFIG_KEY, JSON.stringify(v))
+}
+
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 }
@@ -38,6 +51,7 @@ export function useMavenBuilder() {
   // ── 数据 ──
   const projects = ref<ProjectConfig[]>(loadProjects())
   const servers = ref<SshServer[]>(loadServers())
+  const mavenConfig = ref<MavenConfig>(loadMavenConfig())
   const currentProject = ref<ProjectConfig | null>(null)
   const modules = ref<MavenModule[]>([])
   const leafModules = ref<MavenModule[]>([])
@@ -54,7 +68,12 @@ export function useMavenBuilder() {
   const buildScope = ref<BuildScope>('with-deps')
   const autoUpload = ref(false)
   const showSettings = ref(false)
-  const settingsTab = ref<'projects' | 'servers'>('projects')
+  const settingsTab = ref<'projects' | 'servers' | 'maven'>('projects')
+
+  // 扫描结果
+  const mavenScanResults = ref<ScanResult[]>([])
+  const jdkScanResults = ref<ScanResult[]>([])
+  const scanning = ref(false)
 
   // 选中的上传服务器 ID
   const selectedServerIds = ref<string[]>([])
@@ -66,6 +85,7 @@ export function useMavenBuilder() {
   // 持久化
   watch(projects, (v) => saveProjects(v), { deep: true })
   watch(servers, (v) => saveServers(v), { deep: true })
+  watch(mavenConfig, (v) => saveMavenConfig(v), { deep: true })
 
   // 当前选中的上传服务器
   const activeServers = computed(() =>
@@ -75,12 +95,46 @@ export function useMavenBuilder() {
   // ── Maven ──
   async function checkMaven() {
     try {
-      mavenVersion.value = await invoke<string>('check_maven_available')
+      mavenVersion.value = await invoke<string>('check_maven_available', {
+        customPath: mavenConfig.value.customPath || null,
+        javaHome: mavenConfig.value.javaHome || null,
+      })
       return true
     } catch {
       mavenVersion.value = ''
       return false
     }
+  }
+
+  // 更新 Maven 配置
+  function updateMavenConfig(config: MavenConfig) {
+    mavenConfig.value = config
+  }
+
+  // 扫描系统中的 Maven 和 JDK 安装
+  async function scanInstallations() {
+    scanning.value = true
+    try {
+      const [mavenResults, jdkResults] = await Promise.all([
+        invoke<ScanResult[]>('scan_maven_installations'),
+        invoke<ScanResult[]>('scan_jdk_installations'),
+      ])
+      mavenScanResults.value = mavenResults
+      jdkScanResults.value = jdkResults
+    } catch (e) {
+      console.error('扫描失败:', e)
+    } finally {
+      scanning.value = false
+    }
+  }
+
+  // 选择扫描结果
+  function selectMavenPath(path: string) {
+    mavenConfig.value.customPath = path
+  }
+
+  function selectJavaHome(path: string) {
+    mavenConfig.value.javaHome = path
   }
 
   // ── SSH 服务器 CRUD ──
@@ -307,6 +361,8 @@ export function useMavenBuilder() {
         skipTests: skipTests.value,
         outputDir: null, // 不自动复制，直接从 target 目录操作
         buildScope: buildScope.value,
+        customMavenPath: mavenConfig.value.customPath || null,
+        javaHome: mavenConfig.value.javaHome || null,
       })
     } catch (e) {
       buildLogs.value.push(`❌ 启动构建失败: ${e}`)
@@ -342,6 +398,7 @@ export function useMavenBuilder() {
     // 数据
     projects,
     servers,
+    mavenConfig,
     currentProject,
     modules,
     leafModules,
@@ -361,8 +418,15 @@ export function useMavenBuilder() {
     settingsTab,
     selectedServerIds,
     activeServers,
+    mavenScanResults,
+    jdkScanResults,
+    scanning,
     // 方法
     checkMaven,
+    updateMavenConfig,
+    scanInstallations,
+    selectMavenPath,
+    selectJavaHome,
     addServer,
     updateServer,
     removeServer,

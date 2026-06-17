@@ -121,12 +121,16 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
     <!-- 右侧主区域 -->
     <div class="flex-1 flex flex-col overflow-hidden min-w-0">
       <!-- 顶部导航栏（仅首页显示） -->
-      <TopBar v-if="activeModule === 'home'" />
+      <Transition name="fade-slide">
+        <TopBar v-if="activeModule === 'home'" />
+      </Transition>
 
       <!-- 内容区 -->
       <div class="flex-1 flex flex-col overflow-hidden py-2 px-2 relative">
         <!-- 工具页面微光背景 -->
-        <ToolBackground v-if="activeModule !== 'home'" />
+        <Transition name="bg-fade">
+          <ToolBackground v-if="activeModule !== 'home'" />
+        </Transition>
         <div class="relative z-1 flex-1 flex flex-col overflow-hidden min-h-0">
           <Transition name="module-fade" mode="out-in">
             <!-- 首页 -->
@@ -241,20 +245,27 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
 
 <style scoped>
 .module-fade-enter-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .module-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.18s ease-in, transform 0.18s ease-in;
 }
-
 .module-fade-enter-from {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(18px) scale(0.98);
 }
-
 .module-fade-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-8px) scale(0.99);
 }
+
+.fade-slide-enter-active { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-slide-leave-active { transition: all 0.2s ease-in; }
+.fade-slide-enter-from { opacity: 0; transform: translateY(-10px); }
+.fade-slide-leave-to { opacity: 0; transform: translateY(-6px); }
+
+.bg-fade-enter-active { transition: opacity 0.6s ease; }
+.bg-fade-leave-active { transition: opacity 0.4s ease; }
+.bg-fade-enter-from { opacity: 0; }
+.bg-fade-leave-to { opacity: 0; }
 </style>

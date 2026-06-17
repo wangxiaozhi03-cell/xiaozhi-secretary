@@ -39,6 +39,298 @@ fn format_speed(bytes: u64, ms: u128) -> String {
     format!("{:.1} MB/s", mb_per_sec)
 }
 
+/// 创建 Maven 命令，支持自定义 JAVA_HOME
+fn create_maven_command(maven_cmd: &str, java_home: &Option<String>) -> Command {
+    let mut cmd = Command::new(maven_cmd);
+
+    // 如果指定了 JAVA_HOME，设置环境变量
+    if let Some(jh) = java_home.as_ref().filter(|p| !p.is_empty()) {
+        cmd.env("JAVA_HOME", jh);
+        // 将 JDK 的 bin 目录添加到 PATH
+        let jdk_bin = format!("{}/bin", jh);
+        let current_path = std::env::var("PATH").unwrap_or_default();
+        cmd.env("PATH", format!("{}:{}", jdk_bin, current_path));
+    }
+
+    cmd
+}
+
+/// 扫描结果项
+#[derive(Debug, Serialize, Clone)]
+pub struct ScanResult {
+    /// 显示名称（包含版本信息）
+    pub label: String,
+    /// 实际路径
+    pub path: String,
+    /// 来源（system, sdkman, jenv, brew 等）
+    pub source: String,
+}
+
+/// 获取 Maven 版本
+fn get_maven_version(mvn_path: &str) -> Option<String> {
+    let output = Command::new(mvn_path)
+        .args(["--version"])
+        .output()
+        .ok()?;
+    let version_str = String::from_utf8_lossy(&output.stdout);
+    version_str.lines().next().map(|l| l.to_string())
+}
+
+/// 获取 JDK 版本
+fn get_jdk_version(java_home: &str) -> Option<String> {
+    let java_bin = format!("{}/bin/java", java_home);
+    let output = Command::new(&java_bin)
+        .args(["-version"])
+        .output()
+        .ok()?;
+    let version_str = String::from_utf8_lossy(&output.stderr); // java -version 输出到 stderr
+    version_str.lines().next().map(|l| l.trim().to_string())
+}
+
+/// 扫描系统中的 Maven 安装
+#[tauri::command]
+pub fn scan_maven_installations() -> Vec<ScanResult> {
+    let mut results = Vec::new();
+    let mut seen_paths = std::collections::HashSet::new();
+
+    // 1. 检查 PATH 中的 mvn
+    if let Ok(output) = Command::new("which").arg("mvn").output() {
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !path.is_empty() && seen_paths.insert(path.clone()) {
+            let label = get_maven_version(&path).unwrap_or_else(|| "Maven".to_string());
+            results.push(ScanResult {
+                label: format!("{} (PATH)", label),
+                path,
+                source: "system".to_string(),
+            });
+        }
+    }
+
+    // 2. 扫描 sdkman
+    if let Ok(home) = std::env::var("HOME") {
+        let sdkman_dir = format!("{}/.sdkman/candidates/maven", home);
+        if let Ok(entries) = fs::read_dir(&sdkman_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let mvn_path = format!("{}/bin/mvn", path.display());
+                    if std::path::Path::new(&mvn_path).exists() && seen_paths.insert(mvn_path.clone()) {
+                        let version = path.file_name()
+                            .map(|n| n.to_string_lossy().to_string())
+                            .unwrap_or_else(|| "unknown".to_string());
+                        results.push(ScanResult {
+                            label: format!("Maven {} (sdkman)", version),
+                            path: mvn_path,
+                            source: "sdkman".to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. 扫描 Homebrew (macOS)
+    if cfg!(target_os = "macos") {
+        // Intel Mac
+        let brew_paths = vec![
+            "/usr/local/Cellar/maven",
+            "/opt/homebrew/Cellar/maven", // Apple Silicon
+        ];
+        for brew_path in brew_paths {
+            if let Ok(entries) = fs::read_dir(brew_path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let mvn_path = format!("{}/bin/mvn", path.display());
+                        if std::path::Path::new(&mvn_path).exists() && seen_paths.insert(mvn_path.clone()) {
+                            let version = path.file_name()
+                                .map(|n| n.to_string_lossy().to_string())
+                                .unwrap_or_else(|| "unknown".to_string());
+                            results.push(ScanResult {
+                                label: format!("Maven {} (Homebrew)", version),
+                                path: mvn_path,
+                                source: "brew".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 4. 常见安装路径
+    let common_paths = vec![
+        "/usr/local/bin/mvn",
+        "/usr/bin/mvn",
+        "/opt/maven/bin/mvn",
+    ];
+    for path in common_paths {
+        if std::path::Path::new(path).exists() && seen_paths.insert(path.to_string()) {
+            let label = get_maven_version(path).unwrap_or_else(|| "Maven".to_string());
+            results.push(ScanResult {
+                label: format!("{} (system)", label),
+                path: path.to_string(),
+                source: "system".to_string(),
+            });
+        }
+    }
+
+    results
+}
+
+/// 扫描系统中的 JDK 安装
+#[tauri::command]
+pub fn scan_jdk_installations() -> Vec<ScanResult> {
+    let mut results = Vec::new();
+    let mut seen_paths = std::collections::HashSet::new();
+
+    // 1. 检查 JAVA_HOME 环境变量
+    if let Ok(java_home) = std::env::var("JAVA_HOME") {
+        if !java_home.is_empty() && seen_paths.insert(java_home.clone()) {
+            let label = get_jdk_version(&java_home).unwrap_or_else(|| "JDK".to_string());
+            results.push(ScanResult {
+                label: format!("{} (JAVA_HOME)", label),
+                path: java_home,
+                source: "env".to_string(),
+            });
+        }
+    }
+
+    // 2. 扫描 jenv
+    if let Ok(home) = std::env::var("HOME") {
+        let jenv_dir = format!("{}/.jenv/versions", home);
+        if let Ok(entries) = fs::read_dir(&jenv_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let java_bin = format!("{}/bin/java", path.display());
+                    if std::path::Path::new(&java_bin).exists() {
+                        let jh = path.to_string_lossy().to_string();
+                        if seen_paths.insert(jh.clone()) {
+                            let version = path.file_name()
+                                .map(|n| n.to_string_lossy().to_string())
+                                .unwrap_or_else(|| "unknown".to_string());
+                            results.push(ScanResult {
+                                label: format!("JDK {} (jenv)", version),
+                                path: jh,
+                                source: "jenv".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. 扫描 sdkman
+    if let Ok(home) = std::env::var("HOME") {
+        let sdkman_dir = format!("{}/.sdkman/candidates/java", home);
+        if let Ok(entries) = fs::read_dir(&sdkman_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let java_bin = format!("{}/bin/java", path.display());
+                    if std::path::Path::new(&java_bin).exists() {
+                        let jh = path.to_string_lossy().to_string();
+                        if seen_paths.insert(jh.clone()) {
+                            let version = path.file_name()
+                                .map(|n| n.to_string_lossy().to_string())
+                                .unwrap_or_else(|| "unknown".to_string());
+                            results.push(ScanResult {
+                                label: format!("JDK {} (sdkman)", version),
+                                path: jh,
+                                source: "sdkman".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 4. 扫描 Homebrew (macOS)
+    if cfg!(target_os = "macos") {
+        let brew_paths = vec![
+            "/usr/local/Cellar/openjdk",
+            "/opt/homebrew/Cellar/openjdk", // Apple Silicon
+        ];
+        for brew_path in brew_paths {
+            if let Ok(entries) = fs::read_dir(brew_path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        let jh = path.to_string_lossy().to_string();
+                        if seen_paths.insert(jh.clone()) {
+                            let version = path.file_name()
+                                .map(|n| n.to_string_lossy().to_string())
+                                .unwrap_or_else(|| "unknown".to_string());
+                            results.push(ScanResult {
+                                label: format!("JDK {} (Homebrew)", version),
+                                path: jh,
+                                source: "brew".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 5. macOS 系统 JDK 路径
+    let mac_jdk_paths = vec![
+        "/Library/Java/JavaVirtualMachines",
+        "/System/Library/Java/JavaVirtualMachines",
+    ];
+    for jdk_base in mac_jdk_paths {
+        if let Ok(entries) = fs::read_dir(jdk_base) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let jh = format!("{}/Contents/Home", path.display());
+                    if std::path::Path::new(&jh).exists() && seen_paths.insert(jh.clone()) {
+                        let version = path.file_name()
+                            .map(|n| n.to_string_lossy().to_string())
+                            .unwrap_or_else(|| "unknown".to_string());
+                        results.push(ScanResult {
+                            label: format!("JDK {} (macOS)", version),
+                            path: jh,
+                            source: "system".to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // 6. Linux 常见路径
+    let linux_jdk_paths = vec![
+        "/usr/lib/jvm",
+        "/usr/java",
+    ];
+    for jdk_base in linux_jdk_paths {
+        if let Ok(entries) = fs::read_dir(jdk_base) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let jh = path.to_string_lossy().to_string();
+                    if seen_paths.insert(jh.clone()) {
+                        let version = path.file_name()
+                            .map(|n| n.to_string_lossy().to_string())
+                            .unwrap_or_else(|| "unknown".to_string());
+                        results.push(ScanResult {
+                            label: format!("JDK {} (system)", version),
+                            path: jh,
+                            source: "system".to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    results
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MavenModule {
     pub name: String,
@@ -258,6 +550,8 @@ pub fn start_build(
     skip_tests: bool,
     output_dir: Option<String>,
     build_scope: Option<String>,
+    custom_maven_path: Option<String>,
+    java_home: Option<String>,
 ) -> Result<(), String> {
     let path = PathBuf::from(&project_path);
     if !path.exists() {
@@ -265,6 +559,8 @@ pub fn start_build(
     }
 
     let scope = build_scope.unwrap_or_else(|| "with-deps".to_string());
+    let maven_cmd = custom_maven_path.filter(|p| !p.is_empty()).unwrap_or_else(|| "mvn".to_string());
+    let java_home_path = java_home.filter(|p| !p.is_empty());
 
     // 在后台线程执行构建
     std::thread::spawn(move || {
@@ -296,7 +592,7 @@ pub fn start_build(
                 }
             }
 
-            let child = Command::new("mvn")
+            let child = create_maven_command(&maven_cmd, &java_home_path)
                 .args(&args)
                 .current_dir(&path)
                 .stdout(Stdio::piped())
@@ -447,7 +743,7 @@ pub fn start_build(
             }
 
             // 启动 mvn 进程，pipe stdout/stderr
-            let child = Command::new("mvn")
+            let child = create_maven_command(&maven_cmd, &java_home_path)
                 .args(&args)
                 .current_dir(&path)
                 .stdout(Stdio::piped())
@@ -892,11 +1188,13 @@ pub fn upload_to_server(
 }
 
 #[tauri::command]
-pub fn check_maven_available() -> Result<String, String> {
-    let output = Command::new("mvn")
+pub fn check_maven_available(custom_path: Option<String>, java_home: Option<String>) -> Result<String, String> {
+    let maven_cmd = custom_path.filter(|p| !p.is_empty()).unwrap_or_else(|| "mvn".to_string());
+
+    let output = create_maven_command(&maven_cmd, &java_home)
         .args(["--version"])
         .output()
-        .map_err(|e| format!("Maven 不可用: {}", e))?;
+        .map_err(|e| format!("Maven 不可用 ({}): {}", maven_cmd, e))?;
 
     let version = String::from_utf8_lossy(&output.stdout).to_string();
     Ok(version.lines().next().unwrap_or("unknown").to_string())

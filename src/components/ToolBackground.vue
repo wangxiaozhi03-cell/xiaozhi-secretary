@@ -47,14 +47,14 @@
 .tb-1 {
   width: 320px; height: 320px;
   top: -60px; right: -40px;
-  background: linear-gradient(135deg, #93C5FD, #60A5FA);
+  background: rgb(var(--blob-1-r), var(--blob-1-g), var(--blob-1-b));
   opacity: 0.22;
 }
 /* 左下 · 薰衣草紫 */
 .tb-2 {
   width: 280px; height: 280px;
   bottom: -40px; left: -30px;
-  background: linear-gradient(135deg, #C4B5FD, #A78BFA);
+  background: rgb(var(--blob-2-r), var(--blob-2-g), var(--blob-2-b));
   opacity: 0.18;
   animation-delay: -6s;
 }
@@ -62,7 +62,7 @@
 .tb-3 {
   width: 220px; height: 220px;
   top: 45%; left: 25%;
-  background: linear-gradient(135deg, #6EE7B7, #34D399);
+  background: rgb(var(--blob-3-r), var(--blob-3-g), var(--blob-3-b));
   opacity: 0.14;
   animation-delay: -11s;
 }
@@ -70,7 +70,7 @@
 .tb-4 {
   width: 200px; height: 200px;
   top: 18%; right: 22%;
-  background: linear-gradient(135deg, #F9A8D4, #F472B6);
+  background: rgb(var(--blob-4-r), var(--blob-4-g), var(--blob-4-b));
   opacity: 0.10;
   animation-delay: -16s;
 }
@@ -78,7 +78,7 @@
 .tb-5 {
   width: 180px; height: 180px;
   bottom: 15%; right: 8%;
-  background: linear-gradient(135deg, #FCD34D, #FBBF24);
+  background: rgb(var(--blob-5-r), var(--blob-5-g), var(--blob-5-b));
   opacity: 0.10;
   animation-delay: -9s;
 }
