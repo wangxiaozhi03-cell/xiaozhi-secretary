@@ -16,6 +16,7 @@ import CurlToolkit from "./components/curl-toolkit/CurlToolkit.vue";
 import NameCaseStudio from "./components/namecase/NameCaseStudio.vue";
 import JavaGenerator from "./components/java-generator/JavaGenerator.vue";
 import JavaPackager from "./components/java-packager/JavaPackager.vue";
+import SqlToolkit from "./components/sql-toolkit/SqlToolkit.vue";
 import type { LayoutKey } from "./types";
 import { useImages } from "./composables/useImages";
 import { usePageSettings } from "./composables/usePageSettings";
@@ -23,7 +24,7 @@ import { useLayout } from "./composables/useLayout";
 import { useExport } from "./composables/useExport";
 import { useOverrides, computePageRanges } from "./composables/useOverrides";
 
-const activeModule = ref<"home" | "image-layout" | "json-toolkit" | "md-toolkit" | "curl-toolkit" | "namecase" | "java-generator" | "java-packager">("home");
+const activeModule = ref<"home" | "image-layout" | "json-toolkit" | "md-toolkit" | "curl-toolkit" | "namecase" | "java-generator" | "java-packager" | "sql-toolkit">("home");
 
 const { images, removeImage, removeLastImage, openFileDialog, reorderImages } = useImages();
 const { settings, setImagesPerPage } = usePageSettings();
@@ -226,6 +227,7 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
 
           <!-- Java 打包工具模块 -->
           <JavaPackager v-else-if="activeModule === 'java-packager'" key="java-packager" />
+          <SqlToolkit v-else-if="activeModule === 'sql-toolkit'" key="sql-toolkit" />
         </Transition>
       </div>
     </div>
