@@ -170,7 +170,7 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col h-full overflow-hidden">
     <!-- 顶部导航 -->
-    <header class="glass-bar px-4 py-2 flex items-center justify-between flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
+    <header class="glass-bar px-5 py-3 flex items-center justify-between flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
       <!-- 左侧：标题 + Tab -->
       <div class="flex items-center gap-4">
         <h1 class="text-sm font-semibold text-primary">MD 工具</h1>
@@ -183,7 +183,7 @@ onUnmounted(() => {
             :key="tab.id"
             class="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
             :class="mode === tab.id
-              ? 'bg-white dark:bg-gray-800 text-primary shadow-sm'
+              ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm'
               : 'text-tertiary hover:text-secondary'"
             @click="mode = tab.id as MdViewMode"
           >

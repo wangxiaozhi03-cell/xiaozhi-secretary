@@ -265,9 +265,10 @@ export function useMavenBuilder() {
       const { line } = event.payload
       buildLogs.value.push(line)
 
-      const copyMatch = line.match(/📦 已复制到: (.+\.jar)/)
-      if (copyMatch) {
-        copiedFilePaths.push(copyMatch[1])
+      // 从 Maven 日志中提取 JAR 原始路径
+      const jarMatch = line.match(/\[INFO\] Building jar: (.+\.jar)/)
+      if (jarMatch) {
+        copiedFilePaths.push(jarMatch[1])
       }
 
       if (buildLogs.value.length > 2000) {
@@ -285,14 +286,16 @@ export function useMavenBuilder() {
       if (unlistenLog) { unlistenLog(); unlistenLog = null }
       if (unlistenDone) { unlistenDone(); unlistenDone = null }
 
+      // 如果用户设置了输出目录，复制到输出目录
+      if (success && outputDir.value && copiedFilePaths.length > 0) {
+        copyToOutputDir()
+      }
+
+      // 如果设置了自动上传，上传到服务器
       if (success && autoUpload.value && selectedServerIds.value.length > 0 && copiedFilePaths.length > 0) {
         upload()
       }
     })
-
-    // 如果选了上传服务器但没有设置输出目录，自动使用项目根目录下的 output 目录（避免被 mvn clean 清除）
-    const hasServers = selectedServerIds.value.length > 0
-    const effectiveOutputDir = outputDir.value || (hasServers ? `${currentProject.value.path}/output` : null)
 
     try {
       await invoke('start_build', {
@@ -302,7 +305,7 @@ export function useMavenBuilder() {
         profile: selectedProfile.value,
         extraArgs: extraArgs.value || null,
         skipTests: skipTests.value,
-        outputDir: effectiveOutputDir,
+        outputDir: null, // 不自动复制，直接从 target 目录操作
         buildScope: buildScope.value,
       })
     } catch (e) {
@@ -310,6 +313,21 @@ export function useMavenBuilder() {
       buildStatus.value = 'error'
       if (unlistenLog) { unlistenLog(); unlistenLog = null }
       if (unlistenDone) { unlistenDone(); unlistenDone = null }
+    }
+  }
+
+  // 复制到用户指定的输出目录
+  async function copyToOutputDir() {
+    if (!outputDir.value || copiedFilePaths.length === 0) return
+
+    try {
+      await invoke('copy_files_to_dir', {
+        filePaths: copiedFilePaths,
+        outputDir: outputDir.value,
+      })
+      buildLogs.value.push(`📦 已复制到: ${outputDir.value}`)
+    } catch (e) {
+      buildLogs.value.push(`❌ 复制到输出目录失败: ${e}`)
     }
   }
 

@@ -94,7 +94,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           type="text"
           :value="config.packageName"
           @input="updateConfig('packageName', ($event.target as HTMLInputElement).value)"
-          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
           placeholder="com.example.demo"
         />
       </div>
@@ -106,7 +106,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           type="text"
           :value="config.moduleName"
           @input="updateConfig('moduleName', ($event.target as HTMLInputElement).value)"
-          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
           placeholder="system"
         />
       </div>
@@ -118,7 +118,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           type="text"
           :value="config.author"
           @input="updateConfig('author', ($event.target as HTMLInputElement).value)"
-          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
           placeholder="Developer"
         />
       </div>
@@ -130,7 +130,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           type="text"
           :value="config.tablePrefix"
           @input="updateConfig('tablePrefix', ($event.target as HTMLInputElement).value)"
-          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+          class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
           placeholder="t_ / sys_"
         />
       </div>
@@ -148,7 +148,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           :class="[
             config.ormType === option.value
               ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-              : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40',
+              : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40',
             option.value === 'jpa' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
           ]"
           :disabled="option.value === 'jpa'"
@@ -160,7 +160,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
               ? 'border-[#4F8CFF] bg-[#4F8CFF]'
               : 'border-gray-300 dark:border-gray-600'"
           >
-            <div v-if="config.ormType === option.value" class="w-1.5 h-1.5 rounded-full bg-white" />
+            <div v-if="config.ormType === option.value" class="w-1.5 h-1.5 rounded-full bg-[#E0E5ED]" />
           </div>
           <div>
             <span class="text-xs font-medium text-primary">{{ option.label }}</span>
@@ -181,7 +181,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           class="flex-1 px-2.5 py-1.5 rounded-lg text-xs text-center transition-all"
           :class="config.dateType === option.value
             ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30 text-[#4F8CFF] font-medium'
-            : 'bg-white/40 dark:bg-black/20 border border-white/20 text-secondary hover:border-white/40'"
+            : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 text-secondary hover:border-white/40'"
           @click="updateConfig('dateType', option.value)"
         >
           {{ option.label }}
@@ -200,7 +200,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
           :class="config.swaggerVersion === option.value
             ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-            : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+            : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
           @click="updateConfig('swaggerVersion', option.value)"
         >
           <div
@@ -209,7 +209,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
               ? 'border-[#4F8CFF] bg-[#4F8CFF]'
               : 'border-gray-300 dark:border-gray-600'"
           >
-            <div v-if="config.swaggerVersion === option.value" class="w-1.5 h-1.5 rounded-full bg-white" />
+            <div v-if="config.swaggerVersion === option.value" class="w-1.5 h-1.5 rounded-full bg-[#E0E5ED]" />
           </div>
           <div>
             <span class="text-xs font-medium text-primary">{{ option.label }}</span>
@@ -230,7 +230,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
           :class="config.responseStyle === option.value
             ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-            : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+            : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
           @click="updateConfig('responseStyle', option.value)"
         >
           <div
@@ -239,7 +239,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
               ? 'border-[#4F8CFF] bg-[#4F8CFF]'
               : 'border-gray-300 dark:border-gray-600'"
           >
-            <div v-if="config.responseStyle === option.value" class="w-1.5 h-1.5 rounded-full bg-white" />
+            <div v-if="config.responseStyle === option.value" class="w-1.5 h-1.5 rounded-full bg-[#E0E5ED]" />
           </div>
           <div>
             <span class="text-xs font-medium text-primary">{{ option.label }}</span>
@@ -260,7 +260,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
           class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all"
           :class="config.generations.includes(option.type)
             ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-            : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+            : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
           @click="toggleGeneration(option.type)"
         >
           <div
@@ -297,7 +297,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
             @click="updateConfig('useLombok', !config.useLombok)"
           >
             <div
-              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform"
+              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
               :class="config.useLombok ? 'translate-x-3.5' : 'translate-x-0'"
             />
           </div>
@@ -315,7 +315,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
             @click="updateConfig('useSwagger', !config.useSwagger)"
           >
             <div
-              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform"
+              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
               :class="config.useSwagger ? 'translate-x-3.5' : 'translate-x-0'"
             />
           </div>
@@ -333,7 +333,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
             @click="updateConfig('useRestController', !config.useRestController)"
           >
             <div
-              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform"
+              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
               :class="config.useRestController ? 'translate-x-3.5' : 'translate-x-0'"
             />
           </div>
@@ -351,7 +351,7 @@ const generationOptions: { type: GenerationType; label: string; icon: string }[]
             @click="updateConfig('useBaseEntity', !config.useBaseEntity)"
           >
             <div
-              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform"
+              class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
               :class="config.useBaseEntity ? 'translate-x-3.5' : 'translate-x-0'"
             />
           </div>

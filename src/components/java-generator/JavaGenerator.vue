@@ -270,7 +270,7 @@ watch(config, () => {
 <template>
   <div class="java-generator flex-1 flex flex-col overflow-hidden">
     <!-- 顶部工具栏 -->
-    <div class="glass-bar flex items-center justify-between px-4 py-2 mb-2">
+    <div class="glass-bar flex items-center justify-between px-5 py-3 mb-2">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
           <svg class="w-5 h-5 text-[#4F8CFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,7 +281,7 @@ watch(config, () => {
         </div>
 
         <!-- 模式切换 -->
-        <div class="flex items-center gap-1 bg-white/40 dark:bg-black/20 rounded-lg p-0.5">
+        <div class="flex items-center gap-1 bg-[#EEF2F8]/40 dark:bg-black/20 rounded-lg p-0.5">
           <button
             class="px-2.5 py-1 rounded-md text-[10px] font-medium transition-all"
             :class="generatorMode === 'sql-to-java'
@@ -488,7 +488,7 @@ watch(config, () => {
                 <input
                   v-model="jsonToDtoConfig.className"
                   type="text"
-                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
                   placeholder="ReqDto"
                 />
               </div>
@@ -499,7 +499,7 @@ watch(config, () => {
                 <input
                   v-model="jsonToDtoConfig.packageName"
                   type="text"
-                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
                   placeholder="com.example.demo"
                 />
               </div>
@@ -510,7 +510,7 @@ watch(config, () => {
                 <input
                   v-model="jsonToDtoConfig.author"
                   type="text"
-                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-white/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
+                  class="w-full px-2.5 py-1.5 rounded-lg text-xs bg-[#EEF2F8]/60 dark:bg-black/40 border border-white/20 focus:border-[#4F8CFF]/50 focus:ring-2 focus:ring-[#4F8CFF]/20 outline-none transition-all"
                   placeholder="Developer"
                 />
               </div>
@@ -527,7 +527,7 @@ watch(config, () => {
                     @click="jsonToDtoConfig.useLombok = !jsonToDtoConfig.useLombok"
                   >
                     <div
-                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform"
+                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
                       :class="jsonToDtoConfig.useLombok ? 'translate-x-3.5' : 'translate-x-0'"
                     />
                   </div>
@@ -546,7 +546,7 @@ watch(config, () => {
                       class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
                       :class="jsonToDtoConfig.swaggerVersion === 'none'
                         ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-                        : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+                        : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
                       @click="jsonToDtoConfig.swaggerVersion = 'none'; jsonToDtoConfig.useSwagger = false"
                     >
                       <div
@@ -555,7 +555,7 @@ watch(config, () => {
                           ? 'border-[#4F8CFF] bg-[#4F8CFF]'
                           : 'border-gray-300 dark:border-gray-600'"
                       >
-                        <div v-if="jsonToDtoConfig.swaggerVersion === 'none'" class="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div v-if="jsonToDtoConfig.swaggerVersion === 'none'" class="w-1.5 h-1.5 rounded-full bg-[#E0E5ED]" />
                       </div>
                       <div>
                         <span class="text-xs font-medium text-primary">不使用</span>
@@ -567,7 +567,7 @@ watch(config, () => {
                       class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
                       :class="jsonToDtoConfig.swaggerVersion === 'swagger2'
                         ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-                        : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+                        : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
                       @click="jsonToDtoConfig.swaggerVersion = 'swagger2'; jsonToDtoConfig.useSwagger = true"
                     >
                       <div
@@ -576,7 +576,7 @@ watch(config, () => {
                           ? 'border-[#4F8CFF] bg-[#4F8CFF]'
                           : 'border-gray-300 dark:border-gray-600'"
                       >
-                        <div v-if="jsonToDtoConfig.swaggerVersion === 'swagger2'" class="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div v-if="jsonToDtoConfig.swaggerVersion === 'swagger2'" class="w-1.5 h-1.5 rounded-full bg-[#E0E5ED]" />
                       </div>
                       <div>
                         <span class="text-xs font-medium text-primary">Swagger 2</span>
@@ -588,7 +588,7 @@ watch(config, () => {
                       class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all"
                       :class="jsonToDtoConfig.swaggerVersion === 'swagger3'
                         ? 'bg-[#4F8CFF]/10 border border-[#4F8CFF]/30'
-                        : 'bg-white/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
+                        : 'bg-[#EEF2F8]/40 dark:bg-black/20 border border-white/20 hover:border-white/40'"
                       @click="jsonToDtoConfig.swaggerVersion = 'swagger3'; jsonToDtoConfig.useSwagger = true"
                     >
                       <div
@@ -597,7 +597,7 @@ watch(config, () => {
                           ? 'border-[#4F8CFF] bg-[#4F8CFF]'
                           : 'border-gray-300 dark:border-gray-600'"
                       >
-                        <div v-if="jsonToDtoConfig.swaggerVersion === 'swagger3'" class="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div v-if="jsonToDtoConfig.swaggerVersion === 'swagger3'" class="w-1.5 h-1.5 rounded-full bg-[#E0E5ED]" />
                       </div>
                       <div>
                         <span class="text-xs font-medium text-primary">Swagger 3</span>
@@ -615,7 +615,7 @@ watch(config, () => {
                     @click="jsonToDtoConfig.extendPageLimit = !jsonToDtoConfig.extendPageLimit"
                   >
                     <div
-                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform"
+                      class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-[#F0F4F8] shadow-sm transition-transform"
                       :class="jsonToDtoConfig.extendPageLimit ? 'translate-x-3.5' : 'translate-x-0'"
                     />
                   </div>

@@ -61,14 +61,16 @@ onUnmounted(() => {
 .glass-statusbar {
   height: 50px;
   background: rgba(255, 255, 255, 0.50);
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .dark .glass-statusbar {
-  background: rgba(30, 38, 50, 0.50);
+  background: rgba(22, 28, 38, 0.50);
   border-top-color: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .tabular-nums {

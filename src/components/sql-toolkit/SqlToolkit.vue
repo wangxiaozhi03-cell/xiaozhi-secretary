@@ -225,7 +225,7 @@ async function copyOutput() {
 .sql-root { display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
 
 /* ── 顶栏 ── */
-.tb { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; flex-shrink: 0; gap: 6px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.tb { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; flex-shrink: 0; gap: 6px; min-height: 52px; border-bottom: 1px solid rgba(0,0,0,0.04); }
 :global(.dark) .tb { border-bottom-color: rgba(255,255,255,0.04); }
 .tb-left { display: flex; align-items: center; gap: 6px; }
 .tb-right { display: flex; align-items: center; gap: 4px; }
@@ -247,7 +247,7 @@ async function copyOutput() {
 
 .dropdown {
   position: absolute; top: calc(100% + 4px); left: 0; z-index: 50;
-  background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+  background: rgba(238, 242, 248, 0.85); backdrop-filter: blur(32px) saturate(180%); -webkit-backdrop-filter: blur(32px) saturate(180%);
   border-radius: 8px; padding: 3px; min-width: 120px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.06);
 }

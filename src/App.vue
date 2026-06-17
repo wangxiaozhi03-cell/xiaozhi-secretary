@@ -17,6 +17,7 @@ import NameCaseStudio from "./components/namecase/NameCaseStudio.vue";
 import JavaGenerator from "./components/java-generator/JavaGenerator.vue";
 import JavaPackager from "./components/java-packager/JavaPackager.vue";
 import SqlToolkit from "./components/sql-toolkit/SqlToolkit.vue";
+import ToolBackground from "./components/ToolBackground.vue";
 import type { LayoutKey } from "./types";
 import { useImages } from "./composables/useImages";
 import { usePageSettings } from "./composables/usePageSettings";
@@ -123,112 +124,116 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
       <TopBar v-if="activeModule === 'home'" />
 
       <!-- 内容区 -->
-      <div class="flex-1 flex flex-col overflow-hidden py-2 px-2">
-        <Transition name="module-fade" mode="out-in">
-          <!-- 首页 -->
-          <HomePage v-if="activeModule === 'home'" key="home" @navigate="(m) => activeModule = m as any" />
+      <div class="flex-1 flex flex-col overflow-hidden py-2 px-2 relative">
+        <!-- 工具页面微光背景 -->
+        <ToolBackground v-if="activeModule !== 'home'" />
+        <div class="relative z-1 flex-1 flex flex-col overflow-hidden min-h-0">
+          <Transition name="module-fade" mode="out-in">
+            <!-- 首页 -->
+            <HomePage v-if="activeModule === 'home'" key="home" @navigate="(m) => activeModule = m as any" />
 
-          <!-- 图片工具模块 -->
-          <div v-else-if="activeModule === 'image-layout'" key="image-layout" class="flex-1 flex flex-col overflow-hidden">
-            <AppHeader
-              :image-count="images.length"
-              :page-count="pages.length"
-              @export-pdf="exportPdf"
-              @export-docx="exportDocx"
-            />
-            <div class="flex-1 flex overflow-hidden gap-2 mt-2">
-              <div class="flex-1 flex flex-col overflow-hidden min-w-0">
-                <div class="glass-card flex-1 overflow-hidden flex flex-col">
-                  <PreviewToolbar
-                    :current-page="currentPage"
-                    :total-pages="pages.length"
-                    @prev="prevPage"
-                    @next="nextPage"
-                  />
-                  <DocumentPreview
-                    :images="images"
-                    :pages="mergedPages"
-                    :base-pages="pages"
-                    :settings="settings"
-                    :current-page="currentPage"
-                    :overrides="overrides"
-                    @set-image-offset="(imgIdx, ox, oy) => setImageOffset(currentPage, imgIdx, ox, oy)"
-                    @set-page-slots="(slots) => setPageSlots(currentPage, slots)"
-                    @drop-on-slot="handleDropOnSlot"
-                  />
-                  <PageThumbnails
-                    :images="images"
-                    :pages="mergedPages"
-                    :settings="settings"
-                    :current-page="currentPage"
-                    @go-to-page="goToPage"
-                  />
-                </div>
-              </div>
-
-              <aside
-                class="glass-panel flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300"
-                :class="showRightPanel ? 'w-60' : 'w-10'"
-              >
-                <button
-                  class="h-9 flex items-center justify-center hover:bg-black/[0.02] transition-colors text-tertiary"
-                  @click="showRightPanel = !showRightPanel"
-                >
-                  <svg
-                    class="w-4 h-4 transition-transform duration-300"
-                    :class="showRightPanel ? 'rotate-0' : 'rotate-180'"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                  </svg>
-                </button>
-
-                <div v-if="showRightPanel" class="flex-1 overflow-y-auto">
-                  <div class="max-h-[280px] overflow-hidden flex flex-col">
-                    <ImageList
+            <!-- 图片工具模块 -->
+            <div v-else-if="activeModule === 'image-layout'" key="image-layout" class="flex-1 flex flex-col overflow-hidden">
+              <AppHeader
+                :image-count="images.length"
+                :page-count="pages.length"
+                @export-pdf="exportPdf"
+                @export-docx="exportDocx"
+              />
+              <div class="flex-1 flex overflow-hidden gap-2 mt-2">
+                <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+                  <div class="glass-card flex-1 overflow-hidden flex flex-col">
+                    <PreviewToolbar
+                      :current-page="currentPage"
+                      :total-pages="pages.length"
+                      @prev="prevPage"
+                      @next="nextPage"
+                    />
+                    <DocumentPreview
                       :images="images"
-                      @add="openFileDialog"
-                      @remove="removeImage"
-                      @remove-last="removeLastImage"
+                      :pages="mergedPages"
+                      :base-pages="pages"
+                      :settings="settings"
+                      :current-page="currentPage"
+                      :overrides="overrides"
+                      @set-image-offset="(imgIdx, ox, oy) => setImageOffset(currentPage, imgIdx, ox, oy)"
+                      @set-page-slots="(slots) => setPageSlots(currentPage, slots)"
+                      @drop-on-slot="handleDropOnSlot"
+                    />
+                    <PageThumbnails
+                      :images="images"
+                      :pages="mergedPages"
+                      :settings="settings"
+                      :current-page="currentPage"
+                      @go-to-page="goToPage"
                     />
                   </div>
-                  <PageSettings
-                    :settings="settings"
-                    :image-count="images.length"
-                    @update="handlePageSettingsUpdate"
-                  />
-                  <LayoutPicker
-                    :layouts="availableLayouts"
-                    :active-index="activeLayoutIndex"
-                    :image-count="images.length"
-                    @select="selectLayout"
-                  />
                 </div>
-              </aside>
+
+                <aside
+                  class="glass-panel flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300"
+                  :class="showRightPanel ? 'w-60' : 'w-10'"
+                >
+                  <button
+                    class="h-9 flex items-center justify-center hover:bg-black/[0.02] transition-colors text-tertiary"
+                    @click="showRightPanel = !showRightPanel"
+                  >
+                    <svg
+                      class="w-4 h-4 transition-transform duration-300"
+                      :class="showRightPanel ? 'rotate-0' : 'rotate-180'"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                  </button>
+
+                  <div v-if="showRightPanel" class="flex-1 overflow-y-auto">
+                    <div class="max-h-[280px] overflow-hidden flex flex-col">
+                      <ImageList
+                        :images="images"
+                        @add="openFileDialog"
+                        @remove="removeImage"
+                        @remove-last="removeLastImage"
+                      />
+                    </div>
+                    <PageSettings
+                      :settings="settings"
+                      :image-count="images.length"
+                      @update="handlePageSettingsUpdate"
+                    />
+                    <LayoutPicker
+                      :layouts="availableLayouts"
+                      :active-index="activeLayoutIndex"
+                      :image-count="images.length"
+                      @select="selectLayout"
+                    />
+                  </div>
+                </aside>
+              </div>
             </div>
-          </div>
 
-          <!-- JSON 工具模块 -->
-          <JsonToolkit v-else-if="activeModule === 'json-toolkit'" key="json-toolkit" />
+            <!-- JSON 工具模块 -->
+            <JsonToolkit v-else-if="activeModule === 'json-toolkit'" key="json-toolkit" />
 
-          <!-- MD 工具模块 -->
-          <MdToolkit v-else-if="activeModule === 'md-toolkit'" key="md-toolkit" />
+            <!-- MD 工具模块 -->
+            <MdToolkit v-else-if="activeModule === 'md-toolkit'" key="md-toolkit" />
 
-          <!-- Curl 重放工具模块 -->
-          <CurlToolkit v-else-if="activeModule === 'curl-toolkit'" key="curl-toolkit" />
+            <!-- Curl 重放工具模块 -->
+            <CurlToolkit v-else-if="activeModule === 'curl-toolkit'" key="curl-toolkit" />
 
-          <!-- NameCase Studio 命名转换模块 -->
-          <NameCaseStudio v-else-if="activeModule === 'namecase'" key="namecase" />
+            <!-- NameCase Studio 命名转换模块 -->
+            <NameCaseStudio v-else-if="activeModule === 'namecase'" key="namecase" />
 
-          <!-- Java 代码生成模块 -->
-          <JavaGenerator v-else-if="activeModule === 'java-generator'" key="java-generator" />
+            <!-- Java 代码生成模块 -->
+            <JavaGenerator v-else-if="activeModule === 'java-generator'" key="java-generator" />
 
-          <!-- Java 打包工具模块 -->
-          <JavaPackager v-else-if="activeModule === 'java-packager'" key="java-packager" />
-          <SqlToolkit v-else-if="activeModule === 'sql-toolkit'" key="sql-toolkit" />
-        </Transition>
+            <!-- Java 打包工具模块 -->
+            <JavaPackager v-else-if="activeModule === 'java-packager'" key="java-packager" />
+            <SqlToolkit v-else-if="activeModule === 'sql-toolkit'" key="sql-toolkit" />
+          </Transition>
+        </div>
       </div>
     </div>
   </div>

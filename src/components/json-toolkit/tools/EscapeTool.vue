@@ -237,7 +237,7 @@ watch([inputText, selectedLanguage, mode], convert, { immediate: true });
               :key="lang.id"
               class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1.5"
               :class="selectedLanguage === lang.id
-                ? 'bg-white dark:bg-gray-800 text-primary shadow-sm'
+                ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm'
                 : 'text-tertiary hover:text-secondary'"
               @click="selectedLanguage = lang.id"
             >

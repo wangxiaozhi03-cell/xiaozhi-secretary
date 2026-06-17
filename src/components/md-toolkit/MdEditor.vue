@@ -88,7 +88,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full overflow-hidden bg-white/50 dark:bg-white/[0.02]">
+  <div class="flex flex-col h-full overflow-hidden bg-[#EEF2F8]/50 dark:bg-white/[0.02]">
     <!-- 编辑区 -->
     <div class="flex-1 flex overflow-hidden relative">
       <!-- 行号 -->
