@@ -64,7 +64,7 @@ const shortcuts = [
 
 <style scoped>
 .settings-card {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(238, 242, 248, 0.6);
   border-radius: 16px;
   padding: 16px;
   border: 1px solid rgba(0, 0, 0, 0.04);

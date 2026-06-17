@@ -357,8 +357,12 @@ onUnmounted(() => window.removeEventListener("keydown", handleKeydown));
 }
 
 .encrypt-top-bar {
-  background: rgba(0, 0, 0, 0.02);
-  backdrop-filter: blur(20px);
+  background: rgba(238, 242, 248, 0.55);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: 16px;
+  min-height: 52px;
+  box-shadow: inset 0 1px 0 rgba(238, 242, 248, 0.5);
 }
 
 :global(.dark) .encrypt-top-bar {

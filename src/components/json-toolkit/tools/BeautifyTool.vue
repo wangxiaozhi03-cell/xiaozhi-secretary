@@ -778,7 +778,7 @@ function injectActions() {
         />
 
         <!-- 右下角字号控制 -->
-        <div class="absolute bottom-2 right-2 flex items-center gap-0.5 px-2 py-1 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border border-black/[0.06] dark:border-white/[0.08] z-10">
+        <div class="absolute bottom-2 right-2 flex items-center gap-0.5 px-2 py-1 rounded-lg bg-[#EEF2F8]/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border border-black/[0.06] dark:border-white/[0.08] z-10">
           <button
             class="w-6 h-6 flex items-center justify-center rounded-md text-tertiary hover:text-primary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-all duration-150 cursor-pointer active:scale-90"
             title="缩小字号"

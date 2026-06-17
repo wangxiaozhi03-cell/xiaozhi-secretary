@@ -215,46 +215,48 @@ const styleIcons: Record<string, string> = {
 </template>
 
 <style scoped>
-/* 根容器 - 亮色鸿蒙光感背景 */
+/* 根容器 - 透明背景，让共享微光背景透出 */
 .namecase-root {
-  background: linear-gradient(135deg, #F6F8FC 0%, #EEF2FF 50%, #F0F5FF 100%);
+  background: transparent;
   border-radius: 20px;
   position: relative;
 }
 
 .namecase-root::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(79, 124, 255, 0.06) 0%, transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
 /* 顶部栏 */
 .nc-header {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  border-bottom: 1px solid rgba(120, 160, 255, 0.10);
+  background: rgba(238, 242, 248, 0.60);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: 16px;
+  min-height: 52px;
+  border-bottom: 0.5px solid rgba(120, 160, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(238, 242, 248, 0.5);
 }
 
 /* 面板通用 */
 .nc-panel {
-  background: rgba(255, 255, 255, 0.60);
-  backdrop-filter: blur(18px) saturate(120%);
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  background: rgba(238, 242, 248, 0.55);
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
   border-radius: 16px;
-  border: 1px solid rgba(120, 160, 255, 0.12);
-  box-shadow: 0 4px 20px rgba(120, 140, 180, 0.06);
+  border: 0.5px solid rgba(120, 160, 255, 0.12);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 20px rgba(120, 140, 180, 0.05),
+    inset 0 1px 0 rgba(238, 242, 248, 0.5);
   overflow: hidden;
-  transition: all 0.25s ease-out;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nc-panel:hover {
-  box-shadow: 0 8px 30px rgba(120, 140, 180, 0.10);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 8px 30px rgba(120, 140, 180, 0.08),
+    inset 0 1px 0 rgba(238, 242, 248, 0.6);
   border-color: rgba(120, 160, 255, 0.18);
 }
 
@@ -304,13 +306,13 @@ const styleIcons: Record<string, string> = {
 .nc-result-card {
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.70);
+  background: rgba(238, 242, 248, 0.70);
   border: 1px solid rgba(120, 160, 255, 0.10);
   transition: all 0.25s ease-out;
 }
 
 .nc-result-card:hover {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(238, 242, 248, 0.85);
   box-shadow: 0 4px 16px rgba(79, 124, 255, 0.08);
   transform: translateY(-1px);
 }
@@ -368,14 +370,14 @@ const styleIcons: Record<string, string> = {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.50);
+  background: rgba(238, 242, 248, 0.50);
   border: 1px solid rgba(120, 160, 255, 0.08);
   cursor: pointer;
   transition: all 0.2s ease-out;
 }
 
 .nc-action-btn:hover {
-  background: rgba(255, 255, 255, 0.80);
+  background: rgba(238, 242, 248, 0.80);
   border-color: rgba(120, 160, 255, 0.18);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 124, 255, 0.08);

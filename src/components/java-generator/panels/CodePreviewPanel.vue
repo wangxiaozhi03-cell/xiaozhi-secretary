@@ -219,7 +219,7 @@ async function handleCopyWithFeedback() {
       <!-- 加载状态 -->
       <div
         v-if="isGenerating"
-        class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/80 backdrop-blur-sm z-10"
+        class="absolute inset-0 flex items-center justify-center bg-[#EEF2F8]/80 dark:bg-black/80 backdrop-blur-sm z-10"
       >
         <div class="flex flex-col items-center gap-2">
           <svg class="w-8 h-8 text-[#4F8CFF] animate-spin" fill="none" viewBox="0 0 24 24">

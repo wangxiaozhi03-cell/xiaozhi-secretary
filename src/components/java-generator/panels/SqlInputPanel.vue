@@ -112,7 +112,7 @@ onMounted(() => {
     <!-- 快捷按钮 -->
     <div class="absolute bottom-2 right-2 flex items-center gap-1">
       <button
-        class="px-2 py-1 rounded-md text-[10px] bg-white/60 dark:bg-black/40 backdrop-blur-sm border border-white/20 text-secondary hover:text-primary hover:bg-white/80 transition-all"
+        class="px-2 py-1 rounded-md text-[10px] bg-[#EEF2F8]/60 dark:bg-black/40 backdrop-blur-sm border border-white/20 text-secondary hover:text-primary hover:bg-[#EEF2F8]/80 transition-all"
         @click="emit('parse')"
       >
         <span class="flex items-center gap-1">

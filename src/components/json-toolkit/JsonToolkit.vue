@@ -212,7 +212,7 @@ function getActionIcon(icon: string) {
     @drop="handleDrop"
   >
     <!-- 顶部导航栏 -->
-    <header class="glass-bar px-4 py-2 flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
+    <header class="glass-bar px-5 py-3 flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
       <!-- 第一行：标题 + Tab + 状态 -->
       <div class="flex items-center justify-between gap-3 mb-2">
         <div class="flex items-center gap-3 min-w-0">
@@ -225,7 +225,7 @@ function getActionIcon(icon: string) {
               :key="tab.id"
               class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200 whitespace-nowrap"
               :class="mode === tab.id
-                ? 'bg-white dark:bg-gray-800 text-primary shadow-sm'
+                ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm'
                 : 'text-tertiary hover:text-secondary'"
               @click="handleTabClick(tab.id)"
             >

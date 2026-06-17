@@ -79,7 +79,7 @@ function formatSize(bytes: number): string {
 <template>
   <div class="flex flex-col h-full overflow-hidden">
     <!-- 顶部导航栏 -->
-    <header class="glass-bar px-4 py-2 flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
+    <header class="glass-bar px-5 py-3 flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <h1 class="text-sm font-semibold text-primary flex-shrink-0">Curl</h1>
@@ -87,13 +87,13 @@ function formatSize(bytes: number): string {
           <nav class="flex items-center gap-0.5 p-0.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.05] overflow-x-auto">
             <button
               class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200 whitespace-nowrap"
-              :class="selectedEnvId === null ? 'bg-white dark:bg-gray-800 text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
+              :class="selectedEnvId === null ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
               @click="selectEnv(null)"
             >原始</button>
             <button
               v-for="env in environments" :key="env.id"
               class="group px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-200 whitespace-nowrap relative"
-              :class="selectedEnvId === env.id ? 'bg-white dark:bg-gray-800 text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
+              :class="selectedEnvId === env.id ? 'bg-[#EEF2F8] dark:bg-gray-800 text-primary shadow-sm' : 'text-tertiary hover:text-secondary'"
               @click="selectEnv(env.id)"
             >
               {{ env.name }}
@@ -108,7 +108,7 @@ function formatSize(bytes: number): string {
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             </button>
-            <div v-if="showAddEnv" class="absolute top-full left-0 mt-1 z-50 w-[240px] p-3 rounded-xl bg-white dark:bg-gray-800 border border-black/[0.08] dark:border-white/[0.08] shadow-lg space-y-2">
+            <div v-if="showAddEnv" class="absolute top-full left-0 mt-1 z-50 w-[240px] p-3 rounded-xl bg-[#EEF2F8] dark:bg-gray-800 border border-black/[0.08] dark:border-white/[0.08] shadow-lg space-y-2">
               <input v-model="newName" class="env-input w-full" placeholder="名称 (如 Local)" />
               <input v-model="newDomain" class="env-input w-full" placeholder="域名 (如 localhost)" />
               <input v-model="newPort" class="env-input w-full" placeholder="端口 (如 8080)" />

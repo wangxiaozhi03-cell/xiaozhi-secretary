@@ -168,7 +168,7 @@ const iconColors: Record<string, string> = {
       <div class="px-6 pt-8 pb-4">
         <!-- Welcome badge -->
         <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-[#3B82F6]/20 mb-4 transition-all duration-500 shadow-sm"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EEF2F8]/80 backdrop-blur-sm border border-[#3B82F6]/20 mb-4 transition-all duration-500 shadow-sm"
           :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'"
         >
           <span class="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" />
@@ -200,7 +200,7 @@ const iconColors: Record<string, string> = {
           <div
             v-for="stat in stats"
             :key="stat.label"
-            class="stat-card text-center px-4 py-2.5 rounded-xl bg-white/60 backdrop-blur-sm border border-white/80 shadow-sm"
+            class="stat-card text-center px-4 py-2.5 rounded-xl bg-[#EEF2F8]/60 backdrop-blur-sm border border-white/80 shadow-sm"
           >
             <div class="text-lg font-semibold text-[#2B2F36]">
               {{ stat.value }}<span class="text-xs" :style="{ color: stat.color }">{{ stat.suffix }}</span>
@@ -256,7 +256,7 @@ const iconColors: Record<string, string> = {
                 <span
                   v-for="feature in tool.features"
                   :key="feature"
-                  class="px-2 py-0.5 rounded-full text-[10px] bg-white/60 text-[#98A2B3] backdrop-blur-sm border border-white/50"
+                  class="px-2 py-0.5 rounded-full text-[10px] bg-[#EEF2F8]/60 text-[#98A2B3] backdrop-blur-sm border border-white/50"
                 >
                   {{ feature }}
                 </span>
@@ -264,7 +264,7 @@ const iconColors: Record<string, string> = {
             </div>
 
             <!-- Arrow -->
-            <div class="absolute bottom-4 right-4 w-7 h-7 rounded-lg bg-white/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 shadow-sm">
+            <div class="absolute bottom-4 right-4 w-7 h-7 rounded-lg bg-[#EEF2F8]/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 shadow-sm">
               <svg class="w-3.5 h-3.5 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -288,7 +288,7 @@ const iconColors: Record<string, string> = {
             <div
               v-for="tool in recentTools"
               :key="tool.label"
-              class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-white/50 transition-colors cursor-pointer"
+              class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-[#EEF2F8]/50 transition-colors cursor-pointer"
             >
               <div class="w-7 h-7 rounded-lg bg-[#EEF4FF] flex items-center justify-center flex-shrink-0">
                 <svg class="w-3.5 h-3.5 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +316,7 @@ const iconColors: Record<string, string> = {
             <button
               v-for="tool in favoriteTools"
               :key="tool.label"
-              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/50 hover:bg-white/80 border border-white/60 transition-all duration-200 hover:shadow-sm"
+              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EEF2F8]/50 hover:bg-[#EEF2F8]/80 border border-white/60 transition-all duration-200 hover:shadow-sm"
               @click="tool.id && emit('navigate', tool.id)"
             >
               <svg class="w-3 h-3 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,61 +339,55 @@ const iconColors: Record<string, string> = {
 </template>
 
 <style scoped>
+/* ── 鸿蒙沉浸光感首页 ── */
 .home-page {
-  background: linear-gradient(135deg, #F7FAFF 0%, #EEF5FF 50%, #F0FFF4 30%, #F9FBFF 100%);
+  background: transparent;
   position: relative;
 }
 
-/* 背景装饰层 */
-.bg-decoration {
-  z-index: 0;
+:global(.dark) .home-page {
+  background: transparent;
 }
+
+/* 背景装饰层 */
+.bg-decoration { z-index: 0; }
 
 .light-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.35;
-  animation: float 20s ease-in-out infinite;
+  opacity: 0.3;
+  animation: float 25s ease-in-out infinite;
 }
-
 .blob-1 {
-  width: 350px;
-  height: 350px;
+  width: 380px; height: 380px;
   background: linear-gradient(135deg, #93C5FD, #60A5FA);
-  top: -80px;
-  right: -80px;
-  animation-delay: 0s;
+  top: -80px; right: -80px;
 }
-
 .blob-2 {
-  width: 300px;
-  height: 300px;
+  width: 320px; height: 320px;
   background: linear-gradient(135deg, #A78BFA, #818CF8);
-  bottom: -60px;
-  left: -60px;
-  animation-delay: -5s;
+  bottom: -60px; left: -60px;
+  animation-delay: -7s;
 }
-
 .blob-3 {
-  width: 250px;
-  height: 250px;
+  width: 260px; height: 260px;
   background: linear-gradient(135deg, #6EE7B7, #34D399);
-  top: 40%;
-  left: 30%;
-  animation-delay: -10s;
-  opacity: 0.2;
+  top: 40%; left: 30%;
+  animation-delay: -12s;
+  opacity: 0.18;
+}
+.blob-4 {
+  width: 220px; height: 220px;
+  background: linear-gradient(135deg, #F9A8D4, #F472B6);
+  top: 20%; right: 20%;
+  animation-delay: -18s;
+  opacity: 0.12;
 }
 
-.blob-4 {
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(135deg, #F9A8D4, #F472B6);
-  top: 20%;
-  right: 20%;
-  animation-delay: -15s;
-  opacity: 0.15;
-}
+:global(.dark) .light-blob { opacity: 0.15; }
+:global(.dark) .blob-3 { opacity: 0.1; }
+:global(.dark) .blob-4 { opacity: 0.08; }
 
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -403,122 +397,184 @@ const iconColors: Record<string, string> = {
 }
 
 .dot-grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(79, 140, 255, 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
 }
+:global(.dark) .dot-grid {
+  background-image: radial-gradient(circle, rgba(79, 140, 255, 0.03) 1px, transparent 1px);
+}
 
 .geo-line {
   position: absolute;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(79, 140, 255, 0.06), transparent);
   height: 1px;
 }
-
-.line-1 {
-  width: 250px;
-  top: 20%;
-  left: 10%;
-  transform: rotate(-15deg);
-  animation: shimmer 8s ease-in-out infinite;
-}
-
-.line-2 {
-  width: 200px;
-  top: 60%;
-  right: 15%;
-  transform: rotate(20deg);
-  animation: shimmer 8s ease-in-out infinite;
-  animation-delay: -3s;
-}
-
-.line-3 {
-  width: 180px;
-  bottom: 25%;
-  left: 40%;
-  transform: rotate(-8deg);
-  animation: shimmer 8s ease-in-out infinite;
-  animation-delay: -6s;
-}
-
+.line-1 { width: 250px; top: 20%; left: 10%; transform: rotate(-15deg); animation: shimmer 8s ease-in-out infinite; }
+.line-2 { width: 200px; top: 60%; right: 15%; transform: rotate(20deg); animation: shimmer 8s ease-in-out infinite; animation-delay: -3s; }
+.line-3 { width: 180px; bottom: 25%; left: 40%; transform: rotate(-8deg); animation: shimmer 8s ease-in-out infinite; animation-delay: -6s; }
 @keyframes shimmer {
   0%, 100% { opacity: 0.3; transform: rotate(var(--rotation, 0deg)) scaleX(0.8); }
   50% { opacity: 0.7; transform: rotate(var(--rotation, 0deg)) scaleX(1.2); }
 }
 
-/* 快捷功能卡片 */
+/* ── 功能卡片：鸿蒙玻璃态 ── */
 .quick-card {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(18px) saturate(120%);
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 0.5px solid rgba(238, 242, 248, 0.6);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 8px 24px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(238, 242, 248, 0.55);
   cursor: pointer;
 }
 
 .quick-card:hover {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(79, 140, 255, 0.2);
   box-shadow:
-    0 16px 40px rgba(59, 130, 246, 0.12),
-    0 0 0 1px rgba(59, 130, 246, 0.15),
-    0 0 20px rgba(59, 130, 246, 0.06);
-  transform: translateY(-4px) scale(1.01);
-  border-color: rgba(59, 130, 246, 0.25);
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 16px 40px rgba(79, 140, 255, 0.10),
+    0 0 20px rgba(79, 140, 255, 0.05),
+    inset 0 1px 0 rgba(238, 242, 248, 0.7);
+  transform: translateY(-4px) scale(1.005);
 }
 
 .quick-card:active {
   transform: translateY(0) scale(0.99);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition-duration: 0.1s;
 }
 
-/* 内部卡片 */
+:global(.dark) .quick-card {
+  background: rgba(28, 36, 48, 0.60);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+:global(.dark) .quick-card:hover {
+  background: rgba(32, 40, 54, 0.70);
+  border-color: rgba(79, 140, 255, 0.25);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 16px 40px rgba(79, 140, 255, 0.08),
+    0 0 20px rgba(79, 140, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* ── 内部卡片 ── */
 .glass-card-inner {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  transition: all 0.25s ease-out;
+  background: rgba(238, 242, 248, 0.55);
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  border: 0.5px solid rgba(238, 242, 248, 0.6);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 4px 16px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(238, 242, 248, 0.5);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-inner:hover {
+  background: rgba(238, 242, 248, 0.65);
+  border-color: rgba(79, 140, 255, 0.15);
   box-shadow:
-    0 12px 32px rgba(59, 130, 246, 0.10),
-    0 0 0 1px rgba(59, 130, 246, 0.12);
+    0 2px 4px rgba(0, 0, 0, 0.03),
+    0 12px 32px rgba(79, 140, 255, 0.08),
+    inset 0 1px 0 rgba(238, 242, 248, 0.65);
   transform: translateY(-2px);
-  border-color: rgba(59, 130, 246, 0.2);
 }
 
-/* 统计卡片 */
+:global(.dark) .glass-card-inner {
+  background: rgba(28, 36, 48, 0.55);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+:global(.dark) .glass-card-inner:hover {
+  background: rgba(32, 40, 54, 0.62);
+  border-color: rgba(79, 140, 255, 0.2);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 12px 32px rgba(79, 140, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ── 统计卡片 ── */
 .stat-card {
-  transition: all 0.25s ease-out;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: default;
 }
-
 .stat-card:hover {
   transform: translateY(-3px);
   box-shadow:
-    0 10px 28px rgba(59, 130, 246, 0.10),
-    0 0 0 1px rgba(59, 130, 246, 0.12);
+    0 10px 28px rgba(79, 140, 255, 0.10),
+    0 0 0 1px rgba(79, 140, 255, 0.12);
 }
 
-/* 收藏工具按钮 */
+:global(.dark) .stat-card {
+  background: rgba(28, 36, 48, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+:global(.dark) .stat-card:hover {
+  box-shadow:
+    0 10px 28px rgba(79, 140, 255, 0.08),
+    0 0 0 1px rgba(79, 140, 255, 0.15);
+}
+
+/* ── 收藏工具按钮 ── */
 .glass-card-inner button {
   cursor: pointer;
-  transition: all 0.2s ease-out;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .glass-card-inner button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 4px 12px rgba(79, 140, 255, 0.12);
 }
 
-/* 脉冲动画 */
+:global(.dark) .glass-card-inner button {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+:global(.dark) .glass-card-inner button:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 4px 12px rgba(79, 140, 255, 0.10);
+}
+
+/* ── 首页深色模式文字适配 ── */
+:global(.dark) .home-page h1,
+:global(.dark) .home-page h2,
+:global(.dark) .home-page h3 {
+  color: rgba(255, 255, 255, 0.92);
+}
+:global(.dark) .home-page p {
+  color: rgba(255, 255, 255, 0.55);
+}
+:global(.dark) .home-page .text-\[#2B2F36\] {
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+:global(.dark) .home-page .text-\[#5F6B76\] {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+:global(.dark) .home-page .text-\[#98A2B3\] {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* ── 脉冲动画 ── */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }

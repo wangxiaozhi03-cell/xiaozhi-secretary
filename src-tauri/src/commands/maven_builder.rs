@@ -901,3 +901,32 @@ pub fn check_maven_available() -> Result<String, String> {
     let version = String::from_utf8_lossy(&output.stdout).to_string();
     Ok(version.lines().next().unwrap_or("unknown").to_string())
 }
+
+/// 复制文件列表到指定目录
+#[tauri::command]
+pub fn copy_files_to_dir(file_paths: Vec<String>, output_dir: String) -> Result<String, String> {
+    let dest_dir = PathBuf::from(&output_dir);
+    if !dest_dir.exists() {
+        fs::create_dir_all(&dest_dir)
+            .map_err(|e| format!("创建输出目录失败: {}", e))?;
+    }
+
+    let mut copied = 0;
+    for file_path in &file_paths {
+        let src = PathBuf::from(file_path);
+        if !src.exists() {
+            continue;
+        }
+
+        let file_name = src.file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "unknown.jar".to_string());
+
+        let dest = dest_dir.join(&file_name);
+        fs::copy(&src, &dest)
+            .map_err(|e| format!("复制文件失败 {}: {}", file_name, e))?;
+        copied += 1;
+    }
+
+    Ok(format!("已复制 {} 个文件到: {}", copied, output_dir))
+}

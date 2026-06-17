@@ -57,6 +57,13 @@ function handleItemClick(item: MenuItem) {
     class="glass-sidebar flex flex-col overflow-hidden transition-all duration-300 flex-shrink-0"
     :class="collapsed ? 'w-[68px]' : 'w-[260px]'"
   >
+    <!-- 内置装饰光斑 -->
+    <div class="sidebar-glow" aria-hidden="true">
+      <div class="sg-blob sg-1"></div>
+      <div class="sg-blob sg-2"></div>
+      <div class="sg-blob sg-3"></div>
+    </div>
+
     <!-- Logo 区域 -->
     <div class="flex items-center gap-3 px-4 pt-5 pb-3 flex-shrink-0">
       <button
@@ -170,18 +177,91 @@ function handleItemClick(item: MenuItem) {
 </template>
 
 <style scoped>
+/* ── 鸿蒙沉浸光感侧栏 ── */
 .glass-sidebar {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
-  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(238, 243, 250, 0.72);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-right: 0.5px solid rgba(255, 255, 255, 0.55);
+  position: relative;
 }
+/* 顶部极光线 */
+.glass-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4F8CFF, #A78BFA, #34D399, #F59E0B);
+  opacity: 0.7;
+  z-index: 2;
+}
+/* 内侧微光 */
+.glass-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 0; right: 0;
+  height: 40px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── 侧栏内置装饰光斑 ── */
+.sidebar-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.sg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(45px);
+  animation: sgFloat 18s ease-in-out infinite;
+}
+.sg-1 {
+  width: 140px; height: 140px;
+  top: -30px; left: -30px;
+  background: linear-gradient(135deg, #93C5FD, #60A5FA);
+  opacity: 0.35;
+}
+.sg-2 {
+  width: 120px; height: 120px;
+  bottom: 20%; right: -25px;
+  background: linear-gradient(135deg, #C4B5FD, #A78BFA);
+  opacity: 0.25;
+  animation-delay: -6s;
+}
+.sg-3 {
+  width: 100px; height: 100px;
+  bottom: -20px; left: 20%;
+  background: linear-gradient(135deg, #6EE7B7, #34D399);
+  opacity: 0.20;
+  animation-delay: -12s;
+}
+@keyframes sgFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8px, -12px) scale(1.05); }
+  66% { transform: translate(-6px, 8px) scale(0.95); }
+}
+
+:global(.dark) .sg-1 { opacity: 0.20; }
+:global(.dark) .sg-2 { opacity: 0.15; }
+:global(.dark) .sg-3 { opacity: 0.12; }
 
 .dark .glass-sidebar {
-  background: rgba(30, 38, 50, 0.55);
-  border-right-color: rgba(255, 255, 255, 0.06);
+  background: rgba(22, 30, 42, 0.72);
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+.dark .glass-sidebar::before {
+  opacity: 0.5;
+}
+.dark .glass-sidebar::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
 }
 
+/* ── 菜单项：鸿蒙透光按钮风格 ── */
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -189,48 +269,113 @@ function handleItemClick(item: MenuItem) {
   border-radius: 14px;
   cursor: pointer;
   color: rgba(0, 0, 0, 0.45);
-  transition: all 0.2s ease-out;
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    rgba(242, 246, 252, 0.65) 0%,
+    rgba(235, 240, 248, 0.45) 100%
+  );
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 0.5px solid rgba(255, 255, 255, 0.60);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-item:hover {
-  background: rgba(59, 130, 246, 0.08);
+  background: linear-gradient(
+    180deg,
+    rgba(242, 246, 252, 0.80) 0%,
+    rgba(235, 240, 248, 0.58) 100%
+  );
   color: rgba(0, 0, 0, 0.8);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.10);
+  border-color: rgba(79, 140, 255, 0.2);
+  box-shadow:
+    0 4px 14px rgba(79, 140, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80);
 }
 
 .sidebar-item:hover .sidebar-icon {
-  transform: scale(1.15);
-  color: #3B82F6;
+  transform: scale(1.12);
+  color: var(--accent, #4F8CFF);
 }
 
+/* 激活态：渐变底色 + 左侧辉光指示器 */
 .sidebar-item.active {
-  background: rgba(255, 255, 255, 0.75);
-  color: #3B82F6;
+  background: linear-gradient(135deg, rgba(79, 140, 255, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+  color: var(--accent, #4F8CFF);
+  border-color: rgba(79, 140, 255, 0.2);
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.12),
-    0 4px 12px rgba(59, 130, 246, 0.08);
+    0 4px 16px rgba(79, 140, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+/* 左侧3px辉光指示器 */
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4F8CFF, #6BA3FF);
+  box-shadow: 0 0 8px rgba(79, 140, 255, 0.5);
 }
 
 .sidebar-item.active .sidebar-icon {
-  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
+  filter: drop-shadow(0 0 6px rgba(79, 140, 255, 0.35));
 }
 
+/* ── 深色模式菜单项 ── */
 .dark .sidebar-item {
   color: rgba(255, 255, 255, 0.40);
+  background: linear-gradient(
+    180deg,
+    rgba(35, 48, 68, 0.50) 0%,
+    rgba(28, 40, 58, 0.35) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .dark .sidebar-item:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
   color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+  border-color: rgba(79, 140, 255, 0.2);
+  box-shadow:
+    0 4px 14px rgba(79, 140, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 .dark .sidebar-item.active {
-  background: rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(79, 140, 255, 0.15) 0%, rgba(139, 92, 246, 0.10) 100%);
   color: #60A5FA;
+  border-color: rgba(79, 140, 255, 0.25);
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.2),
-    0 4px 12px rgba(59, 130, 246, 0.12);
+    0 4px 16px rgba(79, 140, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.dark .sidebar-item.active::before {
+  background: linear-gradient(180deg, #60A5FA, #818CF8);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+.dark .sidebar-item.active .sidebar-icon {
+  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.4));
+}
+
+/* ── 按压反馈 ── */
+.sidebar-item:active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
 }
 
 /* Fade transition for labels */
