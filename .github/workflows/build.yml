@@ -53,6 +53,7 @@ jobs:
         run: |
           rm -f ~/.npmrc
           npm config set registry https://registry.npmjs.org/
+          npm cache clean --force
           npm install
 
       - name: Build Tauri app
