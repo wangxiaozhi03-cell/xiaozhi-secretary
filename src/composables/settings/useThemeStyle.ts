@@ -22,10 +22,14 @@ export interface ThemeStyleDef {
   /** 基础渐变背景 */
   gradient: string;
   darkGradient: string;
-  /** 玻璃材质 tint */
+  /** 玻璃材质 tint（浅色模式） */
   glassR: number;
   glassG: number;
   glassB: number;
+  /** 玻璃材质 tint（深色模式 — 更饱和的主题色） */
+  darkGlassR: number;
+  darkGlassG: number;
+  darkGlassB: number;
   /** 光斑颜色 (RGB) */
   blobColors: [string, string, string, string, string];
   /** 强调色 */
@@ -44,6 +48,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 240,
     glassG: 244,
     glassB: 250,
+    darkGlassR: 40,
+    darkGlassG: 55,
+    darkGlassB: 85,
     blobColors: ["#93C5FD", "#C4B5FD", "#6EE7B7", "#F9A8D4", "#FCD34D"],
     accent: "#4F8CFF",
     accentHover: "#5E9AFF",
@@ -58,6 +65,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 238,
     glassG: 248,
     glassB: 242,
+    darkGlassR: 35,
+    darkGlassG: 65,
+    darkGlassB: 50,
     blobColors: ["#6EE7B7", "#93C5FD", "#FCD34D", "#A78BFA", "#F9A8D4"],
     accent: "#10B981",
     accentHover: "#059669",
@@ -72,6 +82,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 248,
     glassG: 244,
     glassB: 236,
+    darkGlassR: 65,
+    darkGlassG: 55,
+    darkGlassB: 35,
     blobColors: ["#FCD34D", "#F9A8D4", "#93C5FD", "#6EE7B7", "#C4B5FD"],
     accent: "#D97706",
     accentHover: "#B45309",
@@ -86,6 +99,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 244,
     glassG: 240,
     glassB: 250,
+    darkGlassR: 55,
+    darkGlassG: 40,
+    darkGlassB: 80,
     blobColors: ["#C4B5FD", "#F9A8D4", "#93C5FD", "#6EE7B7", "#FCD34D"],
     accent: "#8B5CF6",
     accentHover: "#7C3AED",
@@ -100,6 +116,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 250,
     glassG: 238,
     glassB: 245,
+    darkGlassR: 75,
+    darkGlassG: 38,
+    darkGlassB: 60,
     blobColors: ["#F9A8D4", "#FBBF24", "#A78BFA", "#6EE7B7", "#93C5FD"],
     accent: "#EC4899",
     accentHover: "#DB2777",
@@ -114,6 +133,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 250,
     glassG: 240,
     glassB: 238,
+    darkGlassR: 80,
+    darkGlassG: 40,
+    darkGlassB: 38,
     blobColors: ["#FCA5A5", "#FCD34D", "#F9A8D4", "#FB923C", "#A78BFA"],
     accent: "#EF4444",
     accentHover: "#DC2626",
@@ -128,6 +150,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 236,
     glassG: 246,
     glassB: 254,
+    darkGlassR: 30,
+    darkGlassG: 58,
+    darkGlassB: 80,
     blobColors: ["#7DD3FC", "#6EE7B7", "#93C5FD", "#A78BFA", "#FCD34D"],
     accent: "#0EA5E9",
     accentHover: "#0284C7",
@@ -142,6 +167,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 242,
     glassG: 250,
     glassB: 236,
+    darkGlassR: 50,
+    darkGlassG: 72,
+    darkGlassB: 35,
     blobColors: ["#BEF264", "#6EE7B7", "#FCD34D", "#93C5FD", "#F9A8D4"],
     accent: "#84CC16",
     accentHover: "#65A30D",
@@ -156,6 +184,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 252,
     glassG: 244,
     glassB: 236,
+    darkGlassR: 72,
+    darkGlassG: 50,
+    darkGlassB: 35,
     blobColors: ["#FDBA74", "#F9A8D4", "#FCD34D", "#6EE7B7", "#93C5FD"],
     accent: "#F97316",
     accentHover: "#EA580C",
@@ -170,6 +201,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 241,
     glassG: 245,
     glassB: 249,
+    darkGlassR: 50,
+    darkGlassG: 55,
+    darkGlassB: 65,
     blobColors: ["#CBD5E1", "#94A3B8", "#A5B4FC", "#86EFAC", "#FDE68A"],
     accent: "#64748B",
     accentHover: "#475569",
@@ -184,6 +218,9 @@ export const THEME_STYLES: Record<ThemeStyle, ThemeStyleDef> = {
     glassR: 240,
     glassG: 242,
     glassB: 254,
+    darkGlassR: 48,
+    darkGlassG: 42,
+    darkGlassB: 80,
     blobColors: ["#A5B4FC", "#6EE7B7", "#F9A8D4", "#FCD34D", "#7DD3FC"],
     accent: "#6366F1",
     accentHover: "#4F46E5",
@@ -211,10 +248,15 @@ function applyThemeStyle(style: ThemeStyle) {
   html.style.setProperty("--bg-gradient", def.gradient);
   html.style.setProperty("--bg-gradient-dark", def.darkGradient);
 
-  // 玻璃 tint
+  // 玻璃 tint（浅色）
   html.style.setProperty("--glass-r", String(def.glassR));
   html.style.setProperty("--glass-g", String(def.glassG));
   html.style.setProperty("--glass-b", String(def.glassB));
+
+  // 玻璃 tint（深色 — 更饱和的主题色）
+  html.style.setProperty("--glass-dark-r", String(def.darkGlassR));
+  html.style.setProperty("--glass-dark-g", String(def.darkGlassG));
+  html.style.setProperty("--glass-dark-b", String(def.darkGlassB));
 
   // 光斑颜色 (hex + RGB 分量)
   def.blobColors.forEach((c, i) => {
@@ -231,6 +273,10 @@ function applyThemeStyle(style: ThemeStyle) {
   html.style.setProperty("--accent-primary", def.accent);
   html.style.setProperty("--accent-glow", def.accent + "59");
   html.style.setProperty("--accent-light", def.accent + "14");
+  const [ar, ag, ab] = hexToRgb(def.accent);
+  html.style.setProperty("--accent-r", String(ar));
+  html.style.setProperty("--accent-g", String(ag));
+  html.style.setProperty("--accent-b", String(ab));
 }
 
 // 初始化

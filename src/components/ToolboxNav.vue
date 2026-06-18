@@ -251,7 +251,7 @@ function handleItemClick(item: MenuItem) {
 :global(.dark) .sg-3 { opacity: 0.12; }
 
 .dark .glass-sidebar {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.18);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.35);
   border-right-color: rgba(255, 255, 255, 0.08);
 }
 .dark .glass-sidebar::before {
@@ -293,8 +293,8 @@ function handleItemClick(item: MenuItem) {
   bottom: 20%;
   width: 3px;
   border-radius: 3px;
-  background: linear-gradient(180deg, #4F8CFF, #6BA3FF);
-  box-shadow: 0 0 8px rgba(79, 140, 255, 0.5);
+  background: linear-gradient(180deg, var(--accent), var(--accent-hover));
+  box-shadow: 0 0 8px var(--accent-glow, rgba(79, 140, 255, 0.5));
   opacity: 0;
   transform: scaleY(0.5);
   transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -342,8 +342,8 @@ function handleItemClick(item: MenuItem) {
   color: rgba(255, 255, 255, 0.40);
   background: linear-gradient(
     180deg,
-    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.10) 0%,
-    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.05) 100%
+    rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.20) 0%,
+    rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.10) 100%
   );
   border-color: rgba(255, 255, 255, 0.06);
   box-shadow:
@@ -354,31 +354,31 @@ function handleItemClick(item: MenuItem) {
 .dark .sidebar-item:hover {
   background: linear-gradient(
     180deg,
-    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15) 0%,
-    rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.08) 100%
+    rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.30) 0%,
+    rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.16) 100%
   );
   color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(79, 140, 255, 0.15);
+  border-color: var(--accent-light, rgba(79, 140, 255, 0.15));
   box-shadow:
-    0 4px 14px rgba(79, 140, 255, 0.08),
+    0 4px 14px var(--accent-light, rgba(79, 140, 255, 0.08)),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .dark .sidebar-item.active {
-  background: linear-gradient(135deg, rgba(79, 140, 255, 0.15) 0%, rgba(139, 92, 246, 0.10) 100%);
-  color: #60A5FA;
-  border-color: rgba(79, 140, 255, 0.25);
+  background: linear-gradient(135deg, var(--accent-light, rgba(79, 140, 255, 0.18)) 0%, rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.22) 100%);
+  color: var(--accent);
+  border-color: var(--accent-light, rgba(79, 140, 255, 0.25));
   box-shadow:
-    0 4px 16px rgba(79, 140, 255, 0.12),
+    0 4px 16px var(--accent-light, rgba(79, 140, 255, 0.12)),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .dark .sidebar-item.active::before {
-  background: linear-gradient(180deg, #60A5FA, #818CF8);
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+  background: linear-gradient(180deg, var(--accent), var(--accent-hover));
+  box-shadow: 0 0 10px var(--accent-glow, rgba(96, 165, 250, 0.5));
 }
 
 .dark .sidebar-item.active .sidebar-icon {
-  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.4));
+  filter: drop-shadow(0 0 6px var(--accent-glow, rgba(96, 165, 250, 0.4)));
 }
 
 /* ── 按压反馈 ── */

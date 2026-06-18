@@ -210,7 +210,7 @@ input[type="range"]::-webkit-slider-thumb:active {
 
 /* ── 深色模式 · 玻璃 ── */
 .dark .glass-card {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.18);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.28);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.25),
@@ -218,17 +218,17 @@ input[type="range"]::-webkit-slider-thumb:active {
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .dark .glass-card:hover {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.22);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.35);
   border-color: rgba(255, 255, 255, 0.10);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.28),
     0 20px 48px rgba(0, 0, 0, 0.38),
-    0 0 24px rgba(79, 140, 255, 0.10),
+    0 0 24px var(--accent-glow, rgba(79, 140, 255, 0.10)),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .dark .glass-panel {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.25);
   border-color: rgba(255, 255, 255, 0.07);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.22),
@@ -237,12 +237,12 @@ input[type="range"]::-webkit-slider-thumb:active {
 }
 
 .dark .glass-bar {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.16);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.26);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .dark .glass-float {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.25);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.35);
   border-color: rgba(255, 255, 255, 0.10);
   box-shadow:
     0 0 0 0.5px rgba(255, 255, 255, 0.08),
@@ -293,22 +293,22 @@ input[type="range"]::-webkit-slider-thumb:active {
 }
 
 .dark .btn {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.14);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.22);
   border-color: rgba(255, 255, 255, 0.12);
-  color: #6BA3FF;
+  color: var(--accent);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .dark .btn:hover {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.20);
-  border-color: rgba(79, 140, 255, 0.25);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.32);
+  border-color: var(--accent-light, rgba(79, 140, 255, 0.25));
   box-shadow:
-    0 4px 12px rgba(79, 140, 255, 0.12),
+    0 4px 12px var(--accent-light, rgba(79, 140, 255, 0.12)),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 .dark .btn:active {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.10);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.16);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -409,8 +409,8 @@ input[type="range"]::-webkit-slider-thumb:active {
   color: rgba(255, 255, 255, 0.4);
 }
 .dark .btn-icon:hover {
-  background: rgba(79, 140, 255, 0.12);
-  color: #6BA3FF;
+  background: var(--accent-light, rgba(79, 140, 255, 0.12));
+  color: var(--accent);
 }
 
 /* ══════════════════════════════════════════
@@ -471,12 +471,12 @@ input[type="range"]::-webkit-slider-thumb:active {
 
 .dark .nav-item { color: rgba(255, 255, 255, 0.35); }
 .dark .nav-item:hover {
-  background: rgba(79, 140, 255, 0.10);
+  background: var(--accent-light, rgba(79, 140, 255, 0.10));
   color: rgba(255, 255, 255, 0.7);
 }
 .dark .nav-item.active {
-  background: rgba(79, 140, 255, 0.15);
-  color: #6BA3FF;
+  background: var(--accent-light, rgba(79, 140, 255, 0.15));
+  color: var(--accent);
 }
 
 /* ══════════════════════════════════════════
@@ -565,11 +565,53 @@ input[type="range"]::-webkit-slider-thumb:active {
 /* 鸿蒙辉光边框 */
 .glow-border {
   box-shadow:
-    0 0 0 0.5px rgba(79, 140, 255, 0.15),
-    0 0 12px rgba(79, 140, 255, 0.08);
+    0 0 0 0.5px var(--accent-light, rgba(79, 140, 255, 0.15)),
+    0 0 12px var(--accent-light, rgba(79, 140, 255, 0.08));
 }
 .dark .glow-border {
   box-shadow:
-    0 0 0 0.5px rgba(79, 140, 255, 0.2),
-    0 0 16px rgba(79, 140, 255, 0.1);
+    0 0 0 0.5px var(--accent-light, rgba(79, 140, 255, 0.2)),
+    0 0 16px var(--accent-light, rgba(79, 140, 255, 0.1));
+}
+
+/* ══════════════════════════════════════════
+   Markdown 预览列表修复 · Override Tailwind Preflight
+   Tailwind v4 preflight 会 reset list-style: none
+   此处全局恢复 .markdown-body 内的列表样式
+   ══════════════════════════════════════════ */
+.markdown-body ul {
+  list-style-type: disc;
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.markdown-body ul ul {
+  list-style-type: circle;
+  margin-bottom: 0;
+}
+.markdown-body ul ul ul {
+  list-style-type: square;
+}
+.markdown-body ol ol {
+  list-style-type: lower-alpha;
+  margin-bottom: 0;
+}
+.markdown-body ol ol ol {
+  list-style-type: lower-roman;
+}
+.markdown-body li {
+  display: list-item;
+  margin-top: 0.25em;
+}
+.markdown-body li > p {
+  margin-top: 16px;
+}
+.markdown-body li + li {
+  margin-top: 0.25em;
 }

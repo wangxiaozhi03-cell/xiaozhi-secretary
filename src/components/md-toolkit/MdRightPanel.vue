@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type { HeadingItem, MdStats } from "../../composables/md-toolkit/types";
-import MdOutline from "./MdOutline.vue";
+import type { MdStats } from "../../composables/md-toolkit/types";
 import MdWordStats from "./MdWordStats.vue";
 import MdExportPanel from "./MdExportPanel.vue";
 
 defineProps<{
-  headings: HeadingItem[];
   stats: MdStats;
   content: string;
 }>();
@@ -36,15 +34,6 @@ const quickActions: QuickAction[] = [
 
 <template>
   <div class="flex-1 overflow-y-auto">
-    <!-- 大纲 -->
-    <MdOutline
-      :headings="headings"
-      @select="() => {}"
-    />
-
-    <!-- 分隔线 -->
-    <div class="mx-4 my-1 h-px bg-black/[0.06] dark:bg-white/[0.06]" />
-
     <!-- 快捷操作 -->
     <div class="flex flex-col">
       <div class="px-4 py-3 flex items-center justify-between flex-shrink-0">

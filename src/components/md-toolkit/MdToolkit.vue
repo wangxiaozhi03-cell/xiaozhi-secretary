@@ -1,36 +1,39 @@
 <script setup lang="ts">
-import { ref, computed, provide, onMounted, onUnmounted } from "vue";
-import MdToolbar from "./MdToolbar.vue";
-import MdEditor from "./MdEditor.vue";
-import MdPreview from "./MdPreview.vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { MdEditor, config } from "md-editor-v3";
+import "md-editor-v3/lib/style.css";
+import screenfull from "screenfull";
+import prettier from "prettier";
+import parserMarkdown from "prettier/plugins/markdown";
 import MdRightPanel from "./MdRightPanel.vue";
 import { useMdEditor } from "../../composables/md-toolkit/useMdEditor";
-import { renderHtml, extractHeadings, computeStats } from "../../composables/md-toolkit/useMarkdown";
+import { computeStats } from "../../composables/md-toolkit/useMarkdown";
 import { exportHtml, copyHtml, copyMarkdown } from "../../composables/md-toolkit/useMdExport";
 import type { MdViewMode } from "../../composables/md-toolkit/types";
 
+// 配置 md-editor-v3 外部依赖
+config({
+  editorExtensions: {
+    screenfull: { instance: screenfull },
+    prettier: { prettierInstance: prettier, parserMarkdownInstance: parserMarkdown },
+  },
+});
+
 const {
   content,
-  cursorLine,
-  cursorCol,
   isSaved,
-  lastSavedAt,
-  currentFilePath,
-  undo,
-  redo,
-  insertAtCursor,
-  onContentChange,
   saveToFile,
   loadFromFile,
   newDocument,
+  onContentChange,
   startAutoSave,
   stopAutoSave,
-  pushHistory,
 } = useMdEditor();
 
 // 视图模式
 const mode = ref<MdViewMode>("split");
 const showRightPanel = ref(true);
+const mdEditorRef = ref<InstanceType<typeof MdEditor>>();
 
 const tabs = [
   { id: "editor", label: "编辑器", shortcut: "⌘1" },
@@ -38,34 +41,58 @@ const tabs = [
   { id: "split", label: "分屏", shortcut: "⌘3" },
 ];
 
-// 渲染后的 HTML
-const renderedHtml = computed(() => renderHtml(content.value));
-const headings = computed(() => extractHeadings(content.value));
-const stats = computed(() => computeStats(content.value));
+// 编辑器模式映射
+const editorPreview = computed(() => mode.value === "split");
+const editorPreviewOnly = computed(() => mode.value === "preview");
 
-// provide 共享状态
-provide("content", content);
-provide("cursorLine", cursorLine);
-provide("cursorCol", cursorCol);
-provide("isSaved", isSaved);
-provide("lastSavedAt", lastSavedAt);
-provide("currentFilePath", currentFilePath);
-provide("insertAtCursor", insertAtCursor);
-provide("undo", undo);
-provide("redo", redo);
+// 暗色模式检测
+const editorTheme = ref<"light" | "dark">("light");
 
-// 格式化操作
-function handleFormat(before: string, after?: string) {
-  const textarea = document.querySelector(".md-editor-textarea") as HTMLTextAreaElement;
-  if (textarea) {
-    insertAtCursor(textarea, before, after);
-  }
+function updateTheme() {
+  editorTheme.value = document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
+
+// 工具栏配置
+const toolbars: any[] = [
+  "bold", "underline", "italic", "strikeThrough",
+  "-",
+  "title", "sub", "sup",
+  "-",
+  "quote", "unorderedList", "orderedList", "task",
+  "-",
+  "codeRow", "code", "link", "image", "table",
+  "-",
+  "revoke", "next",
+  "-",
+  "prettier", "save",
+  "=",
+  "pageFullscreen", "fullscreen", "preview",
+];
+
+// 内容变化
+function handleChange(val: string) {
+  onContentChange(val);
+}
+
+// 保存
+function handleSave(val: string) {
+  onContentChange(val);
+  saveToFile();
+}
+
+// HTML 变化（用于导出）
+const currentHtml = ref("");
+function handleHtmlChanged(html: string) {
+  currentHtml.value = html;
+}
+
+// 统计
+const stats = computed(() => computeStats(content.value));
 
 // 复制
 async function handleCopy() {
   if (mode.value === "preview") {
-    await copyHtml(renderedHtml.value);
+    await copyHtml(currentHtml.value);
   } else {
     await copyMarkdown(content.value);
   }
@@ -73,7 +100,7 @@ async function handleCopy() {
 
 // 导出
 async function handleExport() {
-  await exportHtml(renderedHtml.value, "document");
+  await exportHtml(currentHtml.value, "document");
 }
 
 // 清空
@@ -113,62 +140,25 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
-// 初始化示例内容
-function loadExample() {
-  content.value = `# 欢迎使用 MD 工具
-
-这是一款集 **Markdown 编写、实时预览、文档管理** 于一体的写作工具。
-
-## 功能特性
-
-- ✏️ 实时编辑与预览
-- 📊 字数统计
-- 📑 文档大纲
-- 💾 自动保存
-- 📤 导出 HTML
-
-## 代码示例
-
-\`\`\`javascript
-function hello(name) {
-  console.log(\`Hello, \${name}!\`);
-}
-
-hello("小志秘书");
-\`\`\`
-
-## 表格
-
-| 功能 | 状态 |
-|------|------|
-| 编辑器 | ✅ |
-| 预览 | ✅ |
-| 大纲 | ✅ |
-| 导出 | ✅ |
-
-> 💡 提示：使用 \`⌘S\` 保存，\`⌘O\` 打开文件
-
----
-
-开始你的写作吧！ 🚀
-`;
-  pushHistory();
-}
+let themeObserver: MutationObserver | null = null;
 
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
   startAutoSave();
-  loadExample();
+  updateTheme();
+  themeObserver = new MutationObserver(updateTheme);
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 });
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
   stopAutoSave();
+  themeObserver?.disconnect();
 });
 </script>
 
 <template>
-  <div class="flex flex-col h-full overflow-hidden">
+  <div class="md-toolkit-wrapper flex flex-col h-full overflow-hidden">
     <!-- 顶部导航 -->
     <header class="glass-bar px-5 py-3 flex items-center justify-between flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
       <!-- 左侧：标题 + Tab -->
@@ -239,41 +229,31 @@ onUnmounted(() => {
       </div>
     </header>
 
-    <!-- 格式化工具栏 -->
-    <MdToolbar @format="handleFormat" />
-
     <!-- 内容区 -->
     <div class="flex-1 flex overflow-hidden">
-      <!-- 编辑/预览区 -->
-      <div class="flex-1 flex min-w-0 overflow-hidden">
-        <Transition name="tab-float" mode="out-in">
-          <!-- 编辑器模式 -->
-          <MdEditor
-            v-if="mode === 'editor'"
-            key="editor"
-            class="flex-1 min-w-0"
-            @update:content="onContentChange"
-          />
-
-          <!-- 预览模式 -->
-          <MdPreview
-            v-else-if="mode === 'preview'"
-            key="preview"
-            class="flex-1 min-w-0"
-            :html="renderedHtml"
-          />
-
-          <!-- 分屏模式 -->
-          <div v-else-if="mode === 'split'" key="split" class="flex w-full min-w-0">
-            <MdEditor
-              class="w-1/2 min-w-0"
-              @update:content="onContentChange"
-            />
-            <div class="w-1/2 min-w-0 border-l border-black/[0.04] dark:border-white/[0.06]">
-              <MdPreview :html="renderedHtml" />
-            </div>
-          </div>
-        </Transition>
+      <!-- 编辑器 -->
+      <div class="flex-1 min-w-0 overflow-hidden">
+        <MdEditor
+          ref="mdEditorRef"
+          :model-value="content"
+          :theme="editorTheme"
+          :preview="editorPreview"
+          :preview-only="editorPreviewOnly"
+          :toolbars="toolbars"
+          preview-theme="github"
+          code-theme="atom-one-dark"
+          :show-code-row-number="true"
+          :no-mermaid="true"
+          :no-katex="true"
+          :no-highlight="false"
+          :tab-width="2"
+          placeholder="开始输入 Markdown..."
+          language="zh-CN"
+          class="md-glass-editor"
+          @update:model-value="handleChange"
+          @on-save="handleSave"
+          @on-html-changed="handleHtmlChanged"
+        />
       </div>
 
       <!-- 右侧面板 -->
@@ -298,7 +278,6 @@ onUnmounted(() => {
 
         <MdRightPanel
           v-if="showRightPanel"
-          :headings="headings"
           :stats="stats"
           :content="content"
           @new-doc="handleClear"
@@ -313,8 +292,102 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.tab-float-enter-active { transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
-.tab-float-leave-active { transition: all 0.18s ease-in; }
-.tab-float-enter-from { opacity: 0; transform: translateY(14px) scale(0.98); }
-.tab-float-leave-to { opacity: 0; transform: translateY(-6px) scale(0.99); }
+/* md-editor-v3 主题适配：使用 :deep 穿透到子组件 */
+.md-toolkit-wrapper :deep(.md-editor) {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-toolbar-wrapper) {
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.35);
+  border-bottom: 0.5px solid rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.25);
+}
+
+.md-toolkit-wrapper :deep(.md-editor-toolbar) {
+  background: transparent;
+}
+
+.md-toolkit-wrapper :deep(.cm-editor) {
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.08) !important;
+}
+
+.md-toolkit-wrapper :deep(.cm-gutters) {
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15) !important;
+  border-right: 0.5px solid rgba(0, 0, 0, 0.04) !important;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-preview) {
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.08);
+}
+
+/* 列表渲染修复：Tailwind preflight 重置了 list-style */
+.md-toolkit-wrapper :deep(.md-editor-preview ul) {
+  list-style-type: disc !important;
+  padding-left: 2em !important;
+}
+.md-toolkit-wrapper :deep(.md-editor-preview ol) {
+  list-style-type: decimal !important;
+  padding-left: 2em !important;
+}
+.md-toolkit-wrapper :deep(.md-editor-preview ul ul) {
+  list-style-type: circle !important;
+}
+.md-toolkit-wrapper :deep(.md-editor-preview ul ul ul) {
+  list-style-type: square !important;
+}
+.md-toolkit-wrapper :deep(.md-editor-preview ol ol) {
+  list-style-type: lower-alpha !important;
+}
+.md-toolkit-wrapper :deep(.md-editor-preview li) {
+  display: list-item !important;
+}
+.md-toolkit-wrapper :deep(.md-editor-preview li + li) {
+  margin-top: 0.25em;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-footer) {
+  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.25);
+  border-top: 0.5px solid rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.25);
+}
+
+/* 暗色模式 */
+.md-toolkit-wrapper :deep(.md-editor-dark) {
+  background: transparent;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark .md-editor-toolbar-wrapper) {
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.20);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark .cm-editor) {
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.06) !important;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark .cm-gutters) {
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.12) !important;
+  border-right-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark .md-editor-preview) {
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.06);
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark .md-editor-footer) {
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.15);
+  border-top-color: rgba(255, 255, 255, 0.04);
+}
+
+/* 全屏适配 */
+.md-toolkit-wrapper :deep(.md-editor-fullscreen) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+}
 </style>

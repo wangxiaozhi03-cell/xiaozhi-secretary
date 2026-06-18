@@ -111,16 +111,16 @@ onUnmounted(() => {
 }
 
 .dark .glass-topbar {
-  background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.30);
   border-bottom-color: rgba(255, 255, 255, 0.06);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 .dark .glass-topbar::after {
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(79, 140, 255, 0.08) 30%,
-    rgba(79, 140, 255, 0.12) 50%,
-    rgba(79, 140, 255, 0.08) 70%,
+    var(--accent-light, rgba(79, 140, 255, 0.08)) 30%,
+    var(--accent-light, rgba(79, 140, 255, 0.12)) 50%,
+    var(--accent-light, rgba(79, 140, 255, 0.08)) 70%,
     transparent 100%);
 }
 
@@ -142,17 +142,17 @@ onUnmounted(() => {
 }
 
 .dark .search-box {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.20);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .dark .search-box:focus-within {
-  border-color: rgba(79, 140, 255, 0.4);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-light, rgba(79, 140, 255, 0.4));
+  background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.28);
   box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.12),
-    0 4px 12px rgba(79, 140, 255, 0.15),
+    0 0 0 3px var(--accent-light, rgba(79, 140, 255, 0.12)),
+    0 4px 12px var(--accent-light, rgba(79, 140, 255, 0.15)),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 

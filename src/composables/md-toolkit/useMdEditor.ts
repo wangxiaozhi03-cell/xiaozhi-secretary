@@ -50,18 +50,45 @@ export function useMdEditor() {
    * 在光标位置插入文本
    * @param textarea 编辑器 textarea 元素
    * @param before 前缀
-   * @param after 后缀（可选，默认与 before 相同）
+   * @param after 后缀（可选，不传则仅插入前缀）
    */
   function insertAtCursor(textarea: HTMLTextAreaElement, before: string, after?: string) {
-    const end = after ?? before;
+    // after 明确传了就用，没传说明是纯前缀类型（标题/列表等），不需要后缀
+    const end = after ?? "";
     const start = textarea.selectionStart;
     const endPos = textarea.selectionEnd;
     const selected = content.value.substring(start, endPos);
 
+    // 检测是否是列表/引用前缀
+    const isListPrefix = /^(\d+\.\s|- |\* |\+ |> )$/.test(before);
+
+    let insertBefore = before;
+    let middle = selected;
+
+    if (isListPrefix) {
+      // 光标不在行首时先补换行
+      const needsNewline = start > 0 && content.value[start - 1] !== "\n";
+
+      if (selected.includes("\n")) {
+        // 多行选中：每行加前缀
+        const lines = selected.split("\n");
+        const nl = needsNewline ? "\n" : "";
+        if (/^\d+\.\s$/.test(before)) {
+          const baseNum = parseInt(before) || 1;
+          middle = lines.map((l, i) => `${baseNum + i}. ${l}`).join("\n");
+        } else {
+          middle = lines.map(l => before + l).join("\n");
+        }
+        insertBefore = nl;
+      } else {
+        insertBefore = (needsNewline ? "\n" : "") + before;
+      }
+    }
+
     const newText =
       content.value.substring(0, start) +
-      before +
-      (selected || "文本") +
+      insertBefore +
+      middle +
       end +
       content.value.substring(endPos);
 
@@ -71,8 +98,8 @@ export function useMdEditor() {
 
     // 恢复光标位置
     requestAnimationFrame(() => {
-      const newStart = start + before.length;
-      const newEnd = newStart + (selected || "文本").length;
+      const newStart = start + insertBefore.length;
+      const newEnd = newStart + middle.length;
       textarea.setSelectionRange(newStart, newEnd);
       textarea.focus();
     });

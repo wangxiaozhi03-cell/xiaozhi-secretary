@@ -83,6 +83,15 @@ const toolCategories = [
         bgGradient: "from-[#FEF2F2] to-[#FEE2E2]",
         features: ["模块选择", "多环境", "跳过测试", "构建日志"],
       },
+      {
+        id: "sql-toolkit",
+        label: "SQL 工具",
+        desc: "SQL 格式化、压缩、语法高亮，支持 MySQL/PostgreSQL 等多种方言",
+        icon: "sql",
+        gradient: "from-[#06B6D4] to-[#0891B2]",
+        bgGradient: "from-[#ECFEFF] to-[#CFFAFE]",
+        features: ["格式化", "压缩", "高亮", "多方言"],
+      },
     ],
   },
   {
@@ -103,7 +112,7 @@ const toolCategories = [
 ];
 
 const stats = [
-  { label: "可用工具", value: "6", suffix: "+", color: "#3B82F6" },
+  { label: "可用工具", value: "8", suffix: "+", color: "#3B82F6" },
   { label: "支持格式", value: "PDF", suffix: " · Word", color: "#10B981" },
   { label: "系统平台", value: "Mac", suffix: " · Win", color: "#8B5CF6" },
   { label: "完全免费", value: "∞", suffix: "", color: "#F59E0B" },
@@ -134,6 +143,8 @@ const iconPaths: Record<string, string> = {
   markdown: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z",
   namecase: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5",
   java: "M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5",
+  sql: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4",
+  package: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
 };
 
 const iconColors: Record<string, string> = {
@@ -146,6 +157,8 @@ const iconColors: Record<string, string> = {
   curl: "text-[#F97316]",
   namecase: "text-[#4F7CFF]",
   java: "text-[#EF4444]",
+  sql: "text-[#06B6D4]",
+  package: "text-[#EF4444]",
 };
 </script>
 
@@ -168,11 +181,11 @@ const iconColors: Record<string, string> = {
       <div class="px-6 pt-8 pb-4">
         <!-- Welcome badge -->
         <div
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/[0.06] backdrop-blur-sm border border-[#3B82F6]/20 mb-4 transition-all duration-500 shadow-sm"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/50 backdrop-blur-sm border border-[#3B82F6]/30 mb-4 transition-all duration-500 shadow-sm"
           :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'"
         >
           <span class="w-1.5 h-1.5 rounded-full bg-[#3B82F6] animate-pulse" />
-          <span class="text-xs font-medium text-[#3B82F6]">欢迎回来</span>
+          <span class="text-xs font-semibold text-[#3B82F6]">欢迎回来</span>
         </div>
 
         <!-- Main heading -->
@@ -184,12 +197,12 @@ const iconColors: Record<string, string> = {
         </h1>
 
         <p
-          class="text-sm text-[#5F6B76] max-w-md mb-5 transition-all duration-500"
+          class="text-sm text-[#4A5568] max-w-md mb-5 transition-all duration-500"
           :class="isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'"
         >
           轻盈、治愈、高效的多功能工具集合
           <br />
-          <span class="text-[#98A2B3] text-xs">为你的创意工作流加速</span>
+          <span class="text-[#6B7785] text-xs">为你的创意工作流加速</span>
         </p>
 
         <!-- Stats -->
@@ -200,12 +213,12 @@ const iconColors: Record<string, string> = {
           <div
             v-for="stat in stats"
             :key="stat.label"
-            class="stat-card text-center px-4 py-2.5 rounded-xl bg-black/[0.04] backdrop-blur-sm border border-white/80 shadow-sm"
+            class="stat-card text-center px-4 py-2.5 rounded-xl bg-white/55 backdrop-blur-sm border border-white/80 shadow-sm"
           >
             <div class="text-lg font-semibold text-[#2B2F36]">
               {{ stat.value }}<span class="text-xs" :style="{ color: stat.color }">{{ stat.suffix }}</span>
             </div>
-            <div class="text-[10px] text-[#98A2B3] mt-0.5">{{ stat.label }}</div>
+            <div class="text-[10px] text-[#6B7785] mt-0.5">{{ stat.label }}</div>
           </div>
         </div>
       </div>
@@ -220,7 +233,7 @@ const iconColors: Record<string, string> = {
       >
         <div class="mb-3">
           <h2 class="text-sm font-semibold text-[#2B2F36]">{{ category.label }}</h2>
-          <p class="text-xs text-[#98A2B3] mt-0.5">{{ category.desc }}</p>
+          <p class="text-xs text-[#6B7785] mt-0.5">{{ category.desc }}</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
@@ -231,7 +244,7 @@ const iconColors: Record<string, string> = {
             @click="emit('navigate', tool.id)"
           >
             <!-- 背景渐变 -->
-            <div class="absolute inset-0 opacity-[0.06] transition-opacity duration-300 group-hover:opacity-[0.10]" :class="'bg-gradient-to-br ' + tool.bgGradient" />
+            <div class="absolute inset-0 opacity-[0.12] transition-opacity duration-300 group-hover:opacity-[0.18]" :class="'bg-gradient-to-br ' + tool.bgGradient" />
 
             <div class="relative z-10 flex flex-col flex-1">
               <div class="flex items-start justify-between mb-3">
@@ -248,7 +261,7 @@ const iconColors: Record<string, string> = {
               <h3 class="text-[15px] font-semibold text-[#2B2F36] mb-1 group-hover:text-[#3B82F6] transition-colors duration-200">
                 {{ tool.label }}
               </h3>
-              <p class="text-xs text-[#5F6B76] leading-relaxed mb-3">
+              <p class="text-xs text-[#3D4A5C] leading-relaxed mb-3">
                 {{ tool.desc }}
               </p>
 
@@ -256,7 +269,7 @@ const iconColors: Record<string, string> = {
                 <span
                   v-for="feature in tool.features"
                   :key="feature"
-                  class="px-2 py-0.5 rounded-full text-[10px] bg-black/[0.04] text-[#98A2B3] backdrop-blur-sm border border-white/50"
+                  class="px-2 py-0.5 rounded-full text-[10px] bg-white/60 text-[#5F6B76] backdrop-blur-sm border border-white/80 shadow-sm"
                 >
                   {{ feature }}
                 </span>
@@ -278,8 +291,8 @@ const iconColors: Record<string, string> = {
         <!-- 最近使用 -->
         <div class="glass-card-inner p-4 rounded-2xl">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-[12px] font-semibold text-[#2B2F36]">最近使用</h3>
-            <svg class="w-4 h-4 text-[#98A2B3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h3 class="text-[13px] font-semibold text-[#2B2F36]">最近使用</h3>
+            <svg class="w-4 h-4 text-[#6B7785]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -290,15 +303,15 @@ const iconColors: Record<string, string> = {
               :key="tool.label"
               class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-black/[0.04] transition-colors cursor-pointer"
             >
-              <div class="w-7 h-7 rounded-lg bg-[#EEF4FF] flex items-center justify-center flex-shrink-0">
+              <div class="w-7 h-7 rounded-lg bg-[#E0EAFF] flex items-center justify-center flex-shrink-0">
                 <svg class="w-3.5 h-3.5 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="iconPaths[tool.icon]" />
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <span class="text-[12px] text-[#2B2F36] truncate block">{{ tool.label }}</span>
+                <span class="text-[12px] text-[#2B2F36] font-medium truncate block">{{ tool.label }}</span>
               </div>
-              <span class="text-[10px] text-[#98A2B3] flex-shrink-0">{{ tool.time }}</span>
+              <span class="text-[10px] text-[#6B7785] flex-shrink-0">{{ tool.time }}</span>
             </div>
           </div>
         </div>
@@ -306,7 +319,7 @@ const iconColors: Record<string, string> = {
         <!-- 收藏工具 -->
         <div class="glass-card-inner p-4 rounded-2xl">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-[12px] font-semibold text-[#2B2F36]">收藏工具</h3>
+            <h3 class="text-[13px] font-semibold text-[#2B2F36]">收藏工具</h3>
             <svg class="w-4 h-4 text-[#F59E0B]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
             </svg>
@@ -316,7 +329,7 @@ const iconColors: Record<string, string> = {
             <button
               v-for="tool in favoriteTools"
               :key="tool.label"
-              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/[0.04] hover:bg-black/[0.06] border border-white/60 transition-all duration-200 hover:shadow-sm"
+              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/60 hover:bg-white/80 border border-white/80 transition-all duration-200 hover:shadow-sm"
               @click="tool.id && emit('navigate', tool.id)"
             >
               <svg class="w-3 h-3 text-[#3B82F6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,7 +343,7 @@ const iconColors: Record<string, string> = {
 
       <!-- Footer -->
       <div class="px-6 pb-6 text-center">
-        <p class="text-[11px] text-[#98A2B3]">
+        <p class="text-[11px] text-[#6B7785]">
           持续开发中 · 更多功能即将上线
         </p>
       </div>
@@ -356,38 +369,38 @@ const iconColors: Record<string, string> = {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.3;
+  opacity: 0.45;
   animation: float 25s ease-in-out infinite;
 }
 .blob-1 {
   width: 380px; height: 380px;
-  background: linear-gradient(135deg, #93C5FD, #60A5FA);
+  background: linear-gradient(135deg, rgb(var(--blob-1-r, 147), var(--blob-1-g, 197), var(--blob-1-b, 253)), rgb(var(--blob-2-r, 96), var(--blob-2-g, 165), var(--blob-2-b, 250)));
   top: -80px; right: -80px;
 }
 .blob-2 {
   width: 320px; height: 320px;
-  background: linear-gradient(135deg, #A78BFA, #818CF8);
+  background: linear-gradient(135deg, rgb(var(--blob-2-r, 167), var(--blob-2-g, 139), var(--blob-2-b, 250)), rgb(var(--blob-3-r, 129), var(--blob-3-g, 140), var(--blob-3-b, 248)));
   bottom: -60px; left: -60px;
   animation-delay: -7s;
 }
 .blob-3 {
   width: 260px; height: 260px;
-  background: linear-gradient(135deg, #6EE7B7, #34D399);
+  background: linear-gradient(135deg, rgb(var(--blob-3-r, 110), var(--blob-3-g, 231), var(--blob-3-b, 183)), rgb(var(--blob-4-r, 52), var(--blob-4-g, 211), var(--blob-4-b, 153)));
   top: 40%; left: 30%;
   animation-delay: -12s;
-  opacity: 0.18;
+  opacity: 0.28;
 }
 .blob-4 {
   width: 220px; height: 220px;
-  background: linear-gradient(135deg, #F9A8D4, #F472B6);
+  background: linear-gradient(135deg, rgb(var(--blob-4-r, 249), var(--blob-4-g, 168), var(--blob-4-b, 212)), rgb(var(--blob-5-r, 244), var(--blob-5-g, 114), var(--blob-5-b, 182)));
   top: 20%; right: 20%;
   animation-delay: -18s;
-  opacity: 0.12;
+  opacity: 0.22;
 }
 
-:global(.dark) .light-blob { opacity: 0.15; }
-:global(.dark) .blob-3 { opacity: 0.1; }
-:global(.dark) .blob-4 { opacity: 0.08; }
+:global(.dark) .light-blob { opacity: 0.22; }
+:global(.dark) .blob-3 { opacity: 0.16; }
+:global(.dark) .blob-4 { opacity: 0.14; }
 
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -422,25 +435,25 @@ const iconColors: Record<string, string> = {
 
 /* ── 功能卡片：鸿蒙玻璃态 ── */
 .quick-card {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 0.5px solid rgba(238, 242, 248, 0.6);
+  border: 0.5px solid rgba(238, 242, 248, 0.75);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.03),
     0 8px 24px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(238, 242, 248, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
   cursor: pointer;
 }
 
 .quick-card:hover {
-  background: rgba(255, 255, 255, 0.42);
-  border-color: rgba(79, 140, 255, 0.2);
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(79, 140, 255, 0.25);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.04),
-    0 16px 40px rgba(79, 140, 255, 0.10),
-    0 0 20px rgba(79, 140, 255, 0.05),
-    inset 0 1px 0 rgba(238, 242, 248, 0.7);
+    0 16px 40px rgba(79, 140, 255, 0.12),
+    0 0 24px rgba(79, 140, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transform: translateY(-4px) scale(1.005);
 }
 
@@ -454,61 +467,61 @@ const iconColors: Record<string, string> = {
 }
 
 :global(.dark) .quick-card {
-  background: rgba(28, 36, 48, 0.60);
-  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--glass-dark-r, 40), var(--glass-dark-g, 55), var(--glass-dark-b, 85), 0.45);
+  border-color: rgba(255, 255, 255, 0.10);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.2),
     0 8px 24px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 :global(.dark) .quick-card:hover {
-  background: rgba(32, 40, 54, 0.70);
-  border-color: rgba(79, 140, 255, 0.25);
+  background: rgba(var(--glass-dark-r, 40), var(--glass-dark-g, 55), var(--glass-dark-b, 85), 0.55);
+  border-color: rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.30);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.25),
-    0 16px 40px rgba(79, 140, 255, 0.08),
-    0 0 20px rgba(79, 140, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    0 16px 40px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.12),
+    0 0 24px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 /* ── 内部卡片 ── */
 .glass-card-inner {
-  background: rgba(238, 242, 248, 0.55);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(32px) saturate(160%);
   -webkit-backdrop-filter: blur(32px) saturate(160%);
-  border: 0.5px solid rgba(238, 242, 248, 0.6);
+  border: 0.5px solid rgba(255, 255, 255, 0.85);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.03),
     0 4px 16px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(238, 242, 248, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-inner:hover {
-  background: rgba(238, 242, 248, 0.65);
-  border-color: rgba(79, 140, 255, 0.15);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.20);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.03),
-    0 12px 32px rgba(79, 140, 255, 0.08),
-    inset 0 1px 0 rgba(238, 242, 248, 0.65);
+    0 12px 32px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transform: translateY(-2px);
 }
 
 :global(.dark) .glass-card-inner {
-  background: rgba(28, 36, 48, 0.55);
-  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--glass-dark-r, 40), var(--glass-dark-g, 55), var(--glass-dark-b, 85), 0.40);
+  border-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.2),
     0 4px 16px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 :global(.dark) .glass-card-inner:hover {
-  background: rgba(32, 40, 54, 0.62);
-  border-color: rgba(79, 140, 255, 0.2);
+  background: rgba(var(--glass-dark-r, 40), var(--glass-dark-g, 55), var(--glass-dark-b, 85), 0.50);
+  border-color: rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.25);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.25),
-    0 12px 32px rgba(79, 140, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 12px 32px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ── 统计卡片 ── */
@@ -524,13 +537,13 @@ const iconColors: Record<string, string> = {
 }
 
 :global(.dark) .stat-card {
-  background: rgba(28, 36, 48, 0.5) !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(var(--glass-dark-r, 40), var(--glass-dark-g, 55), var(--glass-dark-b, 85), 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 :global(.dark) .stat-card:hover {
   box-shadow:
-    0 10px 28px rgba(79, 140, 255, 0.08),
-    0 0 0 1px rgba(79, 140, 255, 0.15);
+    0 10px 28px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.10),
+    0 0 0 1px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.18);
 }
 
 /* ── 收藏工具按钮 ── */
@@ -544,12 +557,12 @@ const iconColors: Record<string, string> = {
 }
 
 :global(.dark) .glass-card-inner button {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
 }
 :global(.dark) .glass-card-inner button:hover {
-  background: rgba(255, 255, 255, 0.10) !important;
-  box-shadow: 0 4px 12px rgba(79, 140, 255, 0.10);
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 4px 12px rgba(var(--accent-r, 79), var(--accent-g, 140), var(--accent-b, 255), 0.12);
 }
 
 /* ── 首页深色模式文字适配 ── */
@@ -559,13 +572,22 @@ const iconColors: Record<string, string> = {
   color: rgba(255, 255, 255, 0.92);
 }
 :global(.dark) .home-page p {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.60);
 }
 :global(.dark) .home-page .text-\[#2B2F36\] {
   color: rgba(255, 255, 255, 0.90) !important;
 }
+:global(.dark) .home-page .text-\[#4A5568\] {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+:global(.dark) .home-page .text-\[#3D4A5C\] {
+  color: rgba(255, 255, 255, 0.60) !important;
+}
 :global(.dark) .home-page .text-\[#5F6B76\] {
   color: rgba(255, 255, 255, 0.55) !important;
+}
+:global(.dark) .home-page .text-\[#6B7785\] {
+  color: rgba(255, 255, 255, 0.45) !important;
 }
 :global(.dark) .home-page .text-\[#98A2B3\] {
   color: rgba(255, 255, 255, 0.35) !important;

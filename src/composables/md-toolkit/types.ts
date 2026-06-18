@@ -8,15 +8,6 @@ export interface MdDocument {
   updatedAt: number;
 }
 
-/** 大纲标题项 */
-export interface HeadingItem {
-  id: string;
-  level: 1 | 2 | 3 | 4;
-  text: string;
-  line: number;
-  children: HeadingItem[];
-}
-
 /** 字数统计 */
 export interface MdStats {
   chars: number;

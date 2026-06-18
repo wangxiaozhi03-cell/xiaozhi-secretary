@@ -1,6 +1,6 @@
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
-import type { HeadingItem, MdStats } from "./types";
+import type { MdStats } from "./types";
 
 // 模块级单例
 let md: MarkdownIt | null = null;
@@ -30,52 +30,6 @@ function getMd(): MarkdownIt {
 export function renderHtml(markdown: string): string {
   if (!markdown.trim()) return "";
   return getMd().render(markdown);
-}
-
-/** 从 Markdown 源码提取标题树 */
-export function extractHeadings(markdown: string): HeadingItem[] {
-  const lines = markdown.split("\n");
-  const flat: { level: 1 | 2 | 3 | 4; text: string; line: number }[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(/^(#{1,4})\s+(.+)$/);
-    if (match) {
-      flat.push({
-        level: match[1].length as 1 | 2 | 3 | 4,
-        text: match[2].replace(/[*_`~\[\]]/g, "").trim(),
-        line: i + 1,
-      });
-    }
-  }
-
-  // 构建嵌套树
-  const root: HeadingItem[] = [];
-  const stack: HeadingItem[] = [];
-
-  for (const item of flat) {
-    const node: HeadingItem = {
-      id: `heading-${item.line}`,
-      level: item.level,
-      text: item.text,
-      line: item.line,
-      children: [],
-    };
-
-    // 弹出栈中 level >= 当前的节点
-    while (stack.length > 0 && stack[stack.length - 1].level >= item.level) {
-      stack.pop();
-    }
-
-    if (stack.length === 0) {
-      root.push(node);
-    } else {
-      stack[stack.length - 1].children.push(node);
-    }
-
-    stack.push(node);
-  }
-
-  return root;
 }
 
 /** 计算文档统计 */

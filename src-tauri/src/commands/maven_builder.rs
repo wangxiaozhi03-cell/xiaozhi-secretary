@@ -5,6 +5,23 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use tauri::{AppHandle, Emitter};
 
+/// 创建带有完整 PATH 的 Command（Tauri GUI 应用默认 PATH 不含 homebrew 路径）
+fn sys_cmd(name: &str) -> Command {
+    let mut c = Command::new(name);
+    let mut paths = vec![
+        "/opt/homebrew/bin".to_string(),
+        "/opt/homebrew/sbin".to_string(),
+        "/usr/local/bin".to_string(),
+        "/usr/local/sbin".to_string(),
+    ];
+    if let Ok(p) = std::env::var("PATH") {
+        paths.push(p);
+    }
+    let enhanced = paths.join(":");
+    c.env("PATH", &enhanced);
+    c
+}
+
 /// 格式化文件大小
 fn format_size(bytes: u64) -> String {
     if bytes < 1024 {
@@ -41,7 +58,7 @@ fn format_speed(bytes: u64, ms: u128) -> String {
 
 /// 创建 Maven 命令，支持自定义 JAVA_HOME
 fn create_maven_command(maven_cmd: &str, java_home: &Option<String>) -> Command {
-    let mut cmd = Command::new(maven_cmd);
+    let mut cmd = sys_cmd(maven_cmd);
 
     // 如果指定了 JAVA_HOME，设置环境变量
     if let Some(jh) = java_home.as_ref().filter(|p| !p.is_empty()) {
@@ -68,7 +85,7 @@ pub struct ScanResult {
 
 /// 获取 Maven 版本
 fn get_maven_version(mvn_path: &str) -> Option<String> {
-    let output = Command::new(mvn_path)
+    let output = sys_cmd(mvn_path)
         .args(["--version"])
         .output()
         .ok()?;
@@ -79,7 +96,7 @@ fn get_maven_version(mvn_path: &str) -> Option<String> {
 /// 获取 JDK 版本
 fn get_jdk_version(java_home: &str) -> Option<String> {
     let java_bin = format!("{}/bin/java", java_home);
-    let output = Command::new(&java_bin)
+    let output = sys_cmd(&java_bin)
         .args(["-version"])
         .output()
         .ok()?;
@@ -94,7 +111,7 @@ pub fn scan_maven_installations() -> Vec<ScanResult> {
     let mut seen_paths = std::collections::HashSet::new();
 
     // 1. 检查 PATH 中的 mvn
-    if let Ok(output) = Command::new("which").arg("mvn").output() {
+    if let Ok(output) = sys_cmd("which").arg("mvn").output() {
         let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
         if !path.is_empty() && seen_paths.insert(path.clone()) {
             let label = get_maven_version(&path).unwrap_or_else(|| "Maven".to_string());
@@ -962,7 +979,7 @@ pub fn upload_to_server(
 
         // 检查 sshpass 是否安装（使用密码时）
         if use_password {
-            let sshpass_check = Command::new("which").arg("sshpass").output();
+            let sshpass_check = sys_cmd("which").arg("sshpass").output();
             match sshpass_check {
                 Ok(o) if !o.status.success() => {
                     let _ = app.emit("build-log", BuildLogEvent {
@@ -1008,7 +1025,7 @@ pub fn upload_to_server(
             format!("{}@{}", username, host),
             "echo ok".to_string(),
         ]);
-        let ssh_test = Command::new(&ssh_test_args[0])
+        let ssh_test = sys_cmd(&ssh_test_args[0])
             .args(&ssh_test_args[1..])
             .output();
         match ssh_test {
@@ -1061,7 +1078,7 @@ pub fn upload_to_server(
             format!("{}@{}", username, host),
             format!("mkdir -p {}", remote_path),
         ]);
-        let _ = Command::new(&ssh_args[0])
+        let _ = sys_cmd(&ssh_args[0])
             .args(&ssh_args[1..])
             .output();
 
@@ -1097,7 +1114,7 @@ pub fn upload_to_server(
             ]);
 
             let file_start = std::time::Instant::now();
-            let output = Command::new(&scp_args[0])
+            let output = sys_cmd(&scp_args[0])
                 .args(&scp_args[1..])
                 .output();
 
