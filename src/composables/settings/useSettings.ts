@@ -4,7 +4,9 @@ export interface Settings {
   // 外观
   fontSize: number;
   borderRadius: number;
-  animationEnabled: boolean;
+
+  // 通用
+  closeAction: "exit" | "minimize";
 
   // 编辑器
   editorFont: string;
@@ -29,7 +31,9 @@ const defaultSettings: Settings = {
   // 外观
   fontSize: 14,
   borderRadius: 12,
-  animationEnabled: true,
+
+  // 通用
+  closeAction: "minimize",
 
   // 编辑器
   editorFont: "HarmonyOS Sans",

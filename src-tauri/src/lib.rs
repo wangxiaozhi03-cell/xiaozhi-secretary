@@ -1,6 +1,9 @@
 mod commands;
 
 use commands::{export_pdf, file_dialog, http_request, maven_builder, system};
+use tauri::Emitter;
+use tauri::Manager;
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -29,6 +32,37 @@ pub fn run() {
             maven_builder::scan_maven_installations,
             maven_builder::scan_jdk_installations,
         ])
+        .setup(|app| {
+            // Build system tray
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("小志秘书")
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // Read close action from frontend localStorage via JS
+                // We use a simple approach: always prevent close, let frontend decide
+                let _ = api.prevent_close();
+                let _ = window.emit("close-requested", ());
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

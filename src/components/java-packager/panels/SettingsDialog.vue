@@ -22,6 +22,8 @@ const emit = defineEmits<{
   addServer: [data: Omit<SshServer, 'id'>]
   updateServer: [id: string, data: Omit<SshServer, 'id'>]
   removeServer: [id: string]
+  exportServers: []
+  importServers: []
   updateMavenConfig: [config: MavenConfig]
   scanInstallations: []
   selectMavenPath: [path: string]
@@ -122,6 +124,8 @@ function handleSelectJava(path: string) {
             @add="emit('addServer', $event)"
             @update="handleUpdateServer"
             @remove="emit('removeServer', $event)"
+            @export-servers="emit('exportServers')"
+            @import-servers="emit('importServers')"
           />
           <MavenSettings
             v-else-if="tab === 'maven'"

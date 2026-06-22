@@ -1,10 +1,5 @@
 <script setup lang="ts">
 import AppearancePanel from "./panels/AppearancePanel.vue";
-import EditorPanel from "./panels/EditorPanel.vue";
-import JsonToolkitPanel from "./panels/JsonToolkitPanel.vue";
-import DataPanel from "./panels/DataPanel.vue";
-import PluginPanel from "./panels/PluginPanel.vue";
-import ShortcutPanel from "./panels/ShortcutPanel.vue";
 import AboutPanel from "./panels/AboutPanel.vue";
 
 defineProps<{
@@ -16,11 +11,6 @@ defineProps<{
   <div class="settings-content flex-1 overflow-y-auto p-6">
     <Transition name="panel-fade" mode="out-in">
       <AppearancePanel v-if="activeTab === 'appearance'" key="appearance" />
-      <EditorPanel v-else-if="activeTab === 'editor'" key="editor" />
-      <JsonToolkitPanel v-else-if="activeTab === 'json-toolkit'" key="json-toolkit" />
-      <DataPanel v-else-if="activeTab === 'data'" key="data" />
-      <PluginPanel v-else-if="activeTab === 'plugins'" key="plugins" />
-      <ShortcutPanel v-else-if="activeTab === 'shortcuts'" key="shortcuts" />
       <AboutPanel v-else-if="activeTab === 'about'" key="about" />
     </Transition>
   </div>

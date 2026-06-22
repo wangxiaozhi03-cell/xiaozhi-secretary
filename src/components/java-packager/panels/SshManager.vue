@@ -10,6 +10,8 @@ const emit = defineEmits<{
   add: [data: Omit<SshServer, 'id'>]
   update: [id: string, data: Omit<SshServer, 'id'>]
   remove: [id: string]
+  exportServers: []
+  importServers: []
   close: []
 }>()
 
@@ -66,6 +68,33 @@ function startEdit(s: SshServer) {
 
 <template>
   <div class="space-y-4">
+    <!-- 导入导出工具栏 -->
+    <div class="flex items-center justify-between">
+      <h4 class="text-[12px] font-medium text-primary">已配置服务器</h4>
+      <div class="flex gap-1">
+        <button
+          class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-blue-500 hover:bg-blue-500/10 transition-colors"
+          @click="emit('importServers')"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          导入
+        </button>
+        <button
+          class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-green-500 hover:bg-green-500/10 transition-colors"
+          :class="servers.length === 0 ? 'opacity-40 cursor-not-allowed' : ''"
+          :disabled="servers.length === 0"
+          @click="emit('exportServers')"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          导出
+        </button>
+      </div>
+    </div>
+
     <!-- 已有服务器列表 -->
     <div v-if="servers.length > 0" class="space-y-2">
       <div

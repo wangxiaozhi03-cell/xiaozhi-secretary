@@ -154,6 +154,61 @@ export function useMavenBuilder() {
     selectedServerIds.value = selectedServerIds.value.filter(sid => sid !== id)
   }
 
+  // ── 服务器导入导出 ──
+  async function exportServers() {
+    if (servers.value.length === 0) return
+    const { save, message } = await import('@tauri-apps/plugin-dialog')
+    try {
+      const filePath = await save({
+        title: '导出服务器配置',
+        defaultPath: 'servers.json',
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+      })
+      if (!filePath) return
+      const exportData = servers.value.map(({ id, ...rest }) => rest)
+      const { writeTextFile } = await import('@tauri-apps/plugin-fs')
+      await writeTextFile(filePath, JSON.stringify(exportData, null, 2))
+      await message(`已导出 ${exportData.length} 个服务器配置`, { title: '导出成功' })
+    } catch (e) {
+      console.error('导出服务器配置失败:', e)
+      await message(`导出失败: ${String(e)}`, { title: '错误' })
+    }
+  }
+
+  async function importServers() {
+    const { open, message } = await import('@tauri-apps/plugin-dialog')
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        title: '导入服务器配置',
+      })
+      if (!selected) return
+      const { readTextFile } = await import('@tauri-apps/plugin-fs')
+      const content = await readTextFile(selected as string)
+      const parsed = JSON.parse(content)
+      const arr = Array.isArray(parsed) ? parsed : [parsed]
+      let count = 0
+      for (const item of arr) {
+        if (!item.host || !item.name) continue
+        servers.value.push({
+          id: genId(),
+          name: item.name || '',
+          host: item.host || '',
+          port: item.port || 22,
+          username: item.username || 'root',
+          password: item.password || '',
+          remotePath: item.remotePath || '',
+        })
+        count++
+      }
+      await message(`成功导入 ${count} 个服务器配置`, { title: '导入成功' })
+    } catch (e) {
+      console.error('导入服务器配置失败:', e)
+      await message(`导入失败: ${String(e)}`, { title: '错误' })
+    }
+  }
+
   // ── 项目 CRUD ──
   function addProject(data: ProjectConfig) {
     projects.value.push(data)
@@ -442,6 +497,8 @@ export function useMavenBuilder() {
     addServer,
     updateServer,
     removeServer,
+    exportServers,
+    importServers,
     addProject,
     removeProject,
     updateProject,

@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { useTheme, type ThemeMode, type AccentColor } from "../../../composables/settings/useTheme";
+import { ref, computed } from "vue";
+import { useTheme, type ThemeMode } from "../../../composables/settings/useTheme";
 import { useSettings } from "../../../composables/settings/useSettings";
-import { useThemeStyle, type ThemeStyle } from "../../../composables/settings/useThemeStyle";
+import { useThemeStyle, type ThemeStyle, type ThemeCategory } from "../../../composables/settings/useThemeStyle";
 
-const { themeMode, accentColor, setTheme, setAccentColor, ACCENT_COLORS } = useTheme();
+const { themeMode, setTheme } = useTheme();
 const { settings, updateSetting } = useSettings();
-const { currentThemeStyle, setThemeStyle, THEME_STYLES } = useThemeStyle();
+const { currentThemeStyle, setThemeStyle, THEME_STYLES, THEME_CATEGORIES, getThemesByCategory } = useThemeStyle();
 
-const themeStyleList = Object.values(THEME_STYLES);
+const closeActionOptions = [
+  { value: "minimize" as const, label: "最小化到托盘", desc: "关闭窗口时隐藏到系统托盘，应用继续运行" },
+  { value: "exit" as const, label: "直接退出", desc: "关闭窗口时完全退出应用" },
+];
+
+const activeCategory = ref<ThemeCategory>(THEME_STYLES[currentThemeStyle.value].category);
+const categoryList = Object.values(THEME_CATEGORIES);
+const filteredThemes = computed(() => getThemesByCategory(activeCategory.value));
 
 function handleThemeStyleClick(style: ThemeStyle) {
   setThemeStyle(style);
@@ -19,14 +27,6 @@ const themeOptions: { value: ThemeMode; label: string; icon: string }[] = [
   { value: "system", label: "跟随系统", icon: "monitor" },
 ];
 
-const accentOptions: { value: AccentColor; label: string }[] = [
-  { value: "blue", label: "蓝色" },
-  { value: "green", label: "绿色" },
-  { value: "purple", label: "紫色" },
-  { value: "orange", label: "橙色" },
-  { value: "red", label: "红色" },
-  { value: "graphite", label: "石墨" },
-];
 </script>
 
 <template>
@@ -34,9 +34,22 @@ const accentOptions: { value: AccentColor; label: string }[] = [
     <!-- 主题风格 -->
     <div class="settings-card">
       <h3 class="settings-card-title">主题风格</h3>
-      <div class="grid grid-cols-3 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+      <!-- 分类标签 -->
+      <div class="flex gap-1.5 mb-3">
         <button
-          v-for="theme in themeStyleList"
+          v-for="cat in categoryList"
+          :key="cat.id"
+          class="category-tab text-[11px] font-medium px-3 py-1.5 rounded-lg transition-all duration-200"
+          :class="activeCategory === cat.id ? 'active' : ''"
+          @click="activeCategory = cat.id"
+        >
+          {{ cat.label }}
+        </button>
+      </div>
+      <!-- 主题列表 -->
+      <div class="grid grid-cols-3 gap-2.5 max-h-[280px] overflow-y-auto pr-1">
+        <button
+          v-for="theme in filteredThemes"
           :key="theme.id"
           class="theme-style-card flex items-center gap-2 p-2.5 rounded-xl transition-all duration-200"
           :class="currentThemeStyle === theme.id ? 'active' : ''"
@@ -94,109 +107,37 @@ const accentOptions: { value: AccentColor; label: string }[] = [
       </div>
     </div>
 
-    <!-- 主题颜色 -->
+    <!-- 窗口关闭行为 -->
     <div class="settings-card">
-      <h3 class="settings-card-title">主题颜色</h3>
-      <div class="flex gap-3">
+      <h3 class="settings-card-title">窗口关闭行为</h3>
+      <div class="space-y-2">
         <button
-          v-for="opt in accentOptions"
+          v-for="opt in closeActionOptions"
           :key="opt.value"
-          class="color-chip flex flex-col items-center gap-1.5"
-          @click="setAccentColor(opt.value)"
+          class="close-action-card w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left"
+          :class="settings.closeAction === opt.value ? 'active' : ''"
+          @click="updateSetting('closeAction', opt.value)"
         >
+          <!-- Radio circle -->
           <div
-            class="w-10 h-10 rounded-full transition-all duration-200 relative"
-            :style="{ background: ACCENT_COLORS[opt.value].primary }"
-            :class="accentColor === opt.value ? 'ring-2 ring-offset-2 scale-110' : ''"
-            :ring-color="ACCENT_COLORS[opt.value].primary"
+            class="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors"
+            :class="settings.closeAction === opt.value
+              ? 'border-blue-500'
+              : 'border-black/15 dark:border-white/20'"
           >
-            <svg v-if="accentColor === opt.value" class="w-5 h-5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
+            <div
+              v-if="settings.closeAction === opt.value"
+              class="w-2 h-2 rounded-full bg-blue-500"
+            />
           </div>
-          <span class="text-[11px] text-tertiary">{{ opt.label }}</span>
+          <div class="min-w-0">
+            <div class="text-[12px] font-medium text-primary">{{ opt.label }}</div>
+            <div class="text-[11px] text-tertiary mt-0.5">{{ opt.desc }}</div>
+          </div>
         </button>
       </div>
     </div>
 
-    <!-- 字体大小 -->
-    <div class="settings-card">
-      <h3 class="settings-card-title">字体大小</h3>
-      <div class="flex items-center gap-4">
-        <span class="text-[12px] text-tertiary w-6">A</span>
-        <input
-          type="range"
-          :value="settings.fontSize"
-          min="12"
-          max="18"
-          step="1"
-          class="flex-1"
-          @input="updateSetting('fontSize', Number(($event.target as HTMLInputElement).value))"
-        />
-        <span class="text-[12px] text-tertiary w-8 text-right">{{ settings.fontSize }}px</span>
-      </div>
-    </div>
-
-    <!-- 圆角大小 -->
-    <div class="settings-card">
-      <h3 class="settings-card-title">圆角大小</h3>
-      <div class="flex items-center gap-4">
-        <div class="w-6 h-6 border-2 border-current text-tertiary" :style="{ borderRadius: settings.borderRadius + 'px' }" />
-        <input
-          type="range"
-          :value="settings.borderRadius"
-          min="0"
-          max="24"
-          step="2"
-          class="flex-1"
-          @input="updateSetting('borderRadius', Number(($event.target as HTMLInputElement).value))"
-        />
-        <span class="text-[12px] text-tertiary w-8 text-right">{{ settings.borderRadius }}px</span>
-      </div>
-    </div>
-
-    <!-- 动画开关 -->
-    <div class="settings-card flex items-center justify-between">
-      <div>
-        <h3 class="settings-card-title mb-0">动画效果</h3>
-        <p class="text-[12px] text-tertiary mt-0.5">启用界面过渡动画</p>
-      </div>
-      <button
-        class="settings-switch"
-        :class="settings.animationEnabled ? 'active' : ''"
-        @click="updateSetting('animationEnabled', !settings.animationEnabled)"
-      >
-        <span class="settings-switch-thumb" />
-      </button>
-    </div>
-
-    <!-- 预览区域 -->
-    <div class="settings-card">
-      <h3 class="settings-card-title">实时预览</h3>
-      <div class="preview-area rounded-xl p-4 space-y-3">
-        <!-- Toolbar preview -->
-        <div class="flex items-center gap-2">
-          <div class="h-6 w-16 rounded-lg bg-black/[0.05] dark:bg-white/[0.08]" />
-          <div class="h-6 w-24 rounded-lg bg-black/[0.05] dark:bg-white/[0.08]" />
-          <div class="flex-1" />
-          <div class="h-6 w-6 rounded-lg bg-black/[0.05] dark:bg-white/[0.08]" />
-        </div>
-        <!-- Content preview -->
-        <div class="flex gap-3">
-          <div class="w-20 h-28 rounded-xl bg-black/[0.03] dark:bg-white/[0.05]" />
-          <div class="flex-1 space-y-2">
-            <div class="h-4 w-3/4 rounded bg-black/[0.06] dark:bg-white/[0.08]" />
-            <div class="h-4 w-1/2 rounded bg-black/[0.04] dark:bg-white/[0.06]" />
-            <div class="h-4 w-2/3 rounded bg-black/[0.05] dark:bg-white/[0.07]" />
-          </div>
-        </div>
-        <!-- Button preview -->
-        <div class="flex gap-2">
-          <div class="btn text-[11px] !py-1.5 !px-3">默认按钮</div>
-          <div class="btn-primary text-[11px] !py-1.5 !px-3">主要按钮</div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -253,83 +194,37 @@ const accentOptions: { value: AccentColor; label: string }[] = [
   border-color: #60A5FA;
 }
 
-.color-chip {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.color-chip:hover {
-  transform: scale(1.05);
-}
-
-.settings-switch {
-  width: 44px;
-  height: 24px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.1);
+/* ── 分类标签 ── */
+.category-tab {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.5);
   border: none;
   cursor: pointer;
-  position: relative;
-  transition: background 0.2s ease;
-  padding: 2px;
 }
 
-.dark .settings-switch {
-  background: rgba(255, 255, 255, 0.1);
+.category-tab:hover {
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.7);
 }
 
-.settings-switch.active {
+.dark .category-tab {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dark .category-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.category-tab.active {
   background: #3B82F6;
+  color: #fff;
 }
 
-.settings-switch-thumb {
-  display: block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.04);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-}
-
-.settings-switch.active .settings-switch-thumb {
-  transform: translateX(20px);
-}
-
-.preview-area {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.dark .preview-area {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-input[type="range"] {
-  height: 3px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 3px;
-  outline: none;
-  -webkit-appearance: none;
-}
-
-.dark input[type="range"] {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.04);
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
-.dark input[type="range"]::-webkit-slider-thumb {
-  background: #2A3545;
+.dark .category-tab.active {
+  background: #60A5FA;
+  color: #fff;
 }
 
 /* ── 主题风格卡片 ── */
@@ -350,6 +245,34 @@ input[type="range"]::-webkit-slider-thumb {
 
 .dark .theme-style-card:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.close-action-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.close-action-card:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dark .close-action-card {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .close-action-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.close-action-card.active {
+  background: #EFF6FF;
+  border-color: #3B82F6;
+}
+
+.dark .close-action-card.active {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #60A5FA;
 }
 
 .theme-style-card.active {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted, onUnmounted } from "vue";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useSettings } from "./composables/settings/useSettings";
 import ToolboxNav from "./components/ToolboxNav.vue";
 import TopBar from "./components/TopBar.vue";
 import HomePage from "./components/HomePage.vue";
@@ -26,6 +28,25 @@ import { useExport } from "./composables/useExport";
 import { useOverrides, computePageRanges } from "./composables/useOverrides";
 
 const activeModule = ref<"home" | "image-layout" | "json-toolkit" | "md-toolkit" | "curl-toolkit" | "namecase" | "java-generator" | "java-packager" | "sql-toolkit">("home");
+
+// Window close behavior
+const { settings: appSettings } = useSettings();
+let unlistenClose: (() => void) | null = null;
+
+onMounted(async () => {
+  const win = getCurrentWindow();
+  unlistenClose = await win.listen("close-requested", async () => {
+    if (appSettings.closeAction === "minimize") {
+      await win.hide();
+    } else {
+      await win.close();
+    }
+  });
+});
+
+onUnmounted(() => {
+  unlistenClose?.();
+});
 
 const { images, removeImage, removeLastImage, openFileDialog, reorderImages } = useImages();
 const { settings, setImagesPerPage } = usePageSettings();

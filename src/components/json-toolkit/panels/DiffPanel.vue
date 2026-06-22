@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, h } from "vue";
+import { safeParse } from "../../../composables/json-toolkit/safeParse";
+
+const props = defineProps<{ jsonA?: string }>();
 
 const localA = ref("");
 const inputB = ref("");
@@ -7,6 +10,11 @@ const errorMsg = ref("");
 const compared = ref(false);
 const ignoreWhitespace = ref(false);
 const ignoreKeyOrder = ref(false);
+
+// 同步外部 jsonA prop 到左栏编辑器
+watch(() => props.jsonA, (newVal) => {
+  if (newVal) localA.value = newVal;
+}, { immediate: true });
 
 interface CharSeg { text: string; type: "same" | "added" | "removed" }
 interface DiffRow {
@@ -41,7 +49,7 @@ watch([localA, inputB], () => {
 /* ── JSON 工具 ── */
 function normalizeJson(json: string, _ignoreWS: boolean, ignoreOrder: boolean): string {
   try {
-    const parsed = JSON.parse(json);
+    const parsed = safeParse(json);
     if (ignoreOrder) return JSON.stringify(sortKeys(parsed), null, 2);
     return JSON.stringify(parsed, null, 2);
   } catch { return json; }

@@ -16,6 +16,17 @@ const MAX_HISTORY = 50;
 // 自动保存定时器
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null;
 
+// 最近文件
+const RECENT_FILES_KEY = "md-toolkit-recent-files";
+const MAX_RECENT_FILES = 10;
+const recentFiles = ref<RecentFile[]>([]);
+
+export interface RecentFile {
+  path: string;
+  name: string;
+  openedAt: number;
+}
+
 export function useMdEditor() {
   /** 推入历史记录 */
   function pushHistory() {
@@ -120,6 +131,55 @@ export function useMdEditor() {
     isSaved.value = false;
   }
 
+  /** 加载最近文件列表 */
+  function loadRecentFiles() {
+    try {
+      const stored = localStorage.getItem(RECENT_FILES_KEY);
+      if (stored) {
+        recentFiles.value = JSON.parse(stored);
+      }
+    } catch {
+      recentFiles.value = [];
+    }
+  }
+
+  /** 添加到最近文件 */
+  function addToRecentFiles(path: string) {
+    const name = path.split(/[/\\]/).pop() || path;
+    const existing = recentFiles.value.filter(f => f.path !== path);
+    recentFiles.value = [{ path, name, openedAt: Date.now() }, ...existing].slice(0, MAX_RECENT_FILES);
+    try {
+      localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(recentFiles.value));
+    } catch { /* ignore */ }
+  }
+
+  /** 从最近文件加载 */
+  async function loadRecentFile(path: string) {
+    try {
+      const { readTextFile } = await import("@tauri-apps/plugin-fs");
+      const text = await readTextFile(path);
+      content.value = text;
+      currentFilePath.value = path;
+      isSaved.value = true;
+      lastSavedAt.value = new Date();
+      pushHistory();
+      addToRecentFiles(path);
+    } catch (err) {
+      console.error("Load recent file failed:", err);
+      // 文件可能已删除，从列表中移除
+      recentFiles.value = recentFiles.value.filter(f => f.path !== path);
+      localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(recentFiles.value));
+    }
+  }
+
+  /** 从最近文件列表中移除 */
+  function removeRecentFile(path: string) {
+    recentFiles.value = recentFiles.value.filter(f => f.path !== path);
+    try {
+      localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(recentFiles.value));
+    } catch { /* ignore */ }
+  }
+
   /** 保存到文件 */
   async function saveToFile() {
     try {
@@ -140,8 +200,31 @@ export function useMdEditor() {
       await writeTextFile(filePath, content.value);
       isSaved.value = true;
       lastSavedAt.value = new Date();
+      addToRecentFiles(filePath);
     } catch (err) {
       console.error("Save failed:", err);
+    }
+  }
+
+  /** 另存为 */
+  async function saveAsToFile() {
+    try {
+      const { save } = await import("@tauri-apps/plugin-dialog");
+      const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+
+      const selected = await save({
+        filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
+        defaultPath: "document.md",
+      });
+      if (!selected) return;
+
+      await writeTextFile(selected, content.value);
+      currentFilePath.value = selected;
+      isSaved.value = true;
+      lastSavedAt.value = new Date();
+      addToRecentFiles(selected);
+    } catch (err) {
+      console.error("Save As failed:", err);
     }
   }
 
@@ -162,6 +245,7 @@ export function useMdEditor() {
         isSaved.value = true;
         lastSavedAt.value = new Date();
         pushHistory();
+        addToRecentFiles(selected as string);
       }
     } catch (err) {
       console.error("Load failed:", err);
@@ -204,6 +288,7 @@ export function useMdEditor() {
     isSaved,
     lastSavedAt,
     currentFilePath,
+    recentFiles,
     pushHistory,
     undo,
     redo,
@@ -211,7 +296,12 @@ export function useMdEditor() {
     updateCursorPos,
     onContentChange,
     saveToFile,
+    saveAsToFile,
     loadFromFile,
+    loadRecentFile,
+    loadRecentFiles,
+    addToRecentFiles,
+    removeRecentFile,
     newDocument,
     startAutoSave,
     stopAutoSave,

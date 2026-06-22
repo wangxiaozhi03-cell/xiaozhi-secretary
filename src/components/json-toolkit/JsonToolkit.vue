@@ -2,13 +2,59 @@
 import { ref, provide, onMounted, onUnmounted } from "vue";
 import BeautifyTool from "./tools/BeautifyTool.vue";
 import EscapeTool from "./tools/EscapeTool.vue";
+import ConvertTool from "./tools/ConvertTool.vue";
+import TimestampTool from "./tools/TimestampTool.vue";
 import TreePanel from "./panels/TreePanel.vue";
+import GridPanel from "./panels/GridPanel.vue";
 import DiffPanel from "./panels/DiffPanel.vue";
+import HistoryPanel from "./panels/HistoryPanel.vue";
+import { useJsonQuery } from "../../composables/json-toolkit/useJsonQuery";
+import { useJsonHistory, type HistoryEntry } from "../../composables/json-toolkit/useJsonHistory";
+import { useNestedJson } from "../../composables/json-toolkit/useNestedJson";
 import type { ToolAction } from "../../composables/json-toolkit/types";
+import { safeParse } from "../../composables/json-toolkit/safeParse";
 
-// 4 个模式：process / compare / visual / escape
-const mode = ref<"process" | "compare" | "visual" | "escape">("process");
+// 8 个模式
+type ModeType = "process" | "compare" | "visual" | "escape" | "grid" | "convert" | "timestamp" | "query";
+const mode = ref<ModeType>("process");
 const mainJson = ref("");
+
+// 历史记录面板
+const showHistory = ref(false);
+const { addEntry } = useJsonHistory();
+const { queryExpr, queryMode, queryResults, queryError, resultCount, executeQuery, clearQuery } = useJsonQuery();
+const { expandJsonString } = useNestedJson();
+
+// 嵌套 JSON 展开
+function expandNested() {
+  const result = expandJsonString(mainJson.value);
+  if (result.count > 0) {
+    mainJson.value = result.result;
+  }
+}
+
+// 保存到历史
+function saveToHistory() {
+  if (mainJson.value.trim()) {
+    addEntry(mainJson.value);
+  }
+}
+
+// 从历史加载
+function loadFromHistory(entry: HistoryEntry) {
+  mainJson.value = entry.json;
+  showHistory.value = false;
+}
+
+// JSONPath 查询
+function runQuery() {
+  executeQuery(mainJson.value);
+}
+
+function copyQueryValue(value: unknown) {
+  const text = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+  navigator.clipboard.writeText(text);
+}
 
 // 可视化模式分隔线位置（百分比）
 const splitPosition = ref(50);
@@ -38,6 +84,19 @@ function startDrag(e: MouseEvent) {
   document.addEventListener("mouseup", onMouseUp);
 }
 
+// 操作按钮图标映射（已废弃）
+// function getActionIcon(icon: string) {
+//   const icons: Record<string, string> = {
+//     sparkle: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z",
+//     compress: "M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3",
+//     copy: "M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184",
+//     trash: "M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0",
+//     escape: "M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z",
+//   };
+//   return icons[icon] || icons.sparkle;
+// }
+
+// 工具动作注册
 const toolActions = ref<ToolAction[]>([]);
 provide("registerToolActions", (actions: ToolAction[]) => {
   toolActions.value = actions;
@@ -49,11 +108,15 @@ const tabs = [
   { id: "process", label: "处理" },
   { id: "compare", label: "对比" },
   { id: "visual", label: "可视化" },
+  { id: "grid", label: "表格" },
   { id: "escape", label: "转义" },
+  { id: "convert", label: "转换" },
+  { id: "timestamp", label: "时间戳" },
+  { id: "query", label: "查询" },
 ];
 
 function handleTabClick(tabId: string) {
-  mode.value = tabId as typeof mode.value;
+  mode.value = tabId as ModeType;
 }
 
 function handleAction(actionIndex: number) {
@@ -66,24 +129,17 @@ function handleKeydown(e: KeyboardEvent) {
   const modifier = isMac ? e.metaKey : e.ctrlKey;
 
   if (modifier) {
-    switch (e.key) {
-      case "1":
-        e.preventDefault();
-        mode.value = "process";
-        break;
-      case "2":
-        e.preventDefault();
-        mode.value = "compare";
-        break;
-      case "3":
-        e.preventDefault();
-        mode.value = "visual";
-        break;
-      case "4":
-        e.preventDefault();
-        mode.value = "escape";
-        break;
-    }
+    const keyMap: Record<string, ModeType> = {
+      "1": "process", "2": "compare", "3": "visual", "4": "grid",
+      "5": "escape", "6": "convert", "7": "timestamp", "8": "query",
+    };
+    const target = keyMap[e.key];
+    if (target) { e.preventDefault(); mode.value = target; }
+  }
+  // Ctrl+H 打开历史
+  if (modifier && e.key === "h") {
+    e.preventDefault();
+    showHistory.value = !showHistory.value;
   }
 }
 
@@ -104,7 +160,7 @@ function updateJsonStatus(json: string) {
     return;
   }
   try {
-    JSON.parse(trimmed);
+    safeParse(trimmed);
     jsonStatus.value = "valid";
   } catch {
     jsonStatus.value = "invalid";
@@ -191,6 +247,7 @@ async function handleDrop(e: DragEvent) {
 provide("importJson", importJson);
 provide("exportJson", exportJson);
 provide("loadExample", loadExample);
+provide("saveToHistory", saveToHistory);
 
 // 操作按钮图标映射
 function getActionIcon(icon: string) {
@@ -257,26 +314,6 @@ function getActionIcon(icon: string) {
 
       <!-- 第二行：操作按钮（自动换行） -->
       <div class="flex items-center flex-wrap gap-1.5">
-        <!-- 工具操作按钮 -->
-        <template v-for="(act, idx) in toolActions" :key="idx">
-          <button
-            class="action-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 cursor-pointer"
-            :class="act.variant === 'primary'
-              ? 'bg-blue-500/[0.10] text-blue-500 hover:bg-blue-500/[0.20] hover:shadow-sm active:scale-95'
-              : 'text-tertiary hover:text-primary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:shadow-sm active:scale-95'"
-            :title="act.label"
-            @click="handleAction(idx)"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="getActionIcon(act.icon)" />
-            </svg>
-            <span>{{ act.label }}</span>
-          </button>
-        </template>
-
-        <!-- 分隔线 -->
-        <div class="w-px h-5 bg-black/[0.08] dark:bg-white/[0.10] mx-0.5" />
-
         <!-- 文件操作 -->
         <button
           class="action-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-tertiary hover:text-primary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:shadow-sm active:scale-95 transition-all duration-200 cursor-pointer"
@@ -308,6 +345,26 @@ function getActionIcon(icon: string) {
           </svg>
           <span>示例</span>
         </button>
+
+        <!-- 工具操作按钮（由子组件注册） -->
+        <template v-if="toolActions.length > 0">
+          <div class="w-px h-4 bg-black/[0.08] dark:bg-white/[0.08] mx-0.5" />
+          <button
+            v-for="(act, idx) in toolActions"
+            :key="idx"
+            class="action-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 active:scale-95"
+            :class="act.variant === 'primary'
+              ? 'bg-blue-500/[0.08] text-blue-500 hover:bg-blue-500/[0.14] shadow-sm'
+              : 'text-tertiary hover:text-primary hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:shadow-sm'"
+            @click="handleAction(idx)"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="getActionIcon(act.icon)" />
+            </svg>
+            <span>{{ act.label }}</span>
+          </button>
+        </template>
+
       </div>
     </header>
 
@@ -347,7 +404,7 @@ function getActionIcon(icon: string) {
           </div>
 
           <div class="min-w-0 flex-1">
-            <TreePanel :json="mainJson" />
+            <TreePanel :json="mainJson" @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }" />
           </div>
         </div>
 
@@ -358,8 +415,111 @@ function getActionIcon(icon: string) {
             @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }"
           />
         </div>
+
+        <div v-else-if="mode === 'grid'" key="grid" class="h-full">
+          <GridPanel class="w-full h-full" :json="mainJson" />
+        </div>
+
+        <div v-else-if="mode === 'convert'" key="convert" class="flex h-full">
+          <ConvertTool
+            class="flex-1 min-w-0"
+            :json="mainJson"
+            @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }"
+          />
+        </div>
+
+        <div v-else-if="mode === 'timestamp'" key="timestamp" class="flex h-full">
+          <TimestampTool
+            class="flex-1 min-w-0"
+            :json="mainJson"
+            @update:json="(v: string) => { mainJson = v; updateJsonStatus(v); }"
+          />
+        </div>
+
+        <div v-else-if="mode === 'query'" key="query" class="flex flex-col h-full">
+          <!-- 查询栏 -->
+          <div class="px-4 py-3 border-b border-black/[0.04] dark:border-white/[0.06] flex-shrink-0">
+            <div class="flex items-center gap-2">
+              <!-- 模式切换 -->
+              <div class="flex items-center gap-0.5 p-0.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.05]">
+                <button
+                  class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
+                  :class="queryMode === 'jsonpath' ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary' : 'text-tertiary'"
+                  @click="queryMode = 'jsonpath'"
+                >JSONPath</button>
+                <button
+                  class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
+                  :class="queryMode === 'jmespath' ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary' : 'text-tertiary'"
+                  @click="queryMode = 'jmespath'"
+                >JMESPath</button>
+              </div>
+              <!-- 查询输入 -->
+              <input
+                v-model="queryExpr"
+                type="text"
+                class="flex-1 px-3 py-1.5 text-xs font-mono bg-black/[0.03] dark:bg-white/[0.05] rounded-lg outline-none text-primary placeholder:text-tertiary border border-transparent focus:border-blue-500/30 transition-colors"
+                :placeholder="queryMode === 'jsonpath' ? '$.store.book[*].title' : 'store.book[*].title'"
+                @keydown.enter="runQuery"
+              />
+              <button
+                class="px-3 py-1.5 text-[11px] font-medium rounded-lg bg-blue-500/[0.10] text-blue-500 hover:bg-blue-500/[0.20] transition-colors"
+                @click="runQuery"
+              >查询</button>
+              <button
+                v-if="queryExpr"
+                class="px-2 py-1.5 text-[11px] text-tertiary hover:text-secondary transition-colors"
+                @click="clearQuery"
+              >清除</button>
+            </div>
+            <!-- 查询状态 -->
+            <div v-if="queryError" class="mt-2 text-[11px] text-rose-500">{{ queryError }}</div>
+            <div v-else-if="queryExpr && resultCount >= 0" class="mt-2 text-[11px] text-tertiary">
+              找到 {{ resultCount }} 个匹配项
+            </div>
+          </div>
+          <!-- 查询结果 -->
+          <div class="flex-1 overflow-auto">
+            <div v-if="queryResults.length === 0 && !queryError" class="flex items-center justify-center h-full text-xs text-tertiary">
+              输入查询表达式并按 Enter 执行
+            </div>
+            <div v-else class="divide-y divide-black/[0.03] dark:divide-white/[0.04]">
+              <div
+                v-for="(r, idx) in queryResults"
+                :key="idx"
+                class="px-4 py-2.5 hover:bg-blue-500/[0.03] transition-colors group"
+              >
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-mono text-blue-500">{{ r.path }}</span>
+                  <button
+                    class="opacity-0 group-hover:opacity-100 p-1 rounded text-tertiary hover:text-blue-500 hover:bg-blue-500/[0.08] transition-all"
+                    title="复制值"
+                    @click="copyQueryValue(r.value)"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+                <pre class="text-xs font-mono text-primary whitespace-pre-wrap break-all">{{ typeof r.value === 'object' ? JSON.stringify(r.value, null, 2) : String(r.value) }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
       </Transition>
     </div>
+
+    <!-- 历史记录面板（右侧滑出） -->
+    <Transition name="history-slide">
+      <div
+        v-if="showHistory"
+        class="absolute top-0 right-0 bottom-0 w-80 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-l border-black/[0.06] dark:border-white/[0.08] shadow-xl"
+      >
+        <HistoryPanel
+          @select="loadFromHistory"
+          @close="showHistory = false"
+        />
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -368,4 +528,9 @@ function getActionIcon(icon: string) {
 .tab-float-leave-active { transition: all 0.18s ease-in; }
 .tab-float-enter-from { opacity: 0; transform: translateY(14px) scale(0.98); }
 .tab-float-leave-to { opacity: 0; transform: translateY(-6px) scale(0.99); }
+
+.history-slide-enter-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.history-slide-leave-active { transition: all 0.2s ease-in; }
+.history-slide-enter-from { opacity: 0; transform: translateX(100%); }
+.history-slide-leave-to { opacity: 0; transform: translateX(100%); }
 </style>

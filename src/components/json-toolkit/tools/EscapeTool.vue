@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { safeParse } from "../../../composables/json-toolkit/safeParse";
 
 const props = defineProps<{
   json: string;
@@ -24,9 +25,9 @@ const outputText = ref("");
 const errorMsg = ref("");
 const mode = ref<"escape" | "unescape">("escape");
 
-// 同步外部 JSON
+// 同步外部 JSON（始终覆盖，确保切换 Tab 后内容同步）
 watch(() => props.json, (newVal) => {
-  if (newVal && !inputText.value) {
+  if (newVal) {
     inputText.value = newVal;
   }
 }, { immediate: true });
@@ -35,7 +36,7 @@ watch(() => props.json, (newVal) => {
 function escapeJson(text: string, lang: string): string {
   try {
     // 先尝试解析为 JSON 对象
-    const parsed = JSON.parse(text);
+    const parsed = safeParse(text);
     const compact = JSON.stringify(parsed);
 
     switch (lang) {
@@ -128,8 +129,8 @@ function unescapeJson(text: string, lang: string): string {
 
     case "javascript":
       try {
-        // JSON.parse 会自动处理转义
-        unescaped = JSON.parse(text);
+        // safeParse 会自动处理转义（含 JSON5 单引号支持）
+        unescaped = safeParse(text) as string;
       } catch {
         unescaped = text
           .replace(/\\n/g, "\n")
@@ -160,7 +161,7 @@ function unescapeJson(text: string, lang: string): string {
 
   // 尝试格式化为 JSON
   try {
-    const parsed = JSON.parse(unescaped);
+    const parsed = safeParse(unescaped);
     return JSON.stringify(parsed, null, 2);
   } catch {
     return unescaped;

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, provide } from "vue";
 import { MdEditor, config } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
 import screenfull from "screenfull";
 import prettier from "prettier";
 import parserMarkdown from "prettier/plugins/markdown";
-import MdRightPanel from "./MdRightPanel.vue";
+import mermaid from "mermaid";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+import MdOutlinePanel from "./MdOutlinePanel.vue";
 import { useMdEditor } from "../../composables/md-toolkit/useMdEditor";
 import { computeStats } from "../../composables/md-toolkit/useMarkdown";
 import { exportHtml, copyHtml, copyMarkdown } from "../../composables/md-toolkit/useMdExport";
@@ -16,23 +19,33 @@ config({
   editorExtensions: {
     screenfull: { instance: screenfull },
     prettier: { prettierInstance: prettier, parserMarkdownInstance: parserMarkdown },
+    mermaid: { instance: mermaid },
+    katex: { instance: katex },
   },
 });
 
 const {
   content,
   isSaved,
+  recentFiles,
   saveToFile,
+  saveAsToFile,
   loadFromFile,
+  loadRecentFile,
+  loadRecentFiles,
+  removeRecentFile,
   newDocument,
   onContentChange,
   startAutoSave,
   stopAutoSave,
 } = useMdEditor();
 
+// provide content 给子组件
+provide("mdContent", content);
+
 // 视图模式
 const mode = ref<MdViewMode>("split");
-const showRightPanel = ref(true);
+const showOutline = ref(false);
 const mdEditorRef = ref<InstanceType<typeof MdEditor>>();
 
 const tabs = [
@@ -65,6 +78,7 @@ const toolbars: any[] = [
   "revoke", "next",
   "-",
   "prettier", "save",
+  "mermaid", "katex",
   "=",
   "pageFullscreen", "fullscreen", "preview",
 ];
@@ -96,6 +110,11 @@ async function handleCopy() {
   } else {
     await copyMarkdown(content.value);
   }
+}
+
+// 复制为 HTML
+async function handleCopyAsHtml() {
+  await copyHtml(currentHtml.value);
 }
 
 // 导出
@@ -136,6 +155,10 @@ function handleKeydown(e: KeyboardEvent) {
         e.preventDefault();
         mode.value = "split";
         break;
+      case "k":
+        e.preventDefault();
+        showOutline.value = !showOutline.value;
+        break;
     }
   }
 }
@@ -145,6 +168,7 @@ let themeObserver: MutationObserver | null = null;
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
   startAutoSave();
+  loadRecentFiles();
   updateTheme();
   themeObserver = new MutationObserver(updateTheme);
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
@@ -161,28 +185,10 @@ onUnmounted(() => {
   <div class="md-toolkit-wrapper flex flex-col h-full overflow-hidden">
     <!-- 顶部导航 -->
     <header class="glass-bar px-5 py-3 flex items-center justify-between flex-shrink-0 border-b border-black/[0.04] dark:border-white/[0.06]">
-      <!-- 左侧：标题 + Tab -->
+      <!-- 左侧：标题 -->
       <div class="flex items-center gap-4">
         <h1 class="text-sm font-semibold text-primary">MD 工具</h1>
         <p class="text-xs text-tertiary hidden md:block">Markdown 编辑、预览、导出</p>
-
-        <!-- Tab 导航 -->
-        <nav class="flex items-center gap-1 p-1 rounded-xl bg-black/[0.03] dark:bg-white/[0.05]">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            class="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
-            :class="mode === tab.id
-              ? 'bg-black/[0.06] dark:bg-white/[0.08] text-primary shadow-sm'
-              : 'text-tertiary hover:text-secondary'"
-            @click="mode = tab.id as MdViewMode"
-          >
-            <span>{{ tab.label }}</span>
-            <kbd class="text-[9px] px-1 py-0.5 rounded bg-black/[0.05] dark:bg-white/[0.08] text-tertiary font-mono">
-              {{ tab.shortcut }}
-            </kbd>
-          </button>
-        </nav>
       </div>
 
       <!-- 右侧：状态 + 操作 -->
@@ -200,6 +206,11 @@ onUnmounted(() => {
 
         <!-- 快捷操作 -->
         <div class="flex items-center gap-1">
+          <button class="btn-icon" :class="showOutline ? 'text-blue-500' : ''" title="大纲 (⌘K)" @click="showOutline = !showOutline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+            </svg>
+          </button>
           <button class="btn-icon" title="新建" @click="handleClear">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
@@ -231,6 +242,17 @@ onUnmounted(() => {
 
     <!-- 内容区 -->
     <div class="flex-1 flex overflow-hidden">
+      <!-- 大纲面板 -->
+      <aside
+        v-if="showOutline"
+        class="glass-panel flex flex-col flex-shrink-0 overflow-hidden w-[220px] border-r border-black/[0.04] dark:border-white/[0.06]"
+      >
+        <MdOutlinePanel
+          :content="content"
+          @close="showOutline = false"
+        />
+      </aside>
+
       <!-- 编辑器 -->
       <div class="flex-1 min-w-0 overflow-hidden">
         <MdEditor
@@ -243,8 +265,8 @@ onUnmounted(() => {
           preview-theme="github"
           code-theme="atom-one-dark"
           :show-code-row-number="true"
-          :no-mermaid="true"
-          :no-katex="true"
+          :no-mermaid="false"
+          :no-katex="false"
           :no-highlight="false"
           :tab-width="2"
           placeholder="开始输入 Markdown..."
@@ -256,37 +278,7 @@ onUnmounted(() => {
         />
       </div>
 
-      <!-- 右侧面板 -->
-      <aside
-        class="glass-panel flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300"
-        :class="showRightPanel ? 'w-[280px]' : 'w-10'"
-      >
-        <button
-          class="h-9 flex items-center justify-center hover:bg-black/[0.02] transition-colors text-tertiary"
-          @click="showRightPanel = !showRightPanel"
-        >
-          <svg
-            class="w-4 h-4 transition-transform duration-300"
-            :class="showRightPanel ? 'rotate-0' : 'rotate-180'"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-          </svg>
-        </button>
 
-        <MdRightPanel
-          v-if="showRightPanel"
-          :stats="stats"
-          :content="content"
-          @new-doc="handleClear"
-          @open-file="loadFromFile"
-          @save-file="saveToFile"
-          @export-html="handleExport"
-          @copy="handleCopy"
-        />
-      </aside>
     </div>
   </div>
 </template>
@@ -315,7 +307,23 @@ onUnmounted(() => {
 
 .md-toolkit-wrapper :deep(.cm-gutters) {
   background: rgba(var(--glass-r), var(--glass-g), var(--glass-b), 0.15) !important;
-  border-right: 0.5px solid rgba(0, 0, 0, 0.04) !important;
+  border-right: none !important;
+}
+
+/* 编辑器与预览区分隔线 - 更柔和的渐变效果 */
+.md-toolkit-wrapper :deep(.md-editor-resize-operate) {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-resize-operate::before) {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.06), transparent);
 }
 
 .md-toolkit-wrapper :deep(.md-editor-preview) {
@@ -368,7 +376,12 @@ onUnmounted(() => {
 
 .md-toolkit-wrapper :deep(.md-editor-dark .cm-gutters) {
   background: rgba(var(--glass-dark-r), var(--glass-dark-g), var(--glass-dark-b), 0.12) !important;
-  border-right-color: rgba(255, 255, 255, 0.04) !important;
+  border-right-color: transparent !important;
+}
+
+/* 暗色模式下编辑器与预览区分隔线 */
+.md-toolkit-wrapper :deep(.md-editor-dark .md-editor-resize-operate::before) {
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.08), transparent);
 }
 
 .md-toolkit-wrapper :deep(.md-editor-dark .md-editor-preview) {
@@ -389,5 +402,55 @@ onUnmounted(() => {
   height: 100vh !important;
   z-index: 99999 !important;
   border-radius: 0 !important;
+}
+
+/* 自定义滚动条样式 - 更柔和美观 */
+.md-toolkit-wrapper ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.md-toolkit-wrapper ::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.md-toolkit-wrapper ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.3s ease;
+}
+
+.md-toolkit-wrapper ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.md-toolkit-wrapper ::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* 暗色模式滚动条 */
+.md-toolkit-wrapper :deep(.md-editor-dark) ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.md-toolkit-wrapper :deep(.md-editor-dark) ::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.28);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 </style>

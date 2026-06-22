@@ -2,8 +2,10 @@
 import { ref, computed, watch, h, onMounted, onUnmounted } from "vue";
 import VueJsonPretty from "vue-json-pretty";
 import "vue-json-pretty/lib/styles.css";
+import { safeParse } from "../../../composables/json-toolkit/safeParse";
 
 const props = defineProps<{ json: string }>();
+const emit = defineEmits<{ "update:json": [value: string] }>();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type JSONData = Record<string, any> | any[] | string | number | boolean | null;
@@ -12,8 +14,47 @@ type JSONData = Record<string, any> | any[] | string | number | boolean | null;
 const parsedData = ref<JSONData | null>(null);
 const errorMsg = ref("");
 
-// 搜索
+// 搜索（200ms 防抖，避免频繁遍历树）
 const searchQuery = ref("");
+const debouncedSearchQuery = ref("");
+let searchDebounce: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (val) => {
+  if (searchDebounce) clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    debouncedSearchQuery.value = val;
+  }, 200);
+});
+
+// 搜索：遍历数据查找匹配项的 path 集合
+const searchMatchPaths = computed(() => {
+  if (!debouncedSearchQuery.value.trim() || parsedData.value == null) return new Set<string>();
+  const paths = new Set<string>();
+  const query = debouncedSearchQuery.value.toLowerCase();
+
+  function walk(data: unknown, path: string) {
+    if (data === null || data === undefined) {
+      if (String(data).toLowerCase().includes(query)) paths.add(path);
+      return;
+    }
+    if (Array.isArray(data)) {
+      data.forEach((item, i) => walk(item, `${path}[${i}]`));
+    } else if (typeof data === "object") {
+      for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+        const childPath = /^[a-zA-Z_]\w*$/.test(k) ? `${path}.${k}` : `${path}["${k}"]`;
+        if (k.toLowerCase().includes(query)) paths.add(childPath);
+        walk(v, childPath);
+      }
+    } else {
+      if (String(data).toLowerCase().includes(query)) paths.add(path);
+    }
+  }
+
+  walk(parsedData.value, "$");
+  return paths;
+});
+
+const searchCount = computed(() => searchMatchPaths.value.size);
 
 // 展开/折叠控制
 const deep = ref(999);
@@ -25,6 +66,87 @@ const selectedNodeData = ref<JSONData | null>(null);
 
 // 复制提示
 const copyToast = ref(false);
+
+// 右键菜单
+const contextMenu = ref({ show: false, x: 0, y: 0 });
+const contextNode = ref<{ path: string; key: string; value: unknown } | null>(null);
+
+function onTreeContextMenu(e: MouseEvent) {
+  e.preventDefault();
+  if (!selectedPath.value) return;
+  contextMenu.value = { show: true, x: e.clientX, y: e.clientY };
+  contextNode.value = {
+    path: selectedPath.value,
+    key: selectedPath.value.split(".").pop()?.replace(/[\[\]"]/g, "") || "",
+    value: selectedNodeData.value,
+  };
+  // Close on click elsewhere
+  setTimeout(() => {
+    document.addEventListener("click", closeContextMenu, { once: true });
+  }, 0);
+}
+
+function closeContextMenu() {
+  contextMenu.value.show = false;
+}
+
+function copyKey() {
+  if (contextNode.value?.key) {
+    navigator.clipboard.writeText(contextNode.value.key);
+    showToast();
+  }
+  closeContextMenu();
+}
+
+function copyKeyValue() {
+  if (contextNode.value) {
+    const val = typeof contextNode.value.value === "object"
+      ? JSON.stringify(contextNode.value.value, null, 2)
+      : String(contextNode.value.value);
+    navigator.clipboard.writeText(`${contextNode.value.key}: ${val}`);
+    showToast();
+  }
+  closeContextMenu();
+}
+
+// 删除节点
+function deleteNode() {
+  if (!selectedPath.value || parsedData.value == null) {
+    closeContextMenu();
+    return;
+  }
+  const path = selectedPath.value;
+  // 解析路径：$.foo.bar[0].baz
+  const rest = path.slice(1); // 去掉 "$"
+  const segments = rest.match(/\.(\w+)|\[(\d+)\]|\["([^"]+)"\]/g);
+  if (!segments) { closeContextMenu(); return; }
+
+  const keys: (string | number)[] = segments.map((seg) => {
+    if (seg.startsWith(".")) return seg.slice(1);
+    const inner = seg.slice(1, -1);
+    return inner.startsWith('"') ? inner.slice(1, -1) : Number(inner);
+  });
+
+  // 深拷贝后删除
+  const clone = JSON.parse(JSON.stringify(parsedData.value));
+  let current: any = clone;
+  for (let i = 0; i < keys.length - 1; i++) {
+    current = current?.[keys[i]];
+    if (current == null) { closeContextMenu(); return; }
+  }
+  const lastKey = keys[keys.length - 1];
+  if (Array.isArray(current)) {
+    current.splice(Number(lastKey), 1);
+  } else if (typeof current === "object" && current !== null) {
+    delete current[lastKey];
+  }
+
+  parsedData.value = clone;
+  selectedPath.value = "";
+  selectedNodeData.value = null;
+  emit("update:json", JSON.stringify(clone, null, 2));
+  closeContextMenu();
+}
 
 // 暗色模式检测
 const isDark = ref(false);
@@ -54,41 +176,13 @@ function parse() {
   const trimmed = props.json.trim();
   if (!trimmed) return;
   try {
-    parsedData.value = JSON.parse(trimmed) as JSONData;
+    parsedData.value = safeParse(trimmed) as JSONData;
   } catch (e: unknown) {
     errorMsg.value = e instanceof Error ? e.message : "Invalid JSON";
   }
 }
 
-// 搜索：遍历数据查找匹配项的 path 集合
-const searchMatchPaths = computed(() => {
-  if (!searchQuery.value.trim() || parsedData.value == null) return new Set<string>();
-  const paths = new Set<string>();
-  const query = searchQuery.value.toLowerCase();
-
-  function walk(data: unknown, path: string) {
-    if (data === null || data === undefined) {
-      if (String(data).toLowerCase().includes(query)) paths.add(path);
-      return;
-    }
-    if (Array.isArray(data)) {
-      data.forEach((item, i) => walk(item, `${path}[${i}]`));
-    } else if (typeof data === "object") {
-      for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
-        const childPath = /^[a-zA-Z_]\w*$/.test(k) ? `${path}.${k}` : `${path}["${k}"]`;
-        if (k.toLowerCase().includes(query)) paths.add(childPath);
-        walk(v, childPath);
-      }
-    } else {
-      if (String(data).toLowerCase().includes(query)) paths.add(path);
-    }
-  }
-
-  walk(parsedData.value, "$");
-  return paths;
-});
-
-const searchCount = computed(() => searchMatchPaths.value.size);
+// 搜索：遍历数据查找匹配项的 path 集合（已在上方 debounced 版本中定义）
 
 // 展开 / 折叠全部
 function expandAll() {
@@ -234,7 +328,7 @@ watch(() => props.json, parse, { immediate: true });
     <div v-else-if="parsedData == null" class="flex-1 flex items-center justify-center text-xs text-tertiary">
       Paste JSON in the editor
     </div>
-    <div v-else class="flex-1 overflow-y-auto p-2 tree-container">
+    <div v-else class="flex-1 overflow-y-auto p-2 tree-container" @contextmenu="onTreeContextMenu">
       <vue-json-pretty
         :key="treeKey"
         :data="parsedData"
@@ -281,6 +375,24 @@ watch(() => props.json, parse, { immediate: true });
       </div>
     </div>
 
+    <!-- 右键菜单 -->
+    <Teleport to="body">
+      <Transition name="ctx-menu">
+        <div
+          v-if="contextMenu.show"
+          class="fixed z-[9999] glass-float p-1 min-w-[160px] shadow-xl"
+          :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+        >
+          <button class="ctx-item" @click="copyKey">复制 Key</button>
+          <button class="ctx-item" @click="copyValue">复制 Value</button>
+          <button class="ctx-item" @click="copyKeyValue">复制 Key: Value</button>
+          <button class="ctx-item" @click="copyPath">复制路径</button>
+          <div class="my-1 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
+          <button class="ctx-item text-rose-500" @click="deleteNode">删除节点</button>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- 复制成功提示 -->
     <Transition name="toast">
       <div
@@ -305,6 +417,28 @@ watch(() => props.json, parse, { immediate: true });
 .toast-leave-to {
   opacity: 0;
   transform: translate(-50%, 8px);
+}
+
+.ctx-menu-enter-active { transition: opacity 0.12s ease, transform 0.12s ease; }
+.ctx-menu-leave-active { transition: opacity 0.08s ease; }
+.ctx-menu-enter-from { opacity: 0; transform: scale(0.95); }
+.ctx-menu-leave-to { opacity: 0; }
+
+.ctx-item {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 11px;
+  text-align: left;
+  border-radius: 6px;
+  color: inherit;
+  transition: background 0.1s;
+}
+.ctx-item:hover {
+  background: rgba(59, 130, 246, 0.06);
+}
+:global(.dark) .ctx-item:hover {
+  background: rgba(59, 130, 246, 0.1);
 }
 </style>
 

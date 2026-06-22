@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+import JSON5 from "json5";
+import { safeParse } from "../../../composables/json-toolkit/safeParse";
+import { useSettings } from "../../../composables/settings/useSettings";
+
+const { settings: appSettings, updateSetting: updateAppSetting } = useSettings();
 
 const props = defineProps<{
   tabId: string;
@@ -18,8 +23,28 @@ const history = ref<string[]>([]);
 const errorMsg = ref("");
 const errorLine = ref(-1);
 const errorCol = ref(-1);
-const indentSize = ref(2);
+const indentSize = ref(appSettings.jsonIndent);
 const fontSize = ref(13);
+
+// JSON5 直接读写全局设置，消除 ref+watcher 同步延迟
+const useJson5 = computed({
+  get: () => appSettings.jsonParseJson5,
+  set: (v) => updateAppSetting("jsonParseJson5", v),
+});
+
+// 同步全局缩进设置
+watch(() => appSettings.jsonIndent, (v) => {
+  if (indentSize.value !== v) {
+    indentSize.value = v;
+    const trimmed = input.value.trim();
+    if (trimmed) {
+      try { input.value = JSON.stringify(parseJson(trimmed), null, v); } catch {}
+    }
+  }
+});
+
+// JSON5 开关变化时立即重新校验（清除残留错误）
+watch(useJson5, () => { validateJson(); });
 const textareaRef = ref<HTMLTextAreaElement>();
 const highlightRef = ref<HTMLPreElement>();
 const lineNumbersRef = ref<HTMLDivElement>();
@@ -250,7 +275,12 @@ const isValidJson = computed(() => {
     JSON.parse(input.value);
     return true;
   } catch {
-    return false;
+    try {
+      JSON5.parse(input.value);
+      return true;
+    } catch {
+      return false;
+    }
   }
 });
 
@@ -269,12 +299,20 @@ function validateJson() {
   errorMsg.value = "";
   errorLine.value = -1;
   errorCol.value = -1;
+  if (!appSettings.jsonAutoValidate) return; // 设置面板控制是否自动校验
   const trimmed = input.value.trim();
   if (!trimmed) return;
 
   try {
     JSON.parse(trimmed);
   } catch (e: unknown) {
+    // Always try JSON5 as fallback (JSON is a subset of JSON5)
+    try {
+      JSON5.parse(trimmed);
+      return; // Valid JSON5 (or standard JSON)
+    } catch {
+      // Fall through to error handling
+    }
     if (e instanceof SyntaxError) {
       errorMsg.value = e.message;
       const posMatch = e.message.match(/at position (\d+)/);
@@ -306,7 +344,7 @@ function validateJson() {
   }
 }
 
-// 语法高亮
+// 语法高亮（支持 JSON5：注释、单引号字符串、无引号 key）
 function highlightJson(json: string): string {
   if (!json) return "";
   const lines = json.split("\n");
@@ -318,36 +356,71 @@ function highlightJson(json: string): string {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
 
-      // 提取字符串并用占位符替换，避免后续处理破坏字符串内容
-      const stringPlaceholders: string[] = [];
-      html = html.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match) => {
-        const index = stringPlaceholders.length;
-        stringPlaceholders.push(match);
-        return `__STRING_${index}__`;
+      // ===== 1. 提取所有 token 为占位符 =====
+      const tokens: string[] = [];
+
+      // 1a. 提取字符串（双引号 + 单引号）
+      html = html.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (m) => {
+        tokens.push(m);
+        return `__T${tokens.length - 1}__`;
+      });
+      html = html.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (m) => {
+        tokens.push(m);
+        return `__T${tokens.length - 1}__`;
       });
 
-      // 处理 key（在占位符之后）
-      html = html.replace(/__STRING_(\d+)__(\s*):/g, (_, idx, spaces) => {
-        return `<span class="jh-key">${stringPlaceholders[parseInt(idx)]}</span>${spaces}:`;
+      // 1b. 提取注释（在字符串提取之后，避免字符串内的 // 被误识别）
+      // 单行注释 //
+      const slIdx = html.indexOf("//");
+      if (slIdx !== -1) {
+        const comment = html.slice(slIdx);
+        tokens.push(comment);
+        html = html.slice(0, slIdx) + `__T${tokens.length - 1}__`;
+      }
+      // 块注释 /* ... */
+      const blockMatch = html.match(/\/\*[\s\S]*?\*\//);
+      if (blockMatch) {
+        const ci = html.indexOf(blockMatch[0]);
+        tokens.push(blockMatch[0]);
+        html = html.slice(0, ci) + `__T${tokens.length - 1}__` + html.slice(ci + blockMatch[0].length);
+      }
+
+      // ===== 2. 着色（占位符已保护字符串和注释内容）=====
+
+      // 2a. key: 双/单引号字符串后跟冒号
+      html = html.replace(/__T(\d+)__(\s*):/g, (_, tIdx, spaces) => {
+        return `<span class="jh-key">${tokens[parseInt(tIdx)]}</span>${spaces}:`;
       });
 
-      // 处理数字（排除时间格式中的数字）- 在字符串恢复之前执行
-      html = html.replace(/:(\s*)(-?\d+\.?\d*([eE][+-]?\d+)?)(?![\d:])/g, ':$1<span class="jh-number">$2</span>');
+      // 2b. key: 无引号 key（JSON5 特有），以 letter/$/_ 开头
+      html = html.replace(/\b([a-zA-Z_$][\w$]*)(\s*):/g, (_, key, spaces) => {
+        // 排除已经着色的 value token
+        if (key === "true" || key === "false" || key === "null") return _;
+        return `<span class="jh-key">${key}</span>${spaces}:`;
+      });
 
-      // 处理布尔值 - 在字符串恢复之前执行
+      // 2c. 数字
+      html = html.replace(/:(\s*)(-?\d+\.?\d*([eE][+-]?\d+)?)(?![\d:])/g,
+        ':$1<span class="jh-number">$2</span>');
+
+      // 2d. 布尔值
       html = html.replace(/:(\s*)(true|false)/g, ':$1<span class="jh-bool">$2</span>');
 
-      // 处理 null - 在字符串恢复之前执行
+      // 2e. null
       html = html.replace(/:(\s*)(null)/g, ':$1<span class="jh-null">$2</span>');
 
-      // 处理 value 字符串（在数字、布尔值、null 处理之后恢复）
-      html = html.replace(/:(\s*)__STRING_(\d+)__/g, (_, spaces, idx) => {
-        return `:${spaces}<span class="jh-string">${stringPlaceholders[parseInt(idx)]}</span>`;
+      // 2f. 值字符串（冒号后的占位符）
+      html = html.replace(/:(\s*)__T(\d+)__/g, (_, spaces, tIdx) => {
+        return `:${spaces}<span class="jh-string">${tokens[parseInt(tIdx)]}</span>`;
       });
 
-      // 还原未被处理的字符串占位符
-      stringPlaceholders.forEach((str, i) => {
-        html = html.replace(`__STRING_${i}__`, str);
+      // 2g. 注释（着色并还原）
+      html = html.replace(/__T(\d+)__/g, (_, tIdx) => {
+        const tok = tokens[parseInt(tIdx)];
+        if (tok.startsWith("//") || tok.startsWith("/*")) {
+          return `<span class="jh-comment">${tok}</span>`;
+        }
+        return tok; // 未被着色的字符串原样还原
       });
 
       if (idx === errorLine.value) {
@@ -401,13 +474,21 @@ function resetAfterOperation(end: boolean = true) {
   });
 }
 
+function parseJson(str: string): unknown {
+  try {
+    return JSON.parse(str);
+  } catch {
+    try { return JSON5.parse(str); } catch { throw new Error("Invalid JSON"); }
+  }
+}
+
 function formatPastedJson(text: string): string {
   const trimmed = text.trim();
   if (!trimmed || text.includes("\n")) return text;
-  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return text;
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[") && !trimmed.startsWith("/")) return text;
 
   try {
-    return JSON.stringify(JSON.parse(trimmed), null, indentSize.value);
+    return JSON.stringify(parseJson(trimmed), null, indentSize.value);
   } catch {
     return text;
   }
@@ -417,6 +498,9 @@ function handlePaste(e: ClipboardEvent) {
   const ta = textareaRef.value;
   const pasted = e.clipboardData?.getData("text");
   if (!ta || !pasted) return;
+
+  // 设置面板控制是否自动格式化粘贴内容
+  if (!appSettings.jsonAutoFormat) return;
 
   const formatted = formatPastedJson(pasted);
   if (formatted === pasted) return;
@@ -456,11 +540,13 @@ function undo() {
 // ========== 缩进切换 ==========
 function changeIndent(size: number) {
   indentSize.value = size;
+  // 同步到全局设置
+  updateAppSetting("jsonIndent", size);
   const trimmed = input.value.trim();
   if (!trimmed) return;
   try {
     pushHistory();
-    input.value = JSON.stringify(JSON.parse(trimmed), null, size);
+    input.value = JSON.stringify(parseJson(trimmed), null, size);
     resetAfterOperation();
   } catch {}
 }
@@ -470,14 +556,32 @@ function zoomIn() { fontSize.value = Math.min(fontSize.value + 1, 24); }
 function zoomOut() { fontSize.value = Math.max(fontSize.value - 1, 10); }
 function zoomReset() { fontSize.value = 13; }
 
+// ========== 排序 Key ==========
+function sortObjectKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortObjectKeys);
+  if (obj !== null && typeof obj === "object") {
+    const sorted: Record<string, unknown> = {};
+    for (const k of Object.keys(obj as Record<string, unknown>).sort())
+      sorted[k] = sortObjectKeys((obj as Record<string, unknown>)[k]);
+    return sorted;
+  }
+  return obj;
+}
+
+function maybeSortKeys(obj: unknown): unknown {
+  return appSettings.jsonSortKeys ? sortObjectKeys(obj) : obj;
+}
+
 // ========== 工具操作 ==========
 function beautify() {
   try {
     pushHistory();
-    input.value = JSON.stringify(JSON.parse(input.value), null, indentSize.value);
+    const parsed = maybeSortKeys(parseJson(input.value));
+    input.value = JSON.stringify(parsed, null, indentSize.value);
     errorMsg.value = "";
     errorLine.value = -1;
     resetAfterOperation();
+    validateJson();
   } catch (e: unknown) {
     errorMsg.value = e instanceof Error ? e.message : "Invalid JSON";
   }
@@ -486,10 +590,12 @@ function beautify() {
 function minify() {
   try {
     pushHistory();
-    input.value = JSON.stringify(JSON.parse(input.value));
+    const parsed = maybeSortKeys(parseJson(input.value));
+    input.value = JSON.stringify(parsed);
     errorMsg.value = "";
     errorLine.value = -1;
     resetAfterOperation();
+    validateJson();
   } catch (e: unknown) {
     errorMsg.value = e instanceof Error ? e.message : "Invalid JSON";
   }
@@ -534,7 +640,7 @@ function convertKeyCase(caseType: KeyCase) {
   if (!trimmed) return;
   try {
     pushHistory();
-    const obj = JSON.parse(trimmed);
+    const obj = parseJson(trimmed);
     const fns: Record<KeyCase, (s: string) => string> = {
       camel: toCamelCase,
       snake: toSnakeCase,
@@ -572,10 +678,10 @@ function toggleEscape() {
   if (isEscaped) {
     // 反转义
     try {
-      const result = JSON.parse(trimmed);
+      const result = safeParse(trimmed);
       if (typeof result === "string") {
         try {
-          input.value = JSON.stringify(JSON.parse(result), null, indentSize.value);
+          input.value = JSON.stringify(safeParse(result), null, indentSize.value);
         } catch {
           input.value = result;
         }
@@ -586,7 +692,7 @@ function toggleEscape() {
   } else {
     // 转义：先压缩再转义
     try {
-      const compact = JSON.stringify(JSON.parse(trimmed));
+      const compact = JSON.stringify(safeParse(trimmed));
       input.value = JSON.stringify(compact);
     } catch {
       input.value = JSON.stringify(trimmed);
@@ -671,6 +777,16 @@ function injectActions() {
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>
           撤回
         </button>
+        <div class="flex items-center gap-1">
+          <label class="flex items-center gap-1 text-[10px] text-tertiary cursor-pointer">
+            <input
+              v-model="useJson5"
+              type="checkbox"
+              class="w-2.5 h-2.5 accent-blue-500 rounded"
+            />
+            JSON5
+          </label>
+        </div>
         <div class="flex items-center gap-1">
           <span class="text-[10px] text-tertiary">Indent</span>
           <button
@@ -896,6 +1012,11 @@ pre :deep(.jh-bool) {
 }
 pre :deep(.jh-null) {
   color: v-bind('currentTheme.nullVal');
+}
+pre :deep(.jh-comment) {
+  color: #6a737d;
+  font-style: italic;
+  opacity: 0.8;
 }
 pre :deep(.jh-current-line) {
   background: v-bind('currentTheme.lineBg');
