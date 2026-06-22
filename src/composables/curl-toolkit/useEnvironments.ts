@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import type { Environment } from "./types";
 
 const STORAGE_KEY = "curl-toolkit-environments";
@@ -41,19 +41,12 @@ function saveToStorage() {
 loadFromStorage();
 
 export function useEnvironments() {
-  const activeEnv = ref<Environment | null>(null);
-
-  // 计算当前激活的环境
-  function updateActiveEnv() {
-    activeEnv.value =
-      environments.value.find((e) => e.id === selectedEnvId.value) || null;
-  }
-
-  updateActiveEnv();
+  const activeEnv = computed<Environment | null>(() =>
+    environments.value.find((e) => e.id === selectedEnvId.value) || null
+  );
 
   function selectEnv(id: string | null) {
     selectedEnvId.value = id;
-    updateActiveEnv();
   }
 
   function addEnv(env: Omit<Environment, "id" | "isActive">) {
@@ -71,7 +64,6 @@ export function useEnvironments() {
     environments.value = environments.value.filter((e) => e.id !== id);
     if (selectedEnvId.value === id) {
       selectedEnvId.value = null;
-      updateActiveEnv();
     }
     saveToStorage();
   }

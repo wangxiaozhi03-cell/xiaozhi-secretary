@@ -192,9 +192,9 @@ export function useMavenBuilder() {
         filters: [{ name: 'JSON', extensions: ['json'] }],
         title: '导入服务器配置',
       })
-      if (!selected) return
+      if (!selected || typeof selected !== 'string') return
       const { readTextFile } = await import('@tauri-apps/plugin-fs')
-      const content = await readTextFile(selected as string)
+      const content = await readTextFile(selected)
       const parsed = JSON.parse(content)
       const arr = Array.isArray(parsed) ? parsed : [parsed]
       let count = 0
@@ -423,7 +423,7 @@ export function useMavenBuilder() {
 
       // 如果设置了自动上传，上传到服务器
       if (success && autoUpload.value && selectedServerIds.value.length > 0 && copiedFilePaths.length > 0) {
-        upload()
+        upload().catch(e => buildLogs.value.push(`❌ 自动上传失败: ${e}`))
       }
     })
 

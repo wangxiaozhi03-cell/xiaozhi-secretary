@@ -238,10 +238,10 @@ export function useMdEditor() {
         multiple: false,
         filters: [{ name: "Markdown", extensions: ["md", "markdown", "txt"] }],
       });
-      if (selected) {
-        const text = await readTextFile(selected as string);
+      if (selected && typeof selected === 'string') {
+        const text = await readTextFile(selected);
         content.value = text;
-        currentFilePath.value = selected as string;
+        currentFilePath.value = selected;
         isSaved.value = true;
         lastSavedAt.value = new Date();
         pushHistory();
@@ -268,7 +268,7 @@ export function useMdEditor() {
     stopAutoSave();
     autoSaveTimer = setInterval(() => {
       if (!isSaved.value && currentFilePath.value) {
-        saveToFile();
+        saveToFile().catch(console.error);
       }
     }, interval);
   }

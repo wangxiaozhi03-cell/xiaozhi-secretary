@@ -5,7 +5,7 @@ const glassIntensity = ref(70);
 try {
   const saved = localStorage.getItem("glass-intensity");
   if (saved !== null) {
-    glassIntensity.value = Math.max(0, Math.min(100, parseInt(saved)));
+    glassIntensity.value = Math.max(0, Math.min(100, parseInt(saved, 10)));
   }
 } catch {}
 

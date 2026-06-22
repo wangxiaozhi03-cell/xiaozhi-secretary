@@ -142,7 +142,13 @@ export async function rsaGenerateKeys(length: 1024 | 2048 | 4096 = 2048): Promis
 }
 
 function pemEncode(buffer: ArrayBuffer, label: string): string {
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 8192;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  const base64 = btoa(binary);
   const lines = base64.match(/.{1,64}/g) || [];
   return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----`;
 }

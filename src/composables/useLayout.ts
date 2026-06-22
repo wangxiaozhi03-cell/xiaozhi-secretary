@@ -21,10 +21,15 @@ export function useLayout(images: () => ImageItem[], pageSettings: () => PageSet
   /** 当前选中的布局 */
   const activeLayout = computed<LayoutDefinition>(() => {
     const layouts = availableLayouts.value;
+    const idx = activeLayoutIndex.value >= layouts.length ? 0 : activeLayoutIndex.value;
+    return layouts[idx] || layouts[0];
+  });
+
+  // 可用布局变化时，确保索引不越界
+  watch(availableLayouts, (layouts) => {
     if (activeLayoutIndex.value >= layouts.length) {
       activeLayoutIndex.value = 0;
     }
-    return layouts[activeLayoutIndex.value] || layouts[0];
   });
 
   /** 选择布局 */

@@ -102,14 +102,18 @@ function handleParseSql() {
   }
 }
 
-// 生成代码
+// 生成代码（带防抖和竞态保护）
+let generateSeq = 0
 async function handleGenerate() {
   if (tables.value.length === 0) return
 
+  const seq = ++generateSeq
   isGenerating.value = true
 
-  // 模拟生成延迟（实际应该很快）
   await new Promise(resolve => setTimeout(resolve, 300))
+
+  // 如果期间有新的生成请求，跳过本次
+  if (seq !== generateSeq) return
 
   generationResult.value = generateCode(tables.value, config.value)
   selectedFileIndex.value = 0

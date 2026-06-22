@@ -105,8 +105,9 @@ export async function exportDocx(markdown: string, title: string) {
     const bytes = new Uint8Array(buffer);
 
     let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
+    const chunk = 8192;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
     }
     const b64 = btoa(binary);
 

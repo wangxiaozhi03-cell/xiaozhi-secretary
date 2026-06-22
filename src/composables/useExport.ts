@@ -141,9 +141,10 @@ export function useExport(
       ctx.restore();
     }
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
-        blob!.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
+        if (!blob) { reject(new Error("Canvas toBlob failed")); return; }
+        blob.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
       }, "image/png");
     });
   }

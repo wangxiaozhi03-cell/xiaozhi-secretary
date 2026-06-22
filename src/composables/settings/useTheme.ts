@@ -39,11 +39,12 @@ function applyAccentColor(color: AccentColor) {
 
 // Initialize from localStorage
 try {
+  const validModes: ThemeMode[] = ["light", "dark", "system"];
   const savedTheme = localStorage.getItem("theme-mode") as ThemeMode | null;
-  if (savedTheme) themeMode.value = savedTheme;
+  if (savedTheme && validModes.includes(savedTheme)) themeMode.value = savedTheme;
 
   const savedColor = localStorage.getItem("accent-color") as AccentColor | null;
-  if (savedColor) accentColor.value = savedColor;
+  if (savedColor && ACCENT_COLORS[savedColor]) accentColor.value = savedColor;
 } catch {}
 
 // Apply on load

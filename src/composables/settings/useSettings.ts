@@ -86,12 +86,14 @@ function applySettings() {
 loadSettings();
 applySettings();
 
-// Watch for changes
+// Watch for changes（防抖 200ms）
+let settingsSaveTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
   () => settings,
   () => {
-    saveSettings();
     applySettings();
+    if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
+    settingsSaveTimer = setTimeout(() => { saveSettings(); }, 200);
   },
   { deep: true }
 );

@@ -52,11 +52,14 @@ const isDragging = ref(false);
 const containerRef = ref<HTMLDivElement>();
 
 // 拖拽调整分隔线
+let dragMouseMove: ((e: MouseEvent) => void) | null = null;
+let dragMouseUp: (() => void) | null = null;
+
 function startDrag(e: MouseEvent) {
   isDragging.value = true;
   e.preventDefault();
 
-  const onMouseMove = (moveE: MouseEvent) => {
+  dragMouseMove = (moveE: MouseEvent) => {
     if (!containerRef.value || !isDragging.value) return;
     const rect = containerRef.value.getBoundingClientRect();
     const x = moveE.clientX - rect.left;
@@ -64,14 +67,16 @@ function startDrag(e: MouseEvent) {
     splitPosition.value = Math.min(Math.max(percent, 20), 80);
   };
 
-  const onMouseUp = () => {
+  dragMouseUp = () => {
     isDragging.value = false;
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
+    if (dragMouseMove) document.removeEventListener("mousemove", dragMouseMove);
+    if (dragMouseUp) document.removeEventListener("mouseup", dragMouseUp);
+    dragMouseMove = null;
+    dragMouseUp = null;
   };
 
-  document.addEventListener("mousemove", onMouseMove);
-  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("mousemove", dragMouseMove);
+  document.addEventListener("mouseup", dragMouseUp);
 }
 
 // 操作按钮图标映射（已废弃）
@@ -139,6 +144,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeydown);
+  if (dragMouseMove) document.removeEventListener("mousemove", dragMouseMove);
+  if (dragMouseUp) document.removeEventListener("mouseup", dragMouseUp);
 });
 
 // JSON 状态检测
@@ -182,9 +189,9 @@ async function importJson() {
         { name: "JSON", extensions: ["json", "txt", "log"] },
       ],
     });
-    if (selected) {
+    if (selected && typeof selected === 'string') {
       const { readTextFile } = await import("@tauri-apps/plugin-fs");
-      const content = await readTextFile(selected as string);
+      const content = await readTextFile(selected);
       mainJson.value = content;
     }
   } catch (err) {

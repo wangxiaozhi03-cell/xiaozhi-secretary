@@ -146,7 +146,16 @@ export function useNameCase() {
 
   // ========== 复制功能 ==========
   function copyToClipboard(text: string): void {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => {
+      // fallback: 临时 textarea
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;left:-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    });
   }
 
   function copyAllResults(style: NameStyle): void {

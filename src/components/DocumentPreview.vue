@@ -488,7 +488,7 @@ onUnmounted(() => {
             isEdgeToEdge ? '' : 'rounded',
             dragSourceSlot === slotIdx ? 'opacity-40' : '',
             dragTargetSlot === slotIdx ? 'ring-2 ring-blue-500 ring-dashed' : '',
-            isEdgeToEdge ? 'cursor-grab' : 'cursor-grab',
+            'cursor-grab',
             panSlotIdx === slotIdx ? 'cursor-grabbing' : '',
           ]"
           :style="getSlotStyle(currentPageData.slots[slotIdx])"
