@@ -82,10 +82,19 @@ export function useMavenBuilder() {
   let unlistenLog: (() => void) | null = null
   let unlistenDone: (() => void) | null = null
 
-  // 持久化
-  watch(projects, (v) => saveProjects(v), { deep: true })
-  watch(servers, (v) => saveServers(v), { deep: true })
-  watch(mavenConfig, (v) => saveMavenConfig(v), { deep: true })
+  // 持久化（防抖：500ms 内只保存一次）
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  function debouncedSave() {
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
+      saveProjects(projects.value)
+      saveServers(servers.value)
+      saveMavenConfig(mavenConfig.value)
+    }, 500)
+  }
+  watch(projects, debouncedSave, { deep: true })
+  watch(servers, debouncedSave, { deep: true })
+  watch(mavenConfig, debouncedSave, { deep: true })
 
   // 当前选中的上传服务器
   const activeServers = computed(() =>
@@ -461,6 +470,12 @@ export function useMavenBuilder() {
     copiedFilePaths = []
   }
 
+  // 清理事件监听器（组件卸载时调用）
+  function cleanup() {
+    if (unlistenLog) { unlistenLog(); unlistenLog = null }
+    if (unlistenDone) { unlistenDone(); unlistenDone = null }
+  }
+
   return {
     // 数据
     projects,
@@ -511,5 +526,6 @@ export function useMavenBuilder() {
     upload,
     build,
     resetBuild,
+    cleanup,
   }
 }

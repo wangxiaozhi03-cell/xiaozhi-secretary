@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useMavenBuilder } from '../../composables/java-packager/useMavenBuilder'
 import ProjectSelector from './panels/ProjectSelector.vue'
 import SettingsDialog from './panels/SettingsDialog.vue'
@@ -10,6 +10,10 @@ const b = useMavenBuilder()
 
 onMounted(() => {
   b.checkMaven()
+})
+
+onUnmounted(() => {
+  b.cleanup()
 })
 </script>
 

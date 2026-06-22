@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ImageItem, PageSettings, PageLayout, ImageSlot } from "@/types";
 import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onUnmounted } from "vue";
 import { usePageDrag } from "@/composables/usePageDrag";
 
 const props = defineProps<{
@@ -113,6 +113,13 @@ watch(() => dragState.value, (newVal) => {
     }
     setHoverPage(null);
     setHoverSlot(null);
+  }
+});
+
+onUnmounted(() => {
+  if (checkInterval) {
+    clearInterval(checkInterval);
+    checkInterval = null;
   }
 });
 </script>

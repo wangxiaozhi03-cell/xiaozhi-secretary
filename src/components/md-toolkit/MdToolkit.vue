@@ -2,26 +2,33 @@
 import { ref, computed, onMounted, onUnmounted, provide } from "vue";
 import { MdEditor, config } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
-import screenfull from "screenfull";
-import prettier from "prettier";
-import parserMarkdown from "prettier/plugins/markdown";
-import mermaid from "mermaid";
-import katex from "katex";
-import "katex/dist/katex.min.css";
 import MdOutlinePanel from "./MdOutlinePanel.vue";
 import { useMdEditor } from "../../composables/md-toolkit/useMdEditor";
 import { exportHtml, copyHtml, copyMarkdown } from "../../composables/md-toolkit/useMdExport";
 import type { MdViewMode } from "../../composables/md-toolkit/types";
 
-// 配置 md-editor-v3 外部依赖
-config({
-  editorExtensions: {
-    screenfull: { instance: screenfull },
-    prettier: { prettierInstance: prettier, parserMarkdownInstance: parserMarkdown },
-    mermaid: { instance: mermaid },
-    katex: { instance: katex },
-  },
-});
+// 懒加载重型依赖（首次使用时才加载）
+let extensionsLoaded = false;
+async function loadExtensions() {
+  if (extensionsLoaded) return;
+  extensionsLoaded = true;
+  const [screenfull, prettier, parserMarkdown, mermaid, katex] = await Promise.all([
+    import("screenfull"),
+    import("prettier"),
+    import("prettier/plugins/markdown"),
+    import("mermaid"),
+    import("katex"),
+  ]);
+  await import("katex/dist/katex.min.css");
+  config({
+    editorExtensions: {
+      screenfull: { instance: screenfull.default },
+      prettier: { prettierInstance: prettier.default, parserMarkdownInstance: parserMarkdown.default },
+      mermaid: { instance: mermaid.default },
+      katex: { instance: katex.default },
+    },
+  });
+}
 
 const {
   content,
@@ -145,14 +152,17 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 let themeObserver: MutationObserver | null = null;
+const editorReady = ref(false);
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener("keydown", handleKeydown);
   startAutoSave();
   loadRecentFiles();
   updateTheme();
   themeObserver = new MutationObserver(updateTheme);
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  await loadExtensions();
+  editorReady.value = true;
 });
 
 onUnmounted(() => {
@@ -236,7 +246,11 @@ onUnmounted(() => {
 
       <!-- 编辑器 -->
       <div class="flex-1 min-w-0 overflow-hidden">
+        <div v-if="!editorReady" class="flex items-center justify-center h-full text-tertiary text-sm">
+          加载编辑器中...
+        </div>
         <MdEditor
+          v-else
           ref="mdEditorRef"
           :model-value="content"
           :theme="editorTheme"

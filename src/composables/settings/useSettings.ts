@@ -88,7 +88,7 @@ applySettings();
 
 // Watch for changes
 watch(
-  () => ({ ...settings }),
+  () => settings,
   () => {
     saveSettings();
     applySettings();

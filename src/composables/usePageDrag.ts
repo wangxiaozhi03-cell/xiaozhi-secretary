@@ -19,6 +19,20 @@ const isOverThumbnails = ref(false);
 const hoverPageIndex = ref<number | null>(null);
 const hoverSlotIndex = ref<number | null>(null);
 
+// 安全网：全局 pointerup/pointercancel 确保拖拽状态不会残留
+function _safetyCleanup() {
+  if (dragState.value) {
+    dragState.value = null;
+    isOverThumbnails.value = false;
+    hoverPageIndex.value = null;
+    hoverSlotIndex.value = null;
+  }
+}
+if (typeof document !== "undefined") {
+  document.addEventListener("pointerup", _safetyCleanup, { passive: true });
+  document.addEventListener("pointercancel", _safetyCleanup, { passive: true });
+}
+
 export function usePageDrag() {
   function startDrag(state: PageDragState) {
     dragState.value = state;
