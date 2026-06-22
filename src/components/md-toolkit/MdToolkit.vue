@@ -10,7 +10,6 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import MdOutlinePanel from "./MdOutlinePanel.vue";
 import { useMdEditor } from "../../composables/md-toolkit/useMdEditor";
-import { computeStats } from "../../composables/md-toolkit/useMarkdown";
 import { exportHtml, copyHtml, copyMarkdown } from "../../composables/md-toolkit/useMdExport";
 import type { MdViewMode } from "../../composables/md-toolkit/types";
 
@@ -27,13 +26,9 @@ config({
 const {
   content,
   isSaved,
-  recentFiles,
   saveToFile,
-  saveAsToFile,
   loadFromFile,
-  loadRecentFile,
   loadRecentFiles,
-  removeRecentFile,
   newDocument,
   onContentChange,
   startAutoSave,
@@ -47,12 +42,6 @@ provide("mdContent", content);
 const mode = ref<MdViewMode>("split");
 const showOutline = ref(false);
 const mdEditorRef = ref<InstanceType<typeof MdEditor>>();
-
-const tabs = [
-  { id: "editor", label: "编辑器", shortcut: "⌘1" },
-  { id: "preview", label: "预览", shortcut: "⌘2" },
-  { id: "split", label: "分屏", shortcut: "⌘3" },
-];
 
 // 编辑器模式映射
 const editorPreview = computed(() => mode.value === "split");
@@ -100,9 +89,6 @@ function handleHtmlChanged(html: string) {
   currentHtml.value = html;
 }
 
-// 统计
-const stats = computed(() => computeStats(content.value));
-
 // 复制
 async function handleCopy() {
   if (mode.value === "preview") {
@@ -110,11 +96,6 @@ async function handleCopy() {
   } else {
     await copyMarkdown(content.value);
   }
-}
-
-// 复制为 HTML
-async function handleCopyAsHtml() {
-  await copyHtml(currentHtml.value);
 }
 
 // 导出

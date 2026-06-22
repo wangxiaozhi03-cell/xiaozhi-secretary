@@ -10,7 +10,6 @@ import DiffPanel from "./panels/DiffPanel.vue";
 import HistoryPanel from "./panels/HistoryPanel.vue";
 import { useJsonQuery } from "../../composables/json-toolkit/useJsonQuery";
 import { useJsonHistory, type HistoryEntry } from "../../composables/json-toolkit/useJsonHistory";
-import { useNestedJson } from "../../composables/json-toolkit/useNestedJson";
 import type { ToolAction } from "../../composables/json-toolkit/types";
 import { safeParse } from "../../composables/json-toolkit/safeParse";
 
@@ -23,15 +22,6 @@ const mainJson = ref("");
 const showHistory = ref(false);
 const { addEntry } = useJsonHistory();
 const { queryExpr, queryMode, queryResults, queryError, resultCount, executeQuery, clearQuery } = useJsonQuery();
-const { expandJsonString } = useNestedJson();
-
-// 嵌套 JSON 展开
-function expandNested() {
-  const result = expandJsonString(mainJson.value);
-  if (result.count > 0) {
-    mainJson.value = result.result;
-  }
-}
 
 // 保存到历史
 function saveToHistory() {
