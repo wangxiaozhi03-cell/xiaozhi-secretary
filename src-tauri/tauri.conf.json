@@ -1,6 +1,6 @@
 {
   "productName": "XiaoZhiSecretary",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "identifier": "com.xiaozhi-secretary.app",
   "build": {
     "frontendDist": "../dist",
