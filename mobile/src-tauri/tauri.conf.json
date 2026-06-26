@@ -1,7 +1,7 @@
 {
   "productName": "图片排版",
   "version": "0.1.0",
-  "identifier": "com.xiaozhi.image_layout",
+  "identifier": "com.xiaozhi.image-layout",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1421",
