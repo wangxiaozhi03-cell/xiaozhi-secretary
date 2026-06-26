@@ -9,7 +9,7 @@
     "core:window:allow-set-focus",
     "core:window:allow-close",
     "core:window:allow-set-fullscreen",
-    "core:window:allow-exit-fullscreen",
+    "core:window:allow-set-simple-fullscreen",
     "dialog:default",
     "dialog:allow-open",
     "dialog:allow-save",
