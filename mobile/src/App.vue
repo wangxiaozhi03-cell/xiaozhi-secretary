@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
-import type { LayoutKey } from "@types/index";
-import { useImages } from "@composables/useImages";
-import { usePageSettings } from "@composables/usePageSettings";
-import { useLayout } from "@composables/useLayout";
-import { useExport } from "@composables/useExport";
-import { useOverrides, computePageRanges } from "@composables/useOverrides";
+import type { LayoutKey } from "@/types/index";
+import { useImages } from "@/composables/useImages";
+import { usePageSettings } from "@/composables/usePageSettings";
+import { useLayout } from "@/composables/useLayout";
+import { useExport } from "@/composables/useExport";
+import { useOverrides, computePageRanges } from "@/composables/useOverrides";
 
 // 移动端组件
 import MobileHomePage from "./components/MobileHomePage.vue";
@@ -30,7 +30,7 @@ const showToolPanel = ref(false);
 const currentTool = ref<string>("");
 
 // 核心逻辑（复用桌面端 composables）
-const { images, removeImage, removeLastImage, openFileDialog, reorderImages, addImages } = useImages();
+const { images, removeImage, removeLastImage, openFileDialog, reorderImages } = useImages();
 const { settings, setImagesPerPage } = usePageSettings();
 const {
   availableLayouts,
@@ -109,15 +109,6 @@ function handleDropOnSlot(fromPage: number, fromSlot: number, toPage: number, to
 
   if (targetAbsIndex === fromImageIdx) return;
   reorderImages(fromImageIdx, targetAbsIndex);
-}
-
-function toggleToolPanel(tab: ToolTabKey) {
-  if (activeToolTab.value === tab && showToolPanel.value) {
-    showToolPanel.value = false;
-  } else {
-    activeToolTab.value = tab;
-    showToolPanel.value = true;
-  }
 }
 
 function closeToolPanel() {

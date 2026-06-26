@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PageSettings, LayoutKey } from "@types/index";
+import type { PageSettings, LayoutKey } from "@/types/index";
 import { computed } from "vue";
 
 const props = defineProps<{

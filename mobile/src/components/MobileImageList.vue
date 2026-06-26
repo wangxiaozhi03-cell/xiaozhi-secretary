@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ImageItem } from "@types/index";
+import type { ImageItem } from "@/types/index";
 
 defineProps<{
   images: ImageItem[];

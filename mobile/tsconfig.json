@@ -17,14 +17,20 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@composables/*": ["../src/composables/*"],
-      "@layouts/*": ["../src/layouts/*"],
-      "@types/*": ["../src/types/*"],
+      "@/types": ["../src/types/index.ts"],
       "@/types/*": ["../src/types/*"],
+      "@/layouts": ["../src/layouts/index.ts"],
       "@/layouts/*": ["../src/layouts/*"],
       "@/composables/*": ["../src/composables/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "../src/composables/**/*.ts", "../src/layouts/**/*.ts", "../src/types/**/*.ts"],
+  "exclude": [
+    "../src/composables/curl-toolkit/**",
+    "../src/layouts/layouts-4.ts",
+    "../src/layouts/layouts-6.ts",
+    "../src/layouts/layouts-9.ts",
+    "../src/layouts/registry.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

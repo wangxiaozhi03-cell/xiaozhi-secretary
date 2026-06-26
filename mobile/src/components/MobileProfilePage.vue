@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useThemeStyle, type ThemeStyle, type ThemeMode } from "../composables/useThemeStyle";
+import { useThemeStyle, type ThemeMode } from "../composables/useThemeStyle";
 
 const {
   currentThemeStyle,

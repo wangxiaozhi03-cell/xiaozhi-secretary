@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LayoutDefinition, PageSettings, LayoutKey } from "@types/index";
+import type { LayoutDefinition, PageSettings, LayoutKey } from "@/types/index";
 import MobileLayoutThumbnail from "./MobileLayoutThumbnail.vue";
 import { computed } from "vue";
 

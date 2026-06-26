@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { ref } from "vue";
 
 export type ThemeStyle = "frost" | "mint" | "warm" | "lavender" | "sakura" | "ocean";
 export type ThemeMode = "light" | "dark" | "system";

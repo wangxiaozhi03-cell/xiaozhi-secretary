@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { PageSettings, PageLayout, ImageItem } from "@types/index";
-import { getPaperDimensions, PAGE_MARGIN_MM } from "@types/papers";
+import type { PageSettings, PageLayout, ImageItem } from "@/types/index";
+import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
 import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
@@ -47,13 +47,8 @@ function getThumbImageStyle(page: PageLayout, slotIdx: number) {
   // 计算 cover 模式下的图片样式
   const slotW = slot.width * scaleX;
   const slotH = slot.height * scaleY;
-  const imgAspect = img.width / img.height;
-  const slotAspect = slotW / slotH;
 
-  let objectFit = "contain";
-  if (isEdgeToEdge) {
-    objectFit = "cover";
-  }
+  const objectFit: "contain" | "cover" = isEdgeToEdge ? "cover" : "contain";
 
   return {
     position: "absolute" as const,
@@ -102,7 +97,7 @@ watch(() => props.currentPage, () => {
       <div class="relative w-full h-full bg-white">
         <!-- 渲染每张图片 -->
         <img
-          v-for="(slot, slotIdx) in page.slots"
+          v-for="(_slot, slotIdx) in page.slots"
           :key="slotIdx"
           :src="images[page.imageIndices[slotIdx]]?.thumbUrl"
           :alt="images[page.imageIndices[slotIdx]]?.name"

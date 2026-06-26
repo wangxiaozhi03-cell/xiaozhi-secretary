@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ImageItem, PageSettings, PageLayout, ImageSlot, PageOverrides, ImageOffset } from "@types/index";
-import { getPaperDimensions, PAGE_MARGIN_MM } from "@types/papers";
+import type { ImageItem, PageSettings, PageLayout, ImageSlot, PageOverrides, ImageOffset } from "@/types/index";
+import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
 import { computed, ref, onMounted, onUnmounted } from "vue";
 
 const props = defineProps<{
