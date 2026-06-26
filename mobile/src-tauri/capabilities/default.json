@@ -1,0 +1,33 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for the image layout app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-close",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-exit-fullscreen",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-ask",
+    "dialog:allow-message",
+    "fs:default",
+    "fs:allow-read",
+    "fs:allow-read-text-file",
+    "fs:allow-write",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-exists",
+    "fs:allow-mkdir",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "**" }
+      ]
+    }
+  ]
+}
