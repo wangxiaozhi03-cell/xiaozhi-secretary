@@ -1,9 +1,11 @@
 import type { ImageItem, PageSettings, PageLayout, PageOverrides } from "@/types";
 import { getPaperDimensions, PAGE_MARGIN_MM } from "@/types/papers";
-import { invoke } from "@tauri-apps/api/core";
-import { save, message } from "@tauri-apps/plugin-dialog";
-import { writeFile } from "@tauri-apps/plugin-fs";
 import { PDFDocument } from "pdf-lib";
+
+/** 检测是否在 Tauri 环境中 */
+function isTauri(): boolean {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
 
 function calcFit(
   slotW: number, slotH: number,
@@ -36,12 +38,34 @@ export function useExport(
     return btoa(binary);
   }
 
+  /** 浏览器环境：通过下载链接保存文件 */
+  function downloadFile(filename: string, data: Uint8Array, mimeType: string) {
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function safeWriteFile(path: string, data: Uint8Array) {
-    try {
-      await writeFile(path, data);
-    } catch {
-      const b64 = toBase64(data);
-      await invoke("write_base64_file", { request: { path, base64_data: b64 } });
+    if (isTauri()) {
+      try {
+        const { writeFile } = await import("@tauri-apps/plugin-fs");
+        await writeFile(path, data);
+      } catch {
+        const { invoke } = await import("@tauri-apps/api/core");
+        const b64 = toBase64(data);
+        await invoke("write_base64_file", { request: { path, base64_data: b64 } });
+      }
+    } else {
+      // 浏览器环境：根据路径判断 MIME 类型
+      const ext = path.split(".").pop()?.toLowerCase();
+      const mime = ext === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      downloadFile(path.split("/").pop() || path, data, mime);
     }
   }
 
@@ -154,12 +178,22 @@ export function useExport(
     const imgList = images();
     if (imgList.length === 0) return;
 
-    const filePath = await save({
-      title: "导出 PDF",
-      defaultPath: "document.pdf",
-      filters: [{ name: "PDF", extensions: ["pdf"] }],
-    });
-    if (!filePath) return;
+    // 浏览器环境：使用 prompt 输入文件名
+    let filePath = "document.pdf";
+    if (isTauri()) {
+      const { save } = await import("@tauri-apps/plugin-dialog");
+      const selected = await save({
+        title: "导出 PDF",
+        defaultPath: "document.pdf",
+        filters: [{ name: "PDF", extensions: ["pdf"] }],
+      });
+      if (!selected) return;
+      filePath = selected;
+    } else {
+      const filename = prompt("请输入文件名:", "document.pdf");
+      if (!filename) return;
+      filePath = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
+    }
 
     try {
       const s = settings();
@@ -183,10 +217,20 @@ export function useExport(
 
       const pdfBytes = await pdfDoc.save();
       await safeWriteFile(filePath, pdfBytes);
-      await message("PDF 导出成功！", { title: "ShibaSecretary" });
+      if (isTauri()) {
+        const { message } = await import("@tauri-apps/plugin-dialog");
+        await message("PDF 导出成功！", { title: "ShibaSecretary" });
+      } else {
+        alert("PDF 导出成功！");
+      }
     } catch (e) {
       console.error("PDF 导出失败:", e);
-      await message(`PDF 导出失败: ${String(e)}`, { title: "错误" });
+      if (isTauri()) {
+        const { message } = await import("@tauri-apps/plugin-dialog");
+        await message(`PDF 导出失败: ${String(e)}`, { title: "错误" });
+      } else {
+        alert(`PDF 导出失败: ${String(e)}`);
+      }
     }
   }
 
@@ -195,12 +239,22 @@ export function useExport(
     const imgList = images();
     if (imgList.length === 0) return;
 
-    const filePath = await save({
-      title: "导出 Word",
-      defaultPath: "document.docx",
-      filters: [{ name: "Word", extensions: ["docx"] }],
-    });
-    if (!filePath) return;
+    // 浏览器环境：使用 prompt 输入文件名
+    let filePath = "document.docx";
+    if (isTauri()) {
+      const { save } = await import("@tauri-apps/plugin-dialog");
+      const selected = await save({
+        title: "导出 Word",
+        defaultPath: "document.docx",
+        filters: [{ name: "Word", extensions: ["docx"] }],
+      });
+      if (!selected) return;
+      filePath = selected;
+    } else {
+      const filename = prompt("请输入文件名:", "document.docx");
+      if (!filename) return;
+      filePath = filename.endsWith(".docx") ? filename : `${filename}.docx`;
+    }
 
     try {
       const s = settings();
@@ -322,10 +376,20 @@ ${rels}
 
       const docxBytes = await zip.generate();
       await safeWriteFile(filePath, docxBytes);
-      await message("Word 导出成功！", { title: "ShibaSecretary" });
+      if (isTauri()) {
+        const { message } = await import("@tauri-apps/plugin-dialog");
+        await message("Word 导出成功！", { title: "ShibaSecretary" });
+      } else {
+        alert("Word 导出成功！");
+      }
     } catch (e) {
       console.error("Word 导出失败:", e);
-      await message(`Word 导出失败: ${String(e)}`, { title: "错误" });
+      if (isTauri()) {
+        const { message } = await import("@tauri-apps/plugin-dialog");
+        await message(`Word 导出失败: ${String(e)}`, { title: "错误" });
+      } else {
+        alert(`Word 导出失败: ${String(e)}`);
+      }
     }
   }
 

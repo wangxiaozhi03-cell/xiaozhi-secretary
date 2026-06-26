@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "ohos-module-entry": {
+    "SELECT_TARGET": "default",
+    "MODULE_BUILD_DIR": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build",
+    "TARGETS": {
+      "default": {
+        "SOURCE_ROOT": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/src/main",
+        "RESOURCES_PATH": [
+          "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/src/main/resources"
+        ],
+        "BUILD_PATH": {
+          "OUTPUT_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/outputs/default",
+          "INTERMEDIA_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates",
+          "JS_ASSETS_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/loader_out/default",
+          "JS_LITE_ASSETS_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/loader_out_lite/default",
+          "RES_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/res/default",
+          "RES_PROFILE_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/res/default/resources/base/profile",
+          "ETS_SUPER_VISUAL_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/cache/default/default@CompileArkTS/esmodule",
+          "JS_SUPER_VISUAL_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/cache/default/default@CompileJS/jsbundle",
+          "WORKER_LOADER": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/loader/default/loader.json",
+          "MANIFEST_JSON": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/manifest/default",
+          "OUTPUT_METADATA_JSON": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/hap_metadata/default/output_metadata.json",
+          "SOURCE_MAP_DIR": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry/build/default/intermediates/source_map/default"
+        },
+        "BUILD_OPTION": {
+          "debuggable": true
+        }
+      }
+    },
+    "BUILD_OPTION": {
+      "default-default": {
+        "debuggable": true,
+        "copyFrom": "default"
+      }
+    },
+    "BUILD_PROFILE_OPT": {
+      "apiType": "stageMode",
+      "buildOption": {},
+      "targets": [
+        {
+          "name": "default",
+          "runtimeOS": "HarmonyOS"
+        }
+      ]
+    },
+    "BUILD_CACHE_DIR": ""
+  },
+  "ohos-project": {
+    "SELECT_PRODUCT_NAME": "default",
+    "MODULE_BUILD_DIR": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/build",
+    "BUNDLE_NAME": "com.xiaozhi.imagelayout",
+    "VERSION_CODE": 1000000,
+    "VERSION_NAME": "1.0.0",
+    "BUILD_PATH": {
+      "OUTPUT_PATH": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/build/outputs/default"
+    },
+    "MODULES": [
+      {
+        "name": "entry",
+        "srcPath": "/Users/wzq/workspace/projects/me/document-generator/harmonyos/entry",
+        "targets": [
+          {
+            "name": "default",
+            "applyToProducts": [
+              "default"
+            ]
+          }
+        ],
+        "belongProjectPath": "/Users/wzq/workspace/projects/me/document-generator/harmonyos"
+      }
+    ],
+    "PROFILE_OPT": {
+      "app": {
+        "signingConfigs": [
+          {
+            "name": "default",
+            "type": "HarmonyOS",
+            "material": {
+              "certpath": "/Users/wzq/.ohos/config/default_harmonyos_ygaPesTpTtpDVKpSs3RwptP5GQqboxvQVCmae4-c-Jc=.cer",
+              "keyAlias": "debugKey",
+              "keyPassword": "0000001BC15CD7EC8DD668434A6BC1CDF4F2D4E0ADEE68B416FB59DF5C7A129C84F804D235C2A28EE59EEB",
+              "profile": "/Users/wzq/.ohos/config/default_harmonyos_ygaPesTpTtpDVKpSs3RwptP5GQqboxvQVCmae4-c-Jc=.p7b",
+              "signAlg": "SHA256withECDSA",
+              "storeFile": "/Users/wzq/.ohos/config/default_harmonyos_ygaPesTpTtpDVKpSs3RwptP5GQqboxvQVCmae4-c-Jc=.p12",
+              "storePassword": "0000001B6F317B59412BA1C83B85451500F497C54FFD00A45582C22D0458C3BEF69541F3402E0F687484DA"
+            }
+          },
+          {
+            "name": "wzq",
+            "type": "HarmonyOS",
+            "material": {
+              "certpath": "/Users/wzq/.ohos/config/wzq_harmonyos_ygaPesTpTtpDVKpSs3RwptP5GQqboxvQVCmae4-c-Jc=.cer",
+              "keyAlias": "debugKey",
+              "keyPassword": "0000001BFA074BE8F0199528A2D6104D0BF1421EC87DCCA9A15072A7F10D34F181A681C573EBA11A08C52F",
+              "profile": "/Users/wzq/.ohos/config/wzq_harmonyos_ygaPesTpTtpDVKpSs3RwptP5GQqboxvQVCmae4-c-Jc=.p7b",
+              "signAlg": "SHA256withECDSA",
+              "storeFile": "/Users/wzq/.ohos/config/wzq_harmonyos_ygaPesTpTtpDVKpSs3RwptP5GQqboxvQVCmae4-c-Jc=.p12",
+              "storePassword": "0000001BC89AB51BD1E48401FA91E046F600E5AB859CDEA572B7B18EBF876061ED90477450F508D4449603"
+            }
+          }
+        ],
+        "products": [
+          {
+            "name": "default",
+            "signingConfig": "default",
+            "compatibleSdkVersion": "5.0.0(12)",
+            "runtimeOS": "HarmonyOS",
+            "targetSdkVersion": "26.0.0"
+          }
+        ],
+        "buildModeSet": [
+          {
+            "name": "debug"
+          },
+          {
+            "name": "release"
+          }
+        ]
+      },
+      "modules": [
+        {
+          "name": "entry",
+          "srcPath": "./entry",
+          "targets": [
+            {
+              "name": "default",
+              "applyToProducts": [
+                "default"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "CONFIG_PROPERTIES": {
+      "enableSignTask": true,
+      "skipNativeIncremental": false,
+      "hvigor.keepDependency": true
+    },
+    "OVERALL_PROJECT_PATHS": [
+      "/Users/wzq/workspace/projects/me/document-generator/harmonyos"
+    ],
+    "BUILD_CACHE_DIR": ""
+  }
+}
