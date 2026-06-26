@@ -239,7 +239,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload APK to Release
-        if: startsWith(github.ref, 'refs/tags/v') && steps.find-apk.outputs.apk_path != ''
+        if: needs.version.outputs.tag != '' && steps.find-apk.outputs.apk_path != ''
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.find-apk.outputs.apk_path }}
