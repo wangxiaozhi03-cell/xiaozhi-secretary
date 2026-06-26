@@ -23,6 +23,7 @@ export default defineConfig(async () => ({
       { find: "@tauri-apps/api", replacement: path.resolve(__dirname, "node_modules/@tauri-apps/api") },
       { find: "@tauri-apps/plugin-dialog", replacement: path.resolve(__dirname, "node_modules/@tauri-apps/plugin-dialog") },
       { find: "@tauri-apps/plugin-fs", replacement: path.resolve(__dirname, "node_modules/@tauri-apps/plugin-fs") },
+      { find: "pdf-lib", replacement: path.resolve(__dirname, "node_modules/pdf-lib") },
     ],
   },
   clearScreen: false,
