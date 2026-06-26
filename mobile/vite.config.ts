@@ -19,6 +19,10 @@ export default defineConfig(async () => ({
       { find: "@types", replacement: path.resolve(__dirname, "../src/types") },
       // 移动端自己的 @ 别名
       { find: "@", replacement: path.resolve(__dirname, "./src") },
+      // 确保父项目引用的 npm 包从 mobile 的 node_modules 解析
+      { find: "@tauri-apps/api", replacement: path.resolve(__dirname, "node_modules/@tauri-apps/api") },
+      { find: "@tauri-apps/plugin-dialog", replacement: path.resolve(__dirname, "node_modules/@tauri-apps/plugin-dialog") },
+      { find: "@tauri-apps/plugin-fs", replacement: path.resolve(__dirname, "node_modules/@tauri-apps/plugin-fs") },
     ],
   },
   clearScreen: false,
