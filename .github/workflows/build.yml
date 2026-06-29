@@ -204,14 +204,12 @@ jobs:
 
       - name: Init Tauri Android project
         working-directory: mobile
-        run: npx tauri android init
+        run: npx tauri android init --yes
 
       - name: Build Android APK
         working-directory: mobile
         run: npx tauri android build
         env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
 
       - name: Find APK files
@@ -241,8 +239,12 @@ jobs:
           echo "Found $COUNT APK file(s)"
           cat /tmp/apk_files.txt
           if [ "$COUNT" -gt 0 ]; then
-            # 用换行符分隔，GitHub Actions 支持 multiline 输出
-            printf '%s' "$(cat /tmp/apk_files.txt)" >> $GITHUB_OUTPUT
+            # GitHub Actions multiline output 语法
+            {
+              echo "apk_path<<EOF"
+              cat /tmp/apk_files.txt
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           else
             echo "::warning::No APK file found anywhere in mobile/!"
           fi

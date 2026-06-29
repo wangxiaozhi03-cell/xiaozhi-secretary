@@ -1,0 +1,9 @@
+package = "com.xiaozhi.image_layout"
+minSdkVersion = 26
+targetSdkVersion = 34
+compileSdkVersion = 34
+
+[application]
+usesCleartextTraffic = true
+icon = "@mipmap/ic_launcher"
+label = "图片排版"
