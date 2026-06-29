@@ -235,12 +235,14 @@ jobs:
               done
             fi
           done
-          # 全局搜索所有 APK
-          APK_PATH=$(find mobile -name "*.apk" -type f 2>/dev/null | head -5)
-          if [ -n "$APK_PATH" ]; then
-            echo "APK files found:"
-            echo "$APK_PATH"
-            echo "$APK_PATH" | tr '\n' '|' | sed 's/|$//' >> $GITHUB_OUTPUT
+          # 全局搜索所有 APK，写入临时文件
+          find mobile -name "*.apk" -type f 2>/dev/null > /tmp/apk_files.txt
+          COUNT=$(wc -l < /tmp/apk_files.txt | tr -d ' ')
+          echo "Found $COUNT APK file(s)"
+          cat /tmp/apk_files.txt
+          if [ "$COUNT" -gt 0 ]; then
+            # 用换行符分隔，GitHub Actions 支持 multiline 输出
+            printf '%s' "$(cat /tmp/apk_files.txt)" >> $GITHUB_OUTPUT
           else
             echo "::warning::No APK file found anywhere in mobile/!"
           fi
@@ -250,14 +252,20 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-Android-APK
-          path: ${{ steps.find-apk.outputs.apk_path }}
+          path: |
+            mobile/src-tauri/gen/android/app/build/outputs/apk/*/release/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/*/debug/*.apk
+            mobile/src-tauri/target/*/release/bundle/apk/*.apk
           if-no-files-found: warn
 
       - name: Upload APK to Release
         if: startsWith(github.ref, 'refs/tags/') && steps.find-apk.outputs.apk_path != ''
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.find-apk.outputs.apk_path }}
+          files: |
+            mobile/src-tauri/gen/android/app/build/outputs/apk/*/release/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/*/debug/*.apk
+            mobile/src-tauri/target/*/release/bundle/apk/*.apk
           append_body: true
           body: |
             ### Android
