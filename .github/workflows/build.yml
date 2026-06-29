@@ -158,6 +158,7 @@ jobs:
     env:
       ANDROID_API_LEVEL: 34
       NDK_VERSION: 27.0.12077973
+      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
 
     steps:
       - name: Checkout repository
@@ -171,17 +172,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android SDK components
         run: |
           sdkmanager --install \
             "platforms;android-${{ env.ANDROID_API_LEVEL }}" \
             "build-tools;34.0.0" \
-            "ndk;${{ env.NDK_VERSION }}" \
-            "platform-tools"
-          sdkmanager --licenses || true
+            "ndk;${{ env.NDK_VERSION }}"
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -206,68 +202,64 @@ jobs:
         working-directory: mobile
         run: npx tauri android init
 
-      - name: Build Android APK
+      - name: Build Android APK (release)
         working-directory: mobile
-        run: npx tauri android build
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME }}
+        run: npx tauri android build --release
 
       - name: Find APK files
         id: find-apk
         run: |
           echo "=== Searching for APK files ==="
-          # Tauri v2 构建后的 APK 位置
+          # 列出所有可能的 APK 位置
           for dir in \
-            "src-tauri/target/aarch64-linux-android/release/bundle/apk/" \
-            "src-tauri/target/armv7-linux-androideabi/release/bundle/apk/" \
-            "src-tauri/target/x86_64-linux-android/release/bundle/apk/" \
-            "src-tauri/target/i686-linux-android/release/bundle/apk/" \
-            "src-tauri/target/debug/bundle/apk/" \
-            "src-tauri/gen/android/app/build/outputs/apk/" \
-            "src-tauri/gen/android/app/build/outputs/apk/debug/" \
-            "src-tauri/gen/android/app/build/outputs/apk/release/"; do
+            "mobile/src-tauri/target/aarch64-linux-android/release/bundle/apk/" \
+            "mobile/src-tauri/target/armv7-linux-androideabi/release/bundle/apk/" \
+            "mobile/src-tauri/target/x86_64-linux-android/release/bundle/apk/" \
+            "mobile/src-tauri/target/i686-linux-android/release/bundle/apk/" \
+            "mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/" \
+            "mobile/src-tauri/gen/android/app/build/outputs/apk/universal/debug/" \
+            "mobile/src-tauri/gen/android/app/build/outputs/apk/" \
+            "mobile/src-tauri/gen/android/app/build/outputs/bundle/release/"; do
             if [ -d "$dir" ]; then
               echo "Found APK directory: $dir"
-              find "$dir" -name "*.apk" -type f | while read apk; do
+              find "$dir" -name "*.apk" -type f 2>/dev/null | while read apk; do
                 echo "  Found: $apk"
               done
             fi
           done
-          # 全局搜索所有 APK，写入临时文件
+          # 全局搜索所有 APK
           find mobile -name "*.apk" -type f 2>/dev/null > /tmp/apk_files.txt
           COUNT=$(wc -l < /tmp/apk_files.txt | tr -d ' ')
           echo "Found $COUNT APK file(s)"
           cat /tmp/apk_files.txt
           if [ "$COUNT" -gt 0 ]; then
-            # GitHub Actions multiline output 语法
-            {
-              echo "apk_path<<EOF"
-              cat /tmp/apk_files.txt
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
+            echo "has_apk=true" >> $GITHUB_OUTPUT
           else
             echo "::warning::No APK file found anywhere in mobile/!"
+            echo "has_apk=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload APK artifacts
-        if: steps.find-apk.outputs.apk_path != ''
+        if: steps.find-apk.outputs.has_apk == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: build-Android-APK
           path: |
-            mobile/src-tauri/gen/android/app/build/outputs/apk/*/release/*.apk
-            mobile/src-tauri/gen/android/app/build/outputs/apk/*/debug/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/**/release/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/**/debug/*.apk
             mobile/src-tauri/target/*/release/bundle/apk/*.apk
+            mobile/src-tauri/target/*/debug/bundle/apk/*.apk
           if-no-files-found: warn
 
       - name: Upload APK to Release
-        if: startsWith(github.ref, 'refs/tags/') && steps.find-apk.outputs.apk_path != ''
+        if: startsWith(github.ref, 'refs/tags/') && steps.find-apk.outputs.has_apk == 'true'
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            mobile/src-tauri/gen/android/app/build/outputs/apk/*/release/*.apk
-            mobile/src-tauri/gen/android/app/build/outputs/apk/*/debug/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/**/release/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/**/debug/*.apk
             mobile/src-tauri/target/*/release/bundle/apk/*.apk
+            mobile/src-tauri/target/*/debug/bundle/apk/*.apk
           append_body: true
           body: |
             ### Android
