@@ -151,7 +151,7 @@ jobs:
 
   # Android APK 构建
   build-android:
-    needs: version
+    needs: [version, build]
     runs-on: ubuntu-latest
     name: Build (Android APK)
 
