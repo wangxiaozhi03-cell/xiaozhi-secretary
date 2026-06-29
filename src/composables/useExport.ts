@@ -40,7 +40,7 @@ export function useExport(
 
   /** 浏览器环境：通过下载链接保存文件 */
   function downloadFile(filename: string, data: Uint8Array, mimeType: string) {
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: mimeType });
+    const blob = new Blob([data as unknown as BlobPart], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
