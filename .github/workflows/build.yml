@@ -151,7 +151,7 @@ jobs:
 
   # Android APK 构建
   build-android:
-    needs: [version, build]
+    needs: version
     runs-on: ubuntu-latest
     name: Build (Android APK)
 
@@ -208,7 +208,7 @@ jobs:
 
       - name: Build Android APK
         working-directory: mobile
-        run: npx tauri android build --apk
+        run: npx tauri android build
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
@@ -218,19 +218,34 @@ jobs:
         id: find-apk
         run: |
           echo "=== Searching for APK files ==="
-          APK_PATH=$(find mobile/src-tauri/gen/android -name "*.apk" -type f 2>/dev/null | head -1)
-          if [ -z "$APK_PATH" ]; then
-            APK_PATH=$(find mobile/src-tauri/target -name "*.apk" -type f 2>/dev/null | head -1)
-          fi
+          # Tauri v2 构建后的 APK 位置
+          for dir in \
+            "src-tauri/target/aarch64-linux-android/release/bundle/apk/" \
+            "src-tauri/target/armv7-linux-androideabi/release/bundle/apk/" \
+            "src-tauri/target/x86_64-linux-android/release/bundle/apk/" \
+            "src-tauri/target/i686-linux-android/release/bundle/apk/" \
+            "src-tauri/target/debug/bundle/apk/" \
+            "src-tauri/gen/android/app/build/outputs/apk/" \
+            "src-tauri/gen/android/app/build/outputs/apk/debug/" \
+            "src-tauri/gen/android/app/build/outputs/apk/release/"; do
+            if [ -d "$dir" ]; then
+              echo "Found APK directory: $dir"
+              find "$dir" -name "*.apk" -type f | while read apk; do
+                echo "  Found: $apk"
+              done
+            fi
+          done
+          # 全局搜索所有 APK
+          APK_PATH=$(find mobile -name "*.apk" -type f 2>/dev/null | head -5)
           if [ -n "$APK_PATH" ]; then
-            echo "Found APK: $APK_PATH"
-            echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+            echo "APK files found:"
+            echo "$APK_PATH"
+            echo "$APK_PATH" | tr '\n' '|' | sed 's/|$//' >> $GITHUB_OUTPUT
           else
-            echo "::warning::No APK file found!"
-            find mobile/ -name "*.apk" -type f 2>/dev/null
+            echo "::warning::No APK file found anywhere in mobile/!"
           fi
 
-      - name: Upload APK artifact
+      - name: Upload APK artifacts
         if: steps.find-apk.outputs.apk_path != ''
         uses: actions/upload-artifact@v4
         with:
