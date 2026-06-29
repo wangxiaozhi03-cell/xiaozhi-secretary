@@ -204,7 +204,7 @@ jobs:
 
       - name: Init Tauri Android project
         working-directory: mobile
-        run: npx tauri android init --yes
+        run: npx tauri android init
 
       - name: Build Android APK
         working-directory: mobile
