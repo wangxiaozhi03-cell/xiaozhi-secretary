@@ -174,16 +174,16 @@ jobs:
 
       - name: Install Android SDK command-line tools
         run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          cd $ANDROID_HOME/cmdline-tools
+          mkdir -p $ANDROID_HOME/cmdline-tools/latest
+          cd $ANDROID_HOME/cmdline-tools/latest
           curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
-          echo "y" | sdkmanager --licenses > /dev/null 2>&1 || true
+          unzip -qo cmdline-tools.zip
+          rm cmdline-tools.zip
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
       - name: Install Android SDK components
         run: |
-          sdkmanager --install \
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install \
             "platforms;android-${{ env.ANDROID_API_LEVEL }}" \
             "build-tools;34.0.0" \
             "ndk;${{ env.NDK_VERSION }}"
