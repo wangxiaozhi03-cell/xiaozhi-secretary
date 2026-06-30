@@ -213,7 +213,7 @@ jobs:
 
       - name: Build Android APK (release)
         working-directory: mobile
-        run: npx tauri android build --release
+        run: npx tauri android build
 
       - name: Find APK files
         id: find-apk
