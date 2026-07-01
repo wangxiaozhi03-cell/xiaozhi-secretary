@@ -264,6 +264,7 @@ jobs:
         if: (startsWith(github.ref, 'refs/tags/') || github.event_name == 'push') && steps.find-apk.outputs.has_apk == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.version.outputs.tag }}
           files: |
             mobile/src-tauri/gen/android/app/build/outputs/apk/**/release/*.apk
             mobile/src-tauri/gen/android/app/build/outputs/apk/**/debug/*.apk
