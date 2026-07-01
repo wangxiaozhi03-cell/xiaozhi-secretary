@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  # 获取版本号并递增
+  # 获取版本号
   version:
     runs-on: ubuntu-latest
     outputs:
@@ -22,41 +22,45 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get and increment version
+      - name: Get version
         id: get_version
         run: |
-          # 读取当前版本号
-          CURRENT_VERSION=$(grep -o '"version": *"[^"]*"' src-tauri/tauri.conf.json | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
-          echo "Current version: $CURRENT_VERSION"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # workflow_dispatch: 递增版本号
+            CURRENT_VERSION=$(grep -o '"version": *"[^"]*"' src-tauri/tauri.conf.json | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+            echo "Current version: $CURRENT_VERSION"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+            NEW_PATCH=$((PATCH + 1))
+            NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+            echo "New version: $NEW_VERSION"
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            # Tag push: 使用 tag 作为版本号
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG_NAME#v}
+            echo "Building tagged release: $VERSION"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          else
+            # Push main: 使用当前版本号，不递增
+            VERSION=$(grep -o '"version": *"[^"]*"' src-tauri/tauri.conf.json | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+            echo "Building from main: $VERSION"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          fi
 
-          # 分解版本号
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-
-          # 递增 patch 版本
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
-
-          echo "New version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update version in tauri.conf.json
-        if: github.event_name != 'pull_request'
-        run: |
-          NEW_VERSION=${{ steps.get_version.outputs.version }}
-          # 更新 tauri.conf.json 中的版本号
-          sed -i.bak "s/\"version\": *\"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" src-tauri/tauri.conf.json
-          rm -f src-tauri/tauri.conf.json.bak
-          echo "Updated tauri.conf.json to version $NEW_VERSION"
-
-      - name: Commit and tag
-        if: github.event_name != 'pull_request'
+      - name: Commit and push tag (workflow_dispatch only)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          NEW_VERSION=${{ steps.get_version.outputs.version }}
+          sed -i.bak "s/\"version\": *\"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" src-tauri/tauri.conf.json
+          rm -f src-tauri/tauri.conf.json.bak
           git add src-tauri/tauri.conf.json
-          git commit -m "chore: bump version to ${{ steps.get_version.outputs.version }}" || true
-          git tag ${{ steps.get_version.outputs.tag }}
+          git commit -m "chore: bump version to $NEW_VERSION" || true
+          git tag v$NEW_VERSION
           git push origin HEAD --tags
 
   # 构建任务
