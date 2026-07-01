@@ -232,19 +232,24 @@ jobs:
             "mobile/src-tauri/gen/android/app/build/outputs/apk/universal/release/" \
             "mobile/src-tauri/gen/android/app/build/outputs/apk/universal/debug/" \
             "mobile/src-tauri/gen/android/app/build/outputs/apk/" \
-            "mobile/src-tauri/gen/android/app/build/outputs/bundle/release/"; do
+            "mobile/src-tauri/gen/android/app/build/outputs/bundle/release/" \
+            "mobile/src-tauri/gen/android/app/build/outputs/" \
+            "mobile/src-tauri/gen/android/"; do
             if [ -d "$dir" ]; then
-              echo "Found APK directory: $dir"
+              echo "Checking directory: $dir"
               find "$dir" -name "*.apk" -type f 2>/dev/null | while read apk; do
                 echo "  Found: $apk"
               done
+            else
+              echo "Directory not found: $dir"
             fi
           done
           # 全局搜索所有 APK
           find mobile -name "*.apk" -type f 2>/dev/null > /tmp/apk_files.txt
+          echo "=== All APK files found ==="
+          cat /tmp/apk_files.txt
           COUNT=$(wc -l < /tmp/apk_files.txt | tr -d ' ')
           echo "Found $COUNT APK file(s)"
-          cat /tmp/apk_files.txt
           if [ "$COUNT" -gt 0 ]; then
             echo "has_apk=true" >> $GITHUB_OUTPUT
           else
@@ -258,8 +263,7 @@ jobs:
         with:
           name: build-Android-APK
           path: |
-            mobile/src-tauri/gen/android/app/build/outputs/apk/**/release/*.apk
-            mobile/src-tauri/gen/android/app/build/outputs/apk/**/debug/*.apk
+            mobile/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
             mobile/src-tauri/target/*/release/bundle/apk/*.apk
             mobile/src-tauri/target/*/debug/bundle/apk/*.apk
           if-no-files-found: warn
@@ -269,11 +273,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.tag }}
-          files: |
-            mobile/src-tauri/gen/android/app/build/outputs/apk/**/release/*.apk
-            mobile/src-tauri/gen/android/app/build/outputs/apk/**/debug/*.apk
-            mobile/src-tauri/target/*/release/bundle/apk/*.apk
-            mobile/src-tauri/target/*/debug/bundle/apk/*.apk
+          files: /tmp/apk_files.txt
           append_body: true
           body: |
             ### Android
